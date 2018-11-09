@@ -41,3 +41,5 @@ function uploadfile() {
 }
 
 uploadfile ./geoip.dat
+
+shutdown -h now
