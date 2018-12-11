@@ -25,6 +25,10 @@ jobs:
       sourceFolder: '$(system.defaultworkingdirectory)/publish'
       contents: 'geoip.dat'
       targetFolder: '$(build.artifactStagingDirectory)'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact'
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)'
   - task: GithubRelease@0
     displayName: 'Upload to Github'
     inputs:
