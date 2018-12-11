@@ -21,7 +21,6 @@ jobs:
     displayName: 'Generate'
   - task: GithubRelease@0
     displayName: 'CreateRelease'
-    workingDirectory: '$(system.defaultWorkingDirectory)'
     inputs:
       gitHubConnection: GithubRelease
       repositoryName: v2ray/geoip
