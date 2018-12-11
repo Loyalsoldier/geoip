@@ -16,9 +16,9 @@ jobs:
   - script: |
       go version
       $(Build.SourcesDirectory)/generate.sh
-    workingDirectory: '$(system.defaultWorkingDirectory)/publish'
+    workingDirectory: '$(system.defaultWorkingDirectory)'
     displayName: 'Generate'
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'geosite'
-      targetPath: '$(system.defaultWorkingDirectory)/publish'
+      targetPath: '$(system.defaultWorkingDirectory)'
