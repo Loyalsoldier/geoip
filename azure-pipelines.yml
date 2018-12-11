@@ -32,7 +32,6 @@ jobs:
       action: 'create'
       target: '$(build.sourceVersion)'
       tagSource: 'manual'
-      tag: '$(Build.BuildNumber)'
       releaseNotesSource: 'input'
       releaseNotes: 'Weekly Geoip Release'
       assets: '$(build.artifactStagingDirectory)/geoip.dat'
