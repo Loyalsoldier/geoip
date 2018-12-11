@@ -15,6 +15,7 @@ jobs:
       version: '1.11.2'
   - script: |
       go version
+      chmod +x $(Build.SourcesDirectory)/generate.sh
       $(Build.SourcesDirectory)/generate.sh
     workingDirectory: '$(system.defaultWorkingDirectory)'
     displayName: 'Generate'
