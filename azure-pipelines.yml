@@ -23,12 +23,11 @@ jobs:
     displayName: 'CreateRelease'
     inputs:
       gitHubConnection: GithubRelease
-      repositoryName: v2ray/geoip
+      repositoryName: 'v2ray/geoip'
       action: 'create'
       target: '$(build.sourceVersion)'
-      tagSource: 'auto'
-      #tag: # Required when action == edit || action == discard || tagSource == manual
-      title: '$(Date:yyyyMMdd)'
+      tagSource: 'User specified tag'
+      tag: '$(Date:yyyyMMdd)'
       releaseNotesSource: 'input'
       releaseNotes: 'Weekly Geoip Release'
       assets: '$(system.defaultWorkingDirectory)/publish/geoip.dat'
