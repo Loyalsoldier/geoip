@@ -1,0 +1,24 @@
+jobs:
+- job: build.geoip
+  timeoutInMinutes: 30
+
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  variables:
+    GOPATH: '$(system.defaultWorkingDirectory)'
+
+  steps:
+  - checkout: self
+  - task: GoTool@0
+    inputs:
+      version: '1.11.2'
+  - script: |
+      go version
+      $(Build.SourcesDirectory)/generate.sh
+    workingDirectory: '$(system.defaultWorkingDirectory)/publish'
+    displayName: 'Generate'
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'geosite'
+      targetPath: '$(system.defaultWorkingDirectory)/publish'
