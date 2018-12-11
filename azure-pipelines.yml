@@ -19,7 +19,21 @@ jobs:
       $(Build.SourcesDirectory)/generate.sh
     workingDirectory: '$(system.defaultWorkingDirectory)'
     displayName: 'Generate'
-  - task: PublishPipelineArtifact@0
+  - task: GithubRelease@0
+    displayName: 'CreateRelease'
+    workingDirectory: '$(system.defaultWorkingDirectory)'
     inputs:
-      artifactName: 'geosite'
-      targetPath: '$(system.defaultWorkingDirectory)/publish'
+      gitHubConnection: GithubRelease
+      repositoryName: v2ray/geoip
+      action: 'create'
+      target: '$(build.sourceVersion)'
+      tagSource: 'auto'
+      #tag: # Required when action == edit || action == discard || tagSource == manual
+      title: '$(Date:yyyyMMdd)'
+      releaseNotesSource: 'input'
+      releaseNotes: 'Weekly Geoip Release'
+      assets: '$(system.defaultWorkingDirectory)/publish/geoip.dat'
+      assetUploadMode: 'delete' # Optional. Options: delete, replace
+      #isDraft: false # Optional
+      #isPreRelease: false # Optional
+      #addChangeLog: true # Optional
