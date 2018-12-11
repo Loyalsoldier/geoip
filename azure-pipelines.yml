@@ -17,6 +17,7 @@ jobs:
       go version
       chmod +x $(Build.SourcesDirectory)/generate.sh
       $(Build.SourcesDirectory)/generate.sh
+      ls -al ./publish/
     workingDirectory: '$(system.defaultWorkingDirectory)'
     displayName: 'Generate'
   - task: CopyFiles@2
