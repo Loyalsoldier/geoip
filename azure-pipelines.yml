@@ -22,4 +22,4 @@ jobs:
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'geosite'
-      targetPath: '$(system.defaultWorkingDirectory)'
+      targetPath: '$(system.defaultWorkingDirectory)/publish'
