@@ -19,8 +19,13 @@ jobs:
       $(Build.SourcesDirectory)/generate.sh
     workingDirectory: '$(system.defaultWorkingDirectory)'
     displayName: 'Generate'
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(system.defaultworkingdirectory)/publish'
+      contents: 'geoip.dat'
+      targetFolder: '$(build.artifactStagingDirectory)'
   - task: GithubRelease@0
-    displayName: 'CreateRelease'
+    displayName: 'Upload to Github'
     inputs:
       gitHubConnection: GithubRelease
       repositoryName: 'v2ray/geoip'
@@ -30,8 +35,4 @@ jobs:
       tag: '$(Build.BuildNumber)'
       releaseNotesSource: 'input'
       releaseNotes: 'Weekly Geoip Release'
-      assets: '$(system.defaultWorkingDirectory)/publish/geoip.dat'
-      assetUploadMode: 'delete' # Optional. Options: delete, replace
-      #isDraft: false # Optional
-      #isPreRelease: false # Optional
-      #addChangeLog: true # Optional
+      assets: '$(build.artifactStagingDirectory)/geoip.dat'
