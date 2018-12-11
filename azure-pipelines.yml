@@ -1,5 +1,5 @@
 jobs:
-- job: build.geoip
+- job: build_geoip
   timeoutInMinutes: 30
 
   pool:
