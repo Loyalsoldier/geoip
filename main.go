@@ -16,7 +16,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
-	"v2ray.com/ext/tools/conf"
+	"v2ray.com/core/infra/conf"
 )
 
 var (
