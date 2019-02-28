@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/infra/conf"
