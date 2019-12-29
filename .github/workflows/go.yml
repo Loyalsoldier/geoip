@@ -20,8 +20,8 @@ jobs:
       
       - name: Set GOPATH and release variables
         run: |
-          echo "::set-env name=TAG_NAME::$(date +%Y%m%d)"
-          echo "::set-env name=NAME::$(date +%Y%m%d)"
+          echo "::set-env name=TAG_NAME::$(date +%Y%m%d%H%M)"
+          echo "::set-env name=NAME::$(date +%Y%m%d%H%M)"
           echo "::set-env name=GOPATH::$(dirname $GITHUB_WORKSPACE)"
           echo "::add-path::$(dirname $GITHUB_WORKSPACE)/bin"
         shell: bash
