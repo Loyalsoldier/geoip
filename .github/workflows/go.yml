@@ -41,7 +41,7 @@ jobs:
           mv ./geoip.dat ./publish/ 
           
       - name: Release
-        uses: Ricky-Hao/action-release@master
+        uses: opspresso/action-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ASSET_PATH: publish
