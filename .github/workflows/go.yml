@@ -40,6 +40,17 @@ jobs:
         run: |
           sha256sum geoip.dat > geoip.dat.sha256sum
 
+      - name: Git push assets to "release" branch
+        run: |
+          git init
+          git config --local user.name "${{ github.actor }}"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git checkout -b release
+          git add geoip.dat geoip.dat.sha256sum
+          git commit -m "${{ env.RELEASE_NAME }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u origin release
+
       - name: Create a release
         id: create_release
         uses: actions/create-release@v1
@@ -52,7 +63,6 @@ jobs:
           prerelease: false
 
       - name: Upload geoip.dat
-        id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,7 +73,6 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload geoip.dat sha256sum
-        id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
