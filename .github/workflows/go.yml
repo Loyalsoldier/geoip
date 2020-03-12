@@ -36,6 +36,10 @@ jobs:
           go get -u -v -insecure $REPO_URL
           geoip --country=./geoip/GeoLite2-Country-Locations-en.csv --ipv4=./geoip/GeoLite2-Country-Blocks-IPv4.csv --ipv6=./geoip/GeoLite2-Country-Blocks-IPv6.csv
 
+      - name: Generate geoip.dat sha256 hash
+        run: |
+          sha256sum geoip.dat > geoip.dat.sha256sum
+
       - name: Create a release
         id: create_release
         uses: actions/create-release@v1
@@ -47,7 +51,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload dat file
+      - name: Upload geoip.dat
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
@@ -57,3 +61,14 @@ jobs:
           asset_path: ./geoip.dat
           asset_name: geoip.dat
           asset_content_type: application/octet-stream
+
+      - name: Upload geoip.dat sha256sum
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./geoip.dat.sha256sum
+          asset_name: geoip.dat.sha256sum
+          asset_content_type: text/plain
