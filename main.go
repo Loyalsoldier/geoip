@@ -6,10 +6,12 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
@@ -23,6 +25,7 @@ var (
 	countryCodeFile = flag.String("country", "", "Path to the country code file")
 	ipv4File        = flag.String("ipv4", "", "Path to the IPv4 block file")
 	ipv6File        = flag.String("ipv6", "", "Path to the IPv6 block file")
+	cnIPv4CIDRURL   = flag.String("cnipv4url", "", "URL of CN IPv4 CIDR file")
 )
 
 func getCountryCodeMap() (map[string]string, error) {
@@ -63,8 +66,8 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 	}
 	for _, line := range lines[1:] {
 		cidrStr := line[0]
-		countryId := line[1]
-		if countryCode, found := m[countryId]; found {
+		countryID := line[1]
+		if countryCode, found := m[countryID]; found {
 			cidr, err := conf.ParseIP(cidrStr)
 			if err != nil {
 				return err
@@ -73,6 +76,59 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 			list[countryCode] = cidrs
 		}
 	}
+	return nil
+}
+
+func getCNIPv4Cidr(url string) (cnIPv4CidrList []string, err error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept-Encoding", "gzip")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	data, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer data.Close()
+
+	body, err := ioutil.ReadAll(data)
+	if err != nil {
+		return nil, err
+	}
+
+	cnIPv4CidrList = strings.Split(string(body), "\n")
+	fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
+
+	return cnIPv4CidrList, nil
+}
+
+func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router.CIDR) error {
+	// delete "CN" Key in list
+	delete(list, "CN")
+	fmt.Println("Successfully deleted CN IPv4 CIDR")
+	fmt.Println(list["CN"])
+
+	cnIPv4CidrList, err := getCNIPv4Cidr(url)
+	if err != nil {
+		return err
+	}
+
+	for _, cnIPv4Cidr := range cnIPv4CidrList {
+		cnIPv4Cidr, err := conf.ParseIP(strings.TrimSpace(cnIPv4Cidr))
+		if err != nil {
+			return err
+		}
+		cidrs := append(list["CN"], cnIPv4Cidr)
+		list["CN"] = cidrs
+	}
+
 	return nil
 }
 
@@ -88,6 +144,10 @@ func main() {
 	cidrList := make(map[string][]*router.CIDR)
 	if err := getCidrPerCountry(*ipv4File, ccMap, cidrList); err != nil {
 		fmt.Println("Error loading IPv4 file:", err)
+		return
+	}
+	if err := changeCNIPv4Cidr(*cnIPv4CIDRURL, ccMap, cidrList); err != nil {
+		fmt.Println("Error loading cnIPv4CIDR data:", err)
 		return
 	}
 	if err := getCidrPerCountry(*ipv6File, ccMap, cidrList); err != nil {
