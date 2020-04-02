@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -103,7 +104,12 @@ func getCNIPv4Cidr(url string) (cnIPv4CidrList []string, err error) {
 		return nil, err
 	}
 
-	cnIPv4CidrList = strings.Split(string(body), "\n")
+	reg := regexp.MustCompile(`(\d+\.){3}\d+\/\d+`)
+	matchList := reg.FindAllStringSubmatch(string(body), -1)
+
+	for _, match := range matchList {
+		cnIPv4CidrList = append(cnIPv4CidrList, match[0])
+	}
 	fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
 
 	return cnIPv4CidrList, nil
@@ -121,6 +127,7 @@ func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router
 	}
 
 	for _, cnIPv4Cidr := range cnIPv4CidrList {
+		fmt.Println("Processing CN IPv4 CIDR:", cnIPv4Cidr)
 		cnIPv4Cidr, err := conf.ParseIP(strings.TrimSpace(cnIPv4Cidr))
 		if err != nil {
 			return err
