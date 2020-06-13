@@ -8,6 +8,7 @@ package main
 import (
 	"compress/gzip"
 	"encoding/csv"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -26,7 +27,7 @@ var (
 	countryCodeFile = flag.String("country", "", "Path to the country code file")
 	ipv4File        = flag.String("ipv4", "", "Path to the IPv4 block file")
 	ipv6File        = flag.String("ipv6", "", "Path to the IPv6 block file")
-	cnIPv4CIDRURL   = flag.String("cnipv4url", "", "URL of CN IPv4 CIDR file")
+	ipv4CnURI       = flag.String("ipv4CN", "", "URI of CN IPv4 CIDR file")
 )
 
 func getCountryCodeMap() (map[string]string, error) {
@@ -80,39 +81,55 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 	return nil
 }
 
-func getCNIPv4Cidr(url string) (cnIPv4CidrList []string, err error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
+	reg := regexp.MustCompile(`https?:\/\/`)
+	matchList := reg.FindAllStringSubmatch(path, -1)
+
+	var body []byte
+	if len(matchList) <= 0 {
+		fmt.Println("Reading local file:", path)
+		body, err = ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fmt.Println("Fetching content of URL:", path)
+		req, err := http.NewRequest("GET", path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept-Encoding", "gzip")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		data, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer data.Close()
+
+		body, err = ioutil.ReadAll(data)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	req.Header.Set("Accept-Encoding", "gzip")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	reg = regexp.MustCompile(`(\d+\.){3}\d+\/\d+`)
+	matchList = reg.FindAllStringSubmatch(string(body), -1)
+
+	if len(matchList) > 0 {
+		for _, match := range matchList {
+			cnIPv4CidrList = append(cnIPv4CidrList, match[0])
+		}
+		fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
+		return cnIPv4CidrList, nil
 	}
-	defer resp.Body.Close()
-
-	data, err := gzip.NewReader(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer data.Close()
-
-	body, err := ioutil.ReadAll(data)
-	if err != nil {
-		return nil, err
-	}
-
-	reg := regexp.MustCompile(`(\d+\.){3}\d+\/\d+`)
-	matchList := reg.FindAllStringSubmatch(string(body), -1)
-
-	for _, match := range matchList {
-		cnIPv4CidrList = append(cnIPv4CidrList, match[0])
-	}
-	fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
-
-	return cnIPv4CidrList, nil
+	err = errors.New("No matching IP CIDR addresses")
+	return nil, err
 }
 
 func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router.CIDR) error {
@@ -153,8 +170,8 @@ func main() {
 		fmt.Println("Error loading IPv4 file:", err)
 		return
 	}
-	if err := changeCNIPv4Cidr(*cnIPv4CIDRURL, ccMap, cidrList); err != nil {
-		fmt.Println("Error loading cnIPv4CIDR data:", err)
+	if err := changeCNIPv4Cidr(*ipv4CnURI, ccMap, cidrList); err != nil {
+		fmt.Println("Error loading ipv4CnURI data:", err)
 		return
 	}
 	if err := getCidrPerCountry(*ipv6File, ccMap, cidrList); err != nil {
