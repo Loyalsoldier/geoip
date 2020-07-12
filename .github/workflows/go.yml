@@ -13,10 +13,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.x
+      - name: Set up Go 1.x.y
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.14"
+          go-version: "^1.14.4"
 
       - name: Set $GOPATH and release variables
         run: |
