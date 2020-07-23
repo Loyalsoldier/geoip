@@ -27,8 +27,30 @@ var (
 	countryCodeFile = flag.String("country", "", "Path to the country code file")
 	ipv4File        = flag.String("ipv4", "", "Path to the IPv4 block file")
 	ipv6File        = flag.String("ipv6", "", "Path to the IPv6 block file")
-	ipv4CnURI       = flag.String("ipv4CN", "", "URI of CN IPv4 CIDR file")
+	ipv4CNURI       = flag.String("ipv4CN", "", "URI of CN IPv4 CIDR file")
 )
+
+var privateIPs = []string{
+	"0.0.0.0/8",
+	"10.0.0.0/8",
+	"100.64.0.0/10",
+	"127.0.0.0/8",
+	"169.254.0.0/16",
+	"172.16.0.0/12",
+	"192.0.0.0/24",
+	"192.0.2.0/24",
+	"192.88.99.0/24",
+	"192.168.0.0/16",
+	"198.18.0.0/15",
+	"198.51.100.0/24",
+	"203.0.113.0/24",
+	"224.0.0.0/4",
+	"240.0.0.0/4",
+	"255.255.255.255/32",
+	"::1/128",
+	"fc00::/7",
+	"fe80::/10",
+}
 
 func getCountryCodeMap() (map[string]string, error) {
 	countryCodeReader, err := os.Open(*countryCodeFile)
@@ -81,12 +103,23 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 	return nil
 }
 
-func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
-	reg := regexp.MustCompile(`https?:\/\/`)
-	matchList := reg.FindAllStringSubmatch(path, -1)
+func getPrivateIPs() *router.GeoIP {
+	cidr := make([]*router.CIDR, 0, len(privateIPs))
+	for _, ip := range privateIPs {
+		c, err := conf.ParseIP(ip)
+		common.Must(err)
+		cidr = append(cidr, c)
+	}
+	return &router.GeoIP{
+		CountryCode: "PRIVATE",
+		Cidr:        cidr,
+	}
+}
 
+func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
+	isURL := strings.HasPrefix(path, "http")
 	var body []byte
-	if len(matchList) <= 0 {
+	if !isURL {
 		fmt.Println("Reading local file:", path)
 		body, err = ioutil.ReadFile(path)
 		if err != nil {
@@ -118,12 +151,12 @@ func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
 		}
 	}
 
-	reg = regexp.MustCompile(`(\d+\.){3}\d+\/\d+`)
-	matchList = reg.FindAllStringSubmatch(string(body), -1)
+	reg := regexp.MustCompile(`(\d+\.){3}\d+\/\d+`)
+	matchedCIDRList := reg.FindAllStringSubmatch(string(body), -1)
 
-	if len(matchList) > 0 {
-		for _, match := range matchList {
-			cnIPv4CidrList = append(cnIPv4CidrList, match[0])
+	if len(matchedCIDRList) > 0 {
+		for _, cidr := range matchedCIDRList {
+			cnIPv4CidrList = append(cnIPv4CidrList, cidr[0])
 		}
 		fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
 		return cnIPv4CidrList, nil
@@ -138,18 +171,18 @@ func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router
 	fmt.Println("Successfully deleted CN IPv4 CIDR")
 	fmt.Println(list["CN"])
 
-	cnIPv4CidrList, err := getCNIPv4Cidr(url)
+	cnIPv4CIDRList, err := getCNIPv4Cidr(url)
 	if err != nil {
 		return err
 	}
 
-	for _, cnIPv4Cidr := range cnIPv4CidrList {
-		fmt.Println("Processing CN IPv4 CIDR:", cnIPv4Cidr)
-		cnIPv4Cidr, err := conf.ParseIP(strings.TrimSpace(cnIPv4Cidr))
+	for _, cnIPv4CIDR := range cnIPv4CIDRList {
+		fmt.Println("Processing CN IPv4 CIDR:", cnIPv4CIDR)
+		cnIPv4CIDR, err := conf.ParseIP(strings.TrimSpace(cnIPv4CIDR))
 		if err != nil {
 			return err
 		}
-		cidrs := append(list["CN"], cnIPv4Cidr)
+		cidrs := append(list["CN"], cnIPv4CIDR)
 		list["CN"] = cidrs
 	}
 
@@ -159,24 +192,31 @@ func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router
 func main() {
 	flag.Parse()
 
+	if *ipv4File == "" || *ipv6File == "" || *countryCodeFile == "" {
+		fmt.Println("Please specify these options: country, ipv4, ipv6. Or use '-h' for help.")
+		os.Exit(1)
+	}
+
 	ccMap, err := getCountryCodeMap()
 	if err != nil {
 		fmt.Println("Error reading country code map:", err)
-		return
+		os.Exit(1)
 	}
 
 	cidrList := make(map[string][]*router.CIDR)
 	if err := getCidrPerCountry(*ipv4File, ccMap, cidrList); err != nil {
 		fmt.Println("Error loading IPv4 file:", err)
-		return
+		os.Exit(1)
 	}
-	if err := changeCNIPv4Cidr(*ipv4CnURI, ccMap, cidrList); err != nil {
-		fmt.Println("Error loading ipv4CnURI data:", err)
-		return
+	if *ipv4CNURI != "" {
+		if err := changeCNIPv4Cidr(*ipv4CNURI, ccMap, cidrList); err != nil {
+			fmt.Println("Error loading ipv4CNURI data:", err)
+			os.Exit(1)
+		}
 	}
 	if err := getCidrPerCountry(*ipv6File, ccMap, cidrList); err != nil {
 		fmt.Println("Error loading IPv6 file:", err)
-		return
+		os.Exit(1)
 	}
 
 	geoIPList := new(router.GeoIPList)
@@ -186,51 +226,18 @@ func main() {
 			Cidr:        cidr,
 		})
 	}
-	geoIPList.Entry = append(geoIPList.Entry, getLocalIPs())
+	geoIPList.Entry = append(geoIPList.Entry, getPrivateIPs())
 
 	geoIPBytes, err := proto.Marshal(geoIPList)
 	if err != nil {
 		fmt.Println("Error marshalling geoip list:", err)
+		os.Exit(1)
 	}
 
-	if err := ioutil.WriteFile("geoip.dat", geoIPBytes, 0777); err != nil {
+	if err := ioutil.WriteFile("geoip.dat", geoIPBytes, 0644); err != nil {
 		fmt.Println("Error writing geoip to file:", err)
-	}
-}
-
-var (
-	localIPs = []string{
-		"0.0.0.0/8",
-		"10.0.0.0/8",
-		"100.64.0.0/10",
-		"127.0.0.0/8",
-		"169.254.0.0/16",
-		"172.16.0.0/12",
-		"192.0.0.0/24",
-		"192.0.2.0/24",
-		"192.88.99.0/24",
-		"192.168.0.0/16",
-		"198.18.0.0/15",
-		"198.51.100.0/24",
-		"203.0.113.0/24",
-		"224.0.0.0/4",
-		"240.0.0.0/4",
-		"255.255.255.255/32",
-		"::1/128",
-		"fc00::/7",
-		"fe80::/10",
-	}
-)
-
-func getLocalIPs() *router.GeoIP {
-	cidr := make([]*router.CIDR, 0, 16)
-	for _, ip := range localIPs {
-		c, err := conf.ParseIP(ip)
-		common.Must(err)
-		cidr = append(cidr, c)
-	}
-	return &router.GeoIP{
-		CountryCode: "PRIVATE",
-		Cidr:        cidr,
+		os.Exit(1)
+	} else {
+		fmt.Println("geoip.dat has been generated successfully in the directory.")
 	}
 }
