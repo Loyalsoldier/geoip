@@ -4,6 +4,10 @@ Automatically weekly release of geoip.dat for V2Ray.
 
 This product includes GeoLite2 data created by MaxMind, available from [MaxMind](http://www.maxmind.com/), with replaced CN IPv4 CIDR available from [IPIP.net China IP List](https://github.com/17mon/china_ip_list/blob/master/china_ip_list.txt).
 
+## 说明
+
+[Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，需要在自己仓库的 **[Settings]** 选项卡的 **[Secrets]** 页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MAXMIND 账号的 LICENSE KEY，需要[**注册 MAXMIND 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 **[Services]** 项下的 **[My License Key]** 里生成。
+
 ## Download links
 
 - **geoip.dat**：[https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat](https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat)
