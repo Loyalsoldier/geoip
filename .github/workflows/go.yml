@@ -18,14 +18,14 @@ jobs:
         with:
           go-version: "^1.14.4"
 
-      - name: Set $GOPATH and release variables
+      - name: Set variables
         run: |
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "RELEASE_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-          echo "REPO_URL=github.com/${{ github.repository }}" >> $GITHUB_ENV
-          echo "GOPATH=$(dirname $GITHUB_WORKSPACE)" >> $GITHUB_ENV
-          echo "$(dirname $GITHUB_WORKSPACE)/bin" >> $GITHUB_PATH
         shell: bash
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2.3.3
 
       - name: Get GeoLite2
         env:
@@ -38,23 +38,29 @@ jobs:
 
       - name: Build geoip.dat file
         run: |
-          go get -u -v -insecure $REPO_URL
-          geoip --country=./geoip/GeoLite2-Country-Locations-en.csv --ipv4=./geoip/GeoLite2-Country-Blocks-IPv4.csv --ipv6=./geoip/GeoLite2-Country-Blocks-IPv6.csv --ipv4CN=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
+          go mod download
+          go run ./ --country=./geoip/GeoLite2-Country-Locations-en.csv --ipv4=./geoip/GeoLite2-Country-Blocks-IPv4.csv --ipv6=./geoip/GeoLite2-Country-Blocks-IPv6.csv --ipv4CN=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
 
       - name: Generate geoip.dat sha256 hash
         run: |
           sha256sum geoip.dat > geoip.dat.sha256sum
 
+      - name: Move files to publish directory
+        run: |
+          mkdir -p publish
+          mv geoip.dat geoip.dat.sha256sum ./publish
+
       - name: Git push assets to "release" branch
         run: |
+          cd publish
           git init
           git config --local user.name "actions"
           git config --local user.email "action@github.com"
           git checkout -b release
           git add geoip.dat geoip.dat.sha256sum
           git commit -m "${{ env.RELEASE_NAME }}"
-          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f -u origin release
+          git remote add geoip "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u geoip release
 
       - name: Create a release
         id: create_release
@@ -73,7 +79,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./geoip.dat
+          asset_path: ./publish/geoip.dat
           asset_name: geoip.dat
           asset_content_type: application/octet-stream
 
@@ -83,6 +89,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./geoip.dat.sha256sum
+          asset_path: ./publish/geoip.dat.sha256sum
           asset_name: geoip.dat.sha256sum
           asset_content_type: text/plain

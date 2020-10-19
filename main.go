@@ -17,7 +17,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/infra/conf"
