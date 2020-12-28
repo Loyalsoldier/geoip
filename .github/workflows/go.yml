@@ -7,7 +7,6 @@ on:
       - master
     paths-ignore:
       - "**/README.md"
-      - ".github/**"
 jobs:
   build:
     name: Build
@@ -16,7 +15,7 @@ jobs:
       - name: Set up Go 1.x.y
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.14.4"
+          go-version: "^1.15.6"
 
       - name: Set variables
         run: |
@@ -38,7 +37,6 @@ jobs:
 
       - name: Build geoip.dat file
         run: |
-          go mod download
           go run ./ --country=./geoip/GeoLite2-Country-Locations-en.csv --ipv4=./geoip/GeoLite2-Country-Blocks-IPv4.csv --ipv6=./geoip/GeoLite2-Country-Blocks-IPv6.csv --ipv4CN=https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt
 
       - name: Generate geoip.dat sha256 hash
@@ -52,7 +50,7 @@ jobs:
 
       - name: Git push assets to "release" branch
         run: |
-          cd publish
+          cd publish || exit 1
           git init
           git config --local user.name "actions"
           git config --local user.email "action@github.com"
