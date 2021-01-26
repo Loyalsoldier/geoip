@@ -1,19 +1,28 @@
-# GeoIP List for V2Ray
+# 简介
 
-Automatically weekly release of geoip.dat for V2Ray.
+本项目每周四自动生成适用于 [V2Ray](https://github.com/v2fly/v2ray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go) 的 `geoip.dat` 规则文件。
 
-This product includes GeoLite2 data created by MaxMind, available from [MaxMind](http://www.maxmind.com/), with replaced CN IPv4 CIDR available from [IPIP.net China IP List](https://github.com/17mon/china_ip_list/blob/master/china_ip_list.txt).
+## 与官方版 geoip.dat 不同之处
+
+- 中国大陆 IPv4 地址数据使用 [IPIP.net](https://github.com/17mon/china_ip_list/blob/master/china_ip_list.txt)
+- 新增 `geoip:telegram` 类别，方便黑名单模式用户使用
 
 ## 说明
 
 [Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，需要在自己仓库的 **[Settings]** 选项卡的 **[Secrets]** 页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MAXMIND 账号的 LICENSE KEY，需要[**注册 MAXMIND 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 **[Services]** 项下的 **[My License Key]** 里生成。
 
-## Download links
+## 下载地址
 
-- **geoip.dat**：[https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat](https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat)
-- **geoip.dat.sha256sum**：[https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat.sha256sum](https://github.com/Loyalsoldier/geoip/raw/release/geoip.dat.sha256sum)
+> 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址（`cdn.jsdelivr.net`），但是内容更新会有 12 小时的延迟。
 
-## Usage example
+- **geoip.dat**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat)
+- **geoip.dat.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat.sha256sum)
+
+## 参考配置
 
 ```json
 "routing": {
@@ -37,7 +46,8 @@ This product includes GeoLite2 data created by MaxMind, available from [MaxMind]
         "1.1.1.1/32",
         "1.0.0.1/32",
         "8.8.8.8/32",
-        "8.8.4.4/32"
+        "8.8.4.4/32",
+        "geoip:telegram"
       ]
     },
     {
@@ -65,3 +75,5 @@ This product includes GeoLite2 data created by MaxMind, available from [MaxMind]
 ## License
 
 [CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
+This product includes GeoLite2 data created by MaxMind, available from [MaxMind](http://www.maxmind.com).

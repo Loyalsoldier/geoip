@@ -52,6 +52,30 @@ var privateIPs = []string{
 	"fe80::/10",
 }
 
+var telegramIPs = []string{
+	"109.239.140.0/24",
+	"149.154.160.0/22",
+	"149.154.164.0/22",
+	"149.154.168.0/22",
+	"149.154.172.0/22",
+	"67.198.55.0/24",
+	"91.108.12.0/22",
+	"91.108.16.0/22",
+	"91.108.20.0/22",
+	"91.108.20.0/23",
+	"91.108.4.0/22",
+	"91.108.56.0/22",
+	"91.108.56.0/23",
+	"91.108.8.0/22",
+	"95.161.64.0/20",
+	"95.161.84.0/23",
+	"2001:67c:4e8::/48",
+	"2001:b28:f23c::/48",
+	"2001:b28:f23d::/48",
+	"2001:b28:f23f::/48",
+	"2001:b28:f242::/48",
+}
+
 func getCountryCodeMap() (map[string]string, error) {
 	countryCodeReader, err := os.Open(*countryCodeFile)
 	if err != nil {
@@ -112,6 +136,19 @@ func getPrivateIPs() *router.GeoIP {
 	}
 	return &router.GeoIP{
 		CountryCode: "PRIVATE",
+		Cidr:        cidr,
+	}
+}
+
+func getTelegramIPs() *router.GeoIP {
+	cidr := make([]*router.CIDR, 0, len(telegramIPs))
+	for _, ip := range telegramIPs {
+		c, err := conf.ParseIP(ip)
+		common.Must(err)
+		cidr = append(cidr, c)
+	}
+	return &router.GeoIP{
+		CountryCode: "TELEGRAM",
 		Cidr:        cidr,
 	}
 }
@@ -227,6 +264,7 @@ func main() {
 		})
 	}
 	geoIPList.Entry = append(geoIPList.Entry, getPrivateIPs())
+	geoIPList.Entry = append(geoIPList.Entry, getTelegramIPs())
 
 	geoIPBytes, err := proto.Marshal(geoIPList)
 	if err != nil {
