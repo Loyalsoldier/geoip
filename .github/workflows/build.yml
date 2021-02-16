@@ -44,10 +44,19 @@ jobs:
         run: |
           sha256sum geoip.dat > geoip.dat.sha256sum
 
+      - name: Download GeoLite2
+        env:
+          LICENSE_KEY: ${{ secrets.MAXMIND_GEOLITE2_LICENSE }}
+        run: |
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o GeoLite2-ASN.tar.gz
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o GeoLite2-ASN-CSV.zip
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o GeoLite2-Country.tar.gz
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o GeoLite2-Country-CSV.zip
+
       - name: Move files to publish directory
         run: |
           mkdir -p publish
-          mv geoip.dat geoip.dat.sha256sum ./publish
+          mv geoip.dat geoip.dat.sha256sum *.gz *.zip ./publish
 
       - name: Git push assets to "release" branch
         run: |
@@ -56,7 +65,7 @@ jobs:
           git config --local user.name "actions"
           git config --local user.email "action@github.com"
           git checkout -b release
-          git add geoip.dat geoip.dat.sha256sum
+          git add geoip.dat geoip.dat.sha256sum *.gz *.zip
           git commit -m "${{ env.RELEASE_NAME }}"
           git remote add geoip "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           git push -f -u geoip release
