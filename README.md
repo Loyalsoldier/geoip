@@ -1,6 +1,6 @@
 # 简介
 
-本项目每周四自动生成适用于 [V2Ray](https://github.com/v2fly/v2ray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go) 的 `geoip.dat` 规则文件。
+本项目每周四自动生成 `geoip.dat` 路由规则文件，适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go) 和 [leaf](https://github.com/eycorsican/leaf)。
 
 ## 与官方版 geoip.dat 不同之处
 
