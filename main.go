@@ -14,20 +14,23 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	"google.golang.org/protobuf/proto"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/infra/conf"
 )
 
 var (
-	countryCodeFile = flag.String("country", "", "Path to the country code file")
-	ipv4File        = flag.String("ipv4", "", "Path to the IPv4 block file")
-	ipv6File        = flag.String("ipv6", "", "Path to the IPv6 block file")
+	countryCodeFile = flag.String("country", "GeoLite2-Country-Locations-en.csv", "Path to the country code file")
+	ipv4File        = flag.String("ipv4", "GeoLite2-Country-Blocks-IPv4.csv", "Path to the IPv4 block file")
+	ipv6File        = flag.String("ipv6", "GeoLite2-Country-Blocks-IPv6.csv", "Path to the IPv6 block file")
 	ipv4CNURI       = flag.String("ipv4CN", "", "URI of CN IPv4 CIDR file")
+	outputName      = flag.String("outputname", "geoip.dat", "Name of the generated file")
+	outputDir       = flag.String("outputdir", "./", "Path to the output directory")
 )
 
 var privateIPs = []string{
@@ -229,11 +232,6 @@ func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router
 func main() {
 	flag.Parse()
 
-	if *ipv4File == "" || *ipv6File == "" || *countryCodeFile == "" {
-		fmt.Println("Please specify these options: country, ipv4, ipv6. Or use '-h' for help.")
-		os.Exit(1)
-	}
-
 	ccMap, err := getCountryCodeMap()
 	if err != nil {
 		fmt.Println("Error reading country code map:", err)
@@ -272,10 +270,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := ioutil.WriteFile("geoip.dat", geoIPBytes, 0644); err != nil {
+	// Create output directory if not exist
+	if _, err := os.Stat(*outputDir); os.IsNotExist(err) {
+		os.Mkdir(*outputDir, 0755)
+	}
+
+	if err := ioutil.WriteFile(filepath.Join(*outputDir, *outputName), geoIPBytes, 0644); err != nil {
 		fmt.Println("Error writing geoip to file:", err)
 		os.Exit(1)
 	} else {
-		fmt.Println("geoip.dat has been generated successfully in the directory.")
+		fmt.Println(*outputName, "has been generated successfully.")
 	}
 }
