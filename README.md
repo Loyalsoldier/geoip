@@ -11,6 +11,8 @@
 
 [Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，需要在自己仓库的 **[Settings]** 选项卡的 **[Secrets]** 页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MAXMIND 账号的 LICENSE KEY，需要[**注册 MAXMIND 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 **[Services]** 项下的 **[My License Key]** 里生成。
 
+[Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，在自己仓库的 `data` 目录中添加包含 CIDR 列表的文件，即可往 `geoip.dat` 规则文件内新增类别，文件名即为类别名。如果在 `data` 目录中添加名为 `us` 的文件，即可覆盖掉原本美国的 IPv4 和 IPv6 地址。
+
 ## 下载地址
 
 > 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址（`cdn.jsdelivr.net`），但是内容更新会有 12 小时的延迟。
