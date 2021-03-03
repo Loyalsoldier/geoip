@@ -6,6 +6,7 @@
 package main
 
 import (
+	"bufio"
 	"compress/gzip"
 	"encoding/csv"
 	"errors"
@@ -19,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	"google.golang.org/protobuf/proto"
 )
@@ -29,54 +29,64 @@ var (
 	ipv4File        = flag.String("ipv4", "GeoLite2-Country-Blocks-IPv4.csv", "Path to the IPv4 block file")
 	ipv6File        = flag.String("ipv6", "GeoLite2-Country-Blocks-IPv6.csv", "Path to the IPv6 block file")
 	ipv4CNURI       = flag.String("ipv4CN", "", "URI of CN IPv4 CIDR file")
+	inputDir        = flag.String("inputdir", "./data", "Path to the input directory")
 	outputName      = flag.String("outputname", "geoip.dat", "Name of the generated file")
 	outputDir       = flag.String("outputdir", "./", "Path to the output directory")
 )
 
-var privateIPs = []string{
-	"0.0.0.0/8",
-	"10.0.0.0/8",
-	"100.64.0.0/10",
-	"127.0.0.0/8",
-	"169.254.0.0/16",
-	"172.16.0.0/12",
-	"192.0.0.0/24",
-	"192.0.2.0/24",
-	"192.88.99.0/24",
-	"192.168.0.0/16",
-	"198.18.0.0/15",
-	"198.51.100.0/24",
-	"203.0.113.0/24",
-	"224.0.0.0/4",
-	"240.0.0.0/4",
-	"255.255.255.255/32",
-	"::1/128",
-	"fc00::/7",
-	"fe80::/10",
+func getCidrPerFile(dataDirMap map[string][]*router.CIDR) error {
+	walkErr := filepath.Walk(*inputDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		filename := strings.ToUpper(filepath.Base(path))
+		cidrContainer := make([]*router.CIDR, 0)
+		if err = readFileLineByLine(path, &cidrContainer); err != nil {
+			return err
+		}
+		dataDirMap[filename] = cidrContainer
+
+		return nil
+	})
+
+	if walkErr != nil {
+		return walkErr
+	}
+	return nil
 }
 
-var telegramIPs = []string{
-	"109.239.140.0/24",
-	"149.154.160.0/22",
-	"149.154.164.0/22",
-	"149.154.168.0/22",
-	"149.154.172.0/22",
-	"67.198.55.0/24",
-	"91.108.12.0/22",
-	"91.108.16.0/22",
-	"91.108.20.0/22",
-	"91.108.20.0/23",
-	"91.108.4.0/22",
-	"91.108.56.0/22",
-	"91.108.56.0/23",
-	"91.108.8.0/22",
-	"95.161.64.0/20",
-	"95.161.84.0/23",
-	"2001:67c:4e8::/48",
-	"2001:b28:f23c::/48",
-	"2001:b28:f23d::/48",
-	"2001:b28:f23f::/48",
-	"2001:b28:f242::/48",
+func readFileLineByLine(path string, container *[]*router.CIDR) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		dummyLine := strings.TrimSpace(scanner.Text())
+		if len(dummyLine) == 0 {
+			continue
+		}
+		if i := strings.Index(dummyLine, "#"); i > 0 {
+			dummyLine = strings.TrimSpace(dummyLine[:i])
+		}
+		cidr, err := conf.ParseIP(dummyLine)
+		if err != nil {
+			return err
+		}
+		*container = append(*container, cidr)
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getCountryCodeMap() (map[string]string, error) {
@@ -128,32 +138,6 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 		}
 	}
 	return nil
-}
-
-func getPrivateIPs() *router.GeoIP {
-	cidr := make([]*router.CIDR, 0, len(privateIPs))
-	for _, ip := range privateIPs {
-		c, err := conf.ParseIP(ip)
-		common.Must(err)
-		cidr = append(cidr, c)
-	}
-	return &router.GeoIP{
-		CountryCode: "PRIVATE",
-		Cidr:        cidr,
-	}
-}
-
-func getTelegramIPs() *router.GeoIP {
-	cidr := make([]*router.CIDR, 0, len(telegramIPs))
-	for _, ip := range telegramIPs {
-		c, err := conf.ParseIP(ip)
-		common.Must(err)
-		cidr = append(cidr, c)
-	}
-	return &router.GeoIP{
-		CountryCode: "TELEGRAM",
-		Cidr:        cidr,
-	}
 }
 
 func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
@@ -253,6 +237,10 @@ func main() {
 		fmt.Println("Error loading IPv6 file:", err)
 		os.Exit(1)
 	}
+	if err := getCidrPerFile(cidrList); err != nil {
+		fmt.Println("Error looping data directory:", err)
+		os.Exit(1)
+	}
 
 	geoIPList := new(router.GeoIPList)
 	for cc, cidr := range cidrList {
@@ -261,8 +249,6 @@ func main() {
 			Cidr:        cidr,
 		})
 	}
-	geoIPList.Entry = append(geoIPList.Entry, getPrivateIPs())
-	geoIPList.Entry = append(geoIPList.Entry, getTelegramIPs())
 
 	geoIPBytes, err := proto.Marshal(geoIPList)
 	if err != nil {
