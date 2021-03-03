@@ -272,7 +272,10 @@ func main() {
 
 	// Create output directory if not exist
 	if _, err := os.Stat(*outputDir); os.IsNotExist(err) {
-		os.Mkdir(*outputDir, 0755)
+		if mkErr := os.MkdirAll(*outputDir, 0755); mkErr != nil {
+			fmt.Println("Failed: ", mkErr)
+			os.Exit(1)
+		}
 	}
 
 	if err := ioutil.WriteFile(filepath.Join(*outputDir, *outputName), geoIPBytes, 0644); err != nil {
