@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/rule"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -76,7 +76,7 @@ func readFileLineByLine(path string, container *[]*router.CIDR) error {
 		if i := strings.Index(dummyLine, "#"); i > 0 {
 			dummyLine = strings.TrimSpace(dummyLine[:i])
 		}
-		cidr, err := conf.ParseIP(dummyLine)
+		cidr, err := rule.ParseIP(dummyLine)
 		if err != nil {
 			return err
 		}
@@ -129,7 +129,7 @@ func getCidrPerCountry(file string, m map[string]string, list map[string][]*rout
 		cidrStr := line[0]
 		countryID := line[1]
 		if countryCode, found := m[countryID]; found {
-			cidr, err := conf.ParseIP(cidrStr)
+			cidr, err := rule.ParseIP(cidrStr)
 			if err != nil {
 				return err
 			}
@@ -185,7 +185,7 @@ func getCNIPv4Cidr(path string) (cnIPv4CidrList []string, err error) {
 		fmt.Println("The length of cnIPv4CIDRList is", len(cnIPv4CidrList))
 		return cnIPv4CidrList, nil
 	}
-	err = errors.New("No matching IP CIDR addresses")
+	err = errors.New("no matching IP CIDR addresses")
 	return nil, err
 }
 
@@ -202,7 +202,7 @@ func changeCNIPv4Cidr(url string, m map[string]string, list map[string][]*router
 
 	for _, cnIPv4CIDR := range cnIPv4CIDRList {
 		fmt.Println("Processing CN IPv4 CIDR:", cnIPv4CIDR)
-		cnIPv4CIDR, err := conf.ParseIP(strings.TrimSpace(cnIPv4CIDR))
+		cnIPv4CIDR, err := rule.ParseIP(strings.TrimSpace(cnIPv4CIDR))
 		if err != nil {
 			return err
 		}
