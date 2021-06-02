@@ -8,6 +8,7 @@ on:
       - master
     paths-ignore:
       - "**/README.md"
+      - "data/**"
 jobs:
   build:
     name: Build
@@ -26,6 +27,21 @@ jobs:
 
       - name: Checkout codebase
         uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Update Cloudflare CIDR automatically
+        run: |
+          curl -sSL https://www.cloudflare.com/ips-v4 | grep "/" > data/cloudflare
+          curl -sSL https://www.cloudflare.com/ips-v6 | grep "/" >> data/cloudflare
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ ! -z $(git status | awk '/data\//{print $2}') ]]; then
+            git commit -m "Chore: auto update Cloudflare CIDR" data/cloudflare
+            git push
+          else
+            echo "No modification."
+          fi
 
       - name: Get GeoLite2
         env:
