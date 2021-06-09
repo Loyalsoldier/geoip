@@ -7,6 +7,8 @@
 - 中国大陆 IPv4 地址数据使用 [IPIP.net](https://github.com/17mon/china_ip_list/blob/master/china_ip_list.txt)
 - 新增类别（方便有特殊需求的用户使用）：
   - `geoip:cloudflare`
+  - `geoip:cloudfront`
+  - `geoip:fastly`
   - `geoip:telegram`
 
 ## 说明

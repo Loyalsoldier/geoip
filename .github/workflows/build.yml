@@ -30,17 +30,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update Cloudflare CIDR automatically
+      - name: Update appended CIDR lists automatically
         run: |
           curl -sSL https://www.cloudflare.com/ips-v4 | grep "/" > data/cloudflare
           curl -sSL https://www.cloudflare.com/ips-v6 | grep "/" >> data/cloudflare
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [[ ! -z $(git status | awk '/data\//{print $2}') ]]; then
-            git commit -m "Chore: auto update Cloudflare CIDR" data/cloudflare
+          curl -sSL https://api.fastly.com/public-ip-list | jq --raw-output '.addresses[],.ipv6_addresses[]' > data/fastly
+          curl -sSL https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips | jq --raw-output '.CLOUDFRONT_GLOBAL_IP_LIST[],.CLOUDFRONT_REGIONAL_EDGE_IP_LIST[]' > data/cloudfront
+
+      - name: Commit file changes
+        run: |
+          if [[ ! -z $(git status | awk '/data\//{print $0}') ]]; then
+            git config --local user.name "github-actions[bot]"
+            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Chore: auto update appended CIDR list(s)" data/*
             git push
           else
-            echo "No modification."
+            echo "No modifications."
           fi
 
       - name: Get GeoLite2
