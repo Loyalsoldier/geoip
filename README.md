@@ -9,6 +9,7 @@
   - `geoip:cloudflare`
   - `geoip:cloudfront`
   - `geoip:fastly`
+  - `geoip:netflix`
   - `geoip:telegram`
 
 ## 说明

@@ -21,21 +21,37 @@ jobs:
 
       - name: Set variables
         run: |
+          echo "PATH=$(go env GOPATH)/bin:${PATH}" >> $GITHUB_ENV
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "RELEASE_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
+
+      - name: Install cidr-merger
+        run: |
+          go get github.com/zhanhb/cidr-merger
 
       - name: Checkout codebase
         uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
-      - name: Update appended CIDR lists automatically
+      - name: Fetch lists from ripe.net
         run: |
-          curl -sSL https://www.cloudflare.com/ips-v4 | grep "/" > data/cloudflare
+          chmod +x asn.sh
+          ./asn.sh
+
+      - name: Append more CIDRs
+        run: |
+          curl -sSL https://www.cloudflare.com/ips-v4 | grep "/" >> data/cloudflare
           curl -sSL https://www.cloudflare.com/ips-v6 | grep "/" >> data/cloudflare
-          curl -sSL https://api.fastly.com/public-ip-list | jq --raw-output '.addresses[],.ipv6_addresses[]' > data/fastly
-          curl -sSL https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips | jq --raw-output '.CLOUDFRONT_GLOBAL_IP_LIST[],.CLOUDFRONT_REGIONAL_EDGE_IP_LIST[]' > data/cloudfront
+          curl -sSL https://api.fastly.com/public-ip-list | jq --raw-output '.addresses[],.ipv6_addresses[]' >> data/fastly
+          curl -sSL https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips | jq --raw-output '.CLOUDFRONT_GLOBAL_IP_LIST[],.CLOUDFRONT_REGIONAL_EDGE_IP_LIST[]' >> data/cloudfront
+
+      - name: Merge CIDR in files except ./data/private
+        run: |
+          for file in $(find ./data -type f ! -name "private"); do
+            cidr-merger --batch -s -o ${file} ${file}
+          done
 
       - name: Commit file changes
         run: |
