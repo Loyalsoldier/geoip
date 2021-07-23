@@ -1,4 +1,3 @@
-commit_message: 🔄 Update file via sync
 name: gh_fsync
 
 on:
@@ -12,11 +11,11 @@ jobs:
   file_sync:
     runs-on: ubuntu-latest
     steps:
-    name: gh_fsync
-    uses: gleich/gh_fsync@v1.2.0
-    files:
-     - path: data/pak
-     source: https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list
-
-
-    
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: gh_fsync
+        uses: gleich/gh_fsync@master
+        files:
+      - path: CONTRIBUTING.md
+         source: 'https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list'
+ 
