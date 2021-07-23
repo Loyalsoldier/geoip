@@ -1,5 +1,12 @@
-on: workflow_dispatch
+name: Clash Ruleset
 
+on: 
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '10 0 * * *' 
+ # watch: 
+   # types: started 
+  workflow_dispatch:
 jobs:
 
   build:
