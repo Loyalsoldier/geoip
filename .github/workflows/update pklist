@@ -1,0 +1,22 @@
+commit_message: 🔄 Update file via sync
+name: gh_fsync
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '*/30 * * * *' # Runs every 30 minutes
+
+jobs:
+  file_sync:
+    runs-on: ubuntu-latest
+    steps:
+    name: gh_fsync
+    uses: gleich/gh_fsync@v1.2.0
+    files:
+     - path: data/pak
+     source: https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list
+
+
+    
