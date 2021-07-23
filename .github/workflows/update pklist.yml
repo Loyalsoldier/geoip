@@ -1,21 +1,24 @@
-name: gh_fsync
-
+name: Build V2Ray rules dat files
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 22 * * *"
   push:
     branches:
       - master
-  schedule:
-    - cron: '*/30 * * * *' # Runs every 30 minutes
-
+    paths-ignore:
+      - "**/README.md"
 jobs:
-  file_sync:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-      - name: gh_fsync
-        uses: gleich/gh_fsync@master
-        files:
-      - path: CONTRIBUTING.md
-         source: 'https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list'
- 
+      - name: Setup Go 1.x.y
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.16
+      - name: Get geoip.dat relative files
+        run: |
+          wget https://raw.githubusercontent.com/cbuijs/ripe-geo/master/countries/pk.list
+      - name: Move and zip files and generate sha256 hash
+        run: |
+          install -Dp ./pk.list /data/pak || exit 1
