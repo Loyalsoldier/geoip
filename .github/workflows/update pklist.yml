@@ -1,16 +1,14 @@
-name: Build V2Ray rules dat files
+name: copy files
 on: workflow_dispatch
 jobs:
+
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go 1.x.y
-        uses: actions/setup-go@v2
-        with:
-          go-version: ^1.16
-      - name: Get geoip.dat relative files
-        run: |
-          wget https://raw.githubusercontent.com/cbuijs/ripe-geo/master/countries/pk.list
-      - name: Move and zip files and generate sha256 hash
-        run: |
-          install -Dp ./pk.list /data/pak || exit 1
+    - uses: actions/checkout@master
+    - name: copy file
+      uses: canastro/copy-file-action@master
+      with:
+        source: "https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list"
+        target: "test-a.txt"
