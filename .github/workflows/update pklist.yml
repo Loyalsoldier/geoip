@@ -7,8 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: copy file
-      uses: canastro/copy-file-action@master
+    - name: CI
+      run: |
+        cd ./data
+        rm -f ./pak
+        curl -o ./pak https://raw.githubusercontent.com/cbuijs/ripe-geo/master/countries/pk.list
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
       with:
-        source: "https://github.com/cbuijs/ripe-geo/blob/master/countries/pk.list"
-        target: "test-a.txt"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: 'main'
