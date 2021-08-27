@@ -1,0 +1,143 @@
+{
+  "input": [
+    {
+      "type": "maxmindGeoLite2CountryCSV",
+      "action": "add",
+      "args": {
+        "country": "./geolite2/GeoLite2-Country-Locations-en.csv",
+        "ipv4": "./geolite2/GeoLite2-Country-Blocks-IPv4.csv",
+        "ipv6": "./geolite2/GeoLite2-Country-Blocks-IPv6.csv",
+        "wantedList": ["cn", "us"]
+      }
+    },
+    {
+      "type": "maxmindGeoLite2CountryCSV",
+      "action": "remove",
+      "args": {
+        "country": "./geolite2/GeoLite2-Country-Locations-en.csv",
+        "ipv4": "./geolite2/GeoLite2-Country-Blocks-IPv4.csv",
+        "ipv6": "./geolite2/GeoLite2-Country-Blocks-IPv6.csv",
+        "wantedList": ["cn"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "inputDir": "./data",
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "mylist",
+        "uri": "./an/example/dir/mycidr.txt",
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "uri": "https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt",
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "private",
+      "action": "add"
+    },
+    {
+      "type": "test",
+      "action": "add"
+    }
+  ],
+  "output": [
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputName": "geoip.dat",
+        "outputDir": "./publish"
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputName": "geoip-only-cn-private.dat",
+        "outputDir": "./publish",
+        "wantedList": ["cn", "private"]
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish",
+        "oneFilePerList": true,
+        "wantedList": ["cn", "private", "test"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output"
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "outputName": "country-only-cn-private.mmdb",
+        "wantedList": ["cn", "private"]
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish",
+        "outputName": "country-only-cn-private.mmdb",
+        "wantedList": ["cn", "private"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish",
+        "wantedList": ["cn", "us", "private"],
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "clashRuleSetClassical",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "private", "test"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "clashRuleSet",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "private", "test"],
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "surgeRuleSet",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "private", "test"],
+        "onlyIPType": "ipv4"
+      }
+    }
+  ]
+}
