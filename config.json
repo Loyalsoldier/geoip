@@ -67,8 +67,10 @@
           "cloudfront",
           "facebook",
           "fastly",
+          "google",
           "netflix",
-          "telegram"
+          "telegram",
+          "twitter"
         ]
       }
     },
@@ -105,8 +107,10 @@
           "cloudfront",
           "facebook",
           "fastly",
+          "google",
           "netflix",
-          "telegram"
+          "telegram",
+          "twitter"
         ]
       }
     }
