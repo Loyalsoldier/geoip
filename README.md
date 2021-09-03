@@ -2,7 +2,7 @@
 
 本项目每周四自动生成 GeoIP 文件，同时提供命令行界面（CLI）供用户自行定制 GeoIP 文件，包括但不限于 V2Ray dat 格式路由规则文件 `geoip.dat` 和 MaxMind mmdb 格式文件 `Country.mmdb`。
 
-This project releases GeoIP files automatically every Thursday. It also provides a command line interface(CLI) for users to customize their own GeoIP files, included but not limited to V2Ray dat format file `geoip.dat` and MaxMind mmdb format file `country.mmdb`.
+This project releases GeoIP files automatically every Thursday. It also provides a command line interface(CLI) for users to customize their own GeoIP files, included but not limited to V2Ray dat format file `geoip.dat` and MaxMind mmdb format file `Country.mmdb`.
 
 ## 与官方版 GeoIP 的区别
 
@@ -12,8 +12,10 @@ This project releases GeoIP files automatically every Thursday. It also provides
   - `geoip:cloudfront`（`GEOIP,CLOUDFRONT`）
   - `geoip:facebook`（`GEOIP,FACEBOOK`）
   - `geoip:fastly`（`GEOIP,FASTLY`）
+  - `geoip:google`（`GEOIP,GOOGLE`）
   - `geoip:netflix`（`GEOIP,NETFLIX`）
   - `geoip:telegram`（`GEOIP,TELEGRAM`）
+  - `geoip:twitter`（`GEOIP,TWITTER`）
 
 ## 参考配置
 
