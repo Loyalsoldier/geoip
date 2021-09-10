@@ -7,7 +7,7 @@ require (
 	github.com/v2fly/v2ray-core/v4 v4.42.1
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
-	inet.af/netaddr v0.0.0-20210729200904-31d5ee66059c
+	inet.af/netaddr v0.0.0-20210903134321-85fa6c94624e
 )
 
 require (
