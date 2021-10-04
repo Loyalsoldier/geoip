@@ -66,8 +66,6 @@ func (t *test) Input(container lib.Container) (lib.Container, error) {
 		}
 	case lib.ActionRemove:
 		container.Remove(entryNameTest)
-	case lib.ActionReplace:
-		container.Replace(entry)
 	default:
 		return nil, lib.ErrUnknownAction
 	}

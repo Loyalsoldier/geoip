@@ -84,8 +84,6 @@ func (p *private) Input(container lib.Container) (lib.Container, error) {
 		}
 	case lib.ActionRemove:
 		container.Remove(entryNamePrivate)
-	case lib.ActionReplace:
-		container.Replace(entry)
 	default:
 		return nil, lib.ErrUnknownAction
 	}

@@ -129,8 +129,6 @@ func (g *geoLite2CountryCSV) Input(container lib.Container) (lib.Container, erro
 			}
 		case lib.ActionRemove:
 			container.Remove(name, ignoreIPType)
-		case lib.ActionReplace:
-			container.Replace(entry, ignoreIPType)
 		default:
 			return nil, lib.ErrUnknownAction
 		}

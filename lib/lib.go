@@ -11,20 +11,18 @@ import (
 )
 
 const (
-	ActionAdd     Action = "add"
-	ActionRemove  Action = "remove"
-	ActionReplace Action = "replace"
-	ActionOutput  Action = "output"
+	ActionAdd    Action = "add"
+	ActionRemove Action = "remove"
+	ActionOutput Action = "output"
 
 	IPv4 IPType = "ipv4"
 	IPv6 IPType = "ipv6"
 )
 
 var ActionsRegistry = map[Action]bool{
-	ActionAdd:     true,
-	ActionRemove:  true,
-	ActionReplace: true,
-	ActionOutput:  true,
+	ActionAdd:    true,
+	ActionRemove: true,
+	ActionOutput: true,
 }
 
 type Action string
@@ -326,7 +324,6 @@ type Container interface {
 	GetEntry(name string) (*Entry, bool)
 	Add(entry *Entry, opts ...IgnoreIPOption) error
 	Remove(name string, opts ...IgnoreIPOption)
-	Replace(entry *Entry, opts ...IgnoreIPOption)
 	Loop() <-chan *Entry
 }
 
@@ -456,23 +453,4 @@ func (c *container) Remove(name string, opts ...IgnoreIPOption) {
 	default:
 		c.entries.Delete(name)
 	}
-}
-
-func (c *container) Replace(entry *Entry, opts ...IgnoreIPOption) {
-	var ignoreIPType IPType
-	for _, opt := range opts {
-		if opt != nil {
-			ignoreIPType = opt()
-		}
-	}
-
-	switch ignoreIPType {
-	case IPv4:
-		entry.ipv4Builder = nil
-	case IPv6:
-		entry.ipv6Builder = nil
-	}
-
-	name := entry.GetName()
-	c.entries.Store(name, entry)
 }

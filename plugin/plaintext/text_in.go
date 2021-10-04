@@ -117,8 +117,6 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 			}
 		case lib.ActionRemove:
 			container.Remove(entry.GetName(), ignoreIPType)
-		case lib.ActionReplace:
-			container.Replace(entry, ignoreIPType)
 		}
 	}
 
