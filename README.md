@@ -210,6 +210,11 @@ All available output formats:
   - text (Convert data to plaintext CIDR format)
 ```
 
+## 激赏 | Donation
+
+- **比特币（BTC）bech32 地址**：bc1qfe4nxcanet4w4ph8pf6qqyf263y68vw26nv9j9
+- **比特币（BTC）地址**：3PRyneb1D7jFFBakAaJiCRSsxsXAtMr7LN
+
 ## License
 
 [CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/)
