@@ -1,6 +1,38 @@
 {
   "input": [
     {
+      "type": "v2rayGeoIPDat",
+      "action": "add",
+      "args": {
+        "uri": "./geoip.dat",
+        "wantedList": ["cn", "us"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "add",
+      "args": {
+        "uri": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat",
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "remove",
+      "args": {
+        "wantedList": ["tw", "hk"],
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "remove",
+      "args": {
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
       "type": "maxmindGeoLite2CountryCSV",
       "action": "add",
       "args": {
