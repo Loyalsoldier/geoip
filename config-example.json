@@ -18,21 +18,6 @@
       }
     },
     {
-      "type": "v2rayGeoIPDat",
-      "action": "remove",
-      "args": {
-        "wantedList": ["tw", "hk"],
-        "onlyIPType": "ipv6"
-      }
-    },
-    {
-      "type": "v2rayGeoIPDat",
-      "action": "remove",
-      "args": {
-        "onlyIPType": "ipv6"
-      }
-    },
-    {
       "type": "maxmindGeoLite2CountryCSV",
       "action": "add",
       "args": {
@@ -46,8 +31,15 @@
       "type": "cutter",
       "action": "remove",
       "args": {
-        "wantedList": ["cn"],
+        "wantedList": ["cn", "us"],
         "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "cutter",
+      "action": "remove",
+      "args": {
+        "onlyIPType": "ipv6"
       }
     },
     {

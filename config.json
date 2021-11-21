@@ -10,12 +10,9 @@
       }
     },
     {
-      "type": "maxmindGeoLite2CountryCSV",
+      "type": "cutter",
       "action": "remove",
       "args": {
-        "country": "./geolite2/GeoLite2-Country-Locations-en.csv",
-        "ipv4": "./geolite2/GeoLite2-Country-Blocks-IPv4.csv",
-        "ipv6": "./geolite2/GeoLite2-Country-Blocks-IPv6.csv",
         "wantedList": ["cn"],
         "onlyIPType": "ipv4"
       }
