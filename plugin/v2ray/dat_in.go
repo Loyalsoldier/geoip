@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
-	"github.com/v2fly/v2ray-core/v4/app/router"
+	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"google.golang.org/protobuf/proto"
 )
 

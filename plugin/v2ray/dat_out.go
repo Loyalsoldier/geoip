@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/rule"
+	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/rule"
 	"google.golang.org/protobuf/proto"
 )
 
