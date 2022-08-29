@@ -38,6 +38,7 @@ func newMMDB(action lib.Action, data json.RawMessage) (lib.OutputConverter, erro
 		OutputName string     `json:"outputName"`
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
+		Overwrite  []string   `json:"overwriteList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
 
@@ -62,6 +63,7 @@ func newMMDB(action lib.Action, data json.RawMessage) (lib.OutputConverter, erro
 		OutputName:  tmp.OutputName,
 		OutputDir:   tmp.OutputDir,
 		Want:        tmp.Want,
+		Overwrite:   tmp.Overwrite,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -73,6 +75,7 @@ type mmdb struct {
 	OutputName  string
 	OutputDir   string
 	Want        []string
+	Overwrite   []string
 	OnlyIPType  lib.IPType
 }
 
@@ -89,14 +92,6 @@ func (m *mmdb) GetDescription() string {
 }
 
 func (m *mmdb) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range m.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
 	writer, err := mmdbwriter.New(
 		mmdbwriter.Options{
 			DatabaseType:            "GeoLite2-Country",
@@ -110,27 +105,16 @@ func (m *mmdb) Output(container lib.Container) error {
 	}
 
 	updated := false
-	switch len(wantList) {
-	case 0:
-		for entry := range container.Loop() {
-			if err := m.marshalData(writer, entry); err != nil {
-				return err
-			}
-			updated = true
+	for _, name := range m.getEntryNameListInOrder(container) {
+		entry, found := container.GetEntry(name)
+		if !found {
+			log.Printf("❌ entry %s not found", name)
+			continue
 		}
-
-	default:
-		for name := range wantList {
-			entry, found := container.GetEntry(name)
-			if !found {
-				log.Printf("❌ entry %s not found", name)
-				continue
-			}
-			if err := m.marshalData(writer, entry); err != nil {
-				return err
-			}
-			updated = true
+		if err := m.marshalData(writer, entry); err != nil {
+			return err
 		}
+		updated = true
 	}
 
 	if updated {
@@ -142,6 +126,53 @@ func (m *mmdb) Output(container lib.Container) error {
 	}
 
 	return nil
+}
+
+func (m *mmdb) getEntryNameListInOrder(container lib.Container) []string {
+	/*
+		Note: The IPs and/or CIDRs of the latter list will overwrite those of the former one
+		when duplicated data found due to MaxMind mmdb file format constraint.
+
+		Be sure to place the name of the most important list at last
+		when writing wantedList and overwriteList in config file.
+
+		The order of names in wantedList has a higher priority than which of the overwriteList.
+	*/
+
+	wantList := make([]string, 0, 200)
+	for _, want := range m.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList = append(wantList, want)
+		}
+	}
+
+	if len(wantList) > 0 {
+		return wantList
+	}
+
+	overwriteList := make([]string, 0, 200)
+	overwriteMap := make(map[string]bool)
+	for _, overwrite := range m.Overwrite {
+		if overwrite = strings.ToUpper(strings.TrimSpace(overwrite)); overwrite != "" {
+			overwriteList = append(overwriteList, overwrite)
+			overwriteMap[overwrite] = true
+		}
+	}
+
+	list := make([]string, 0, 200)
+	for entry := range container.Loop() {
+		name := entry.GetName()
+		_, found := overwriteMap[name]
+		if found {
+			continue
+		}
+		list = append(list, name)
+	}
+
+	// Make sure the names in overwriteList are written at last
+	list = append(list, overwriteList...)
+
+	return list
 }
 
 func (m *mmdb) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry) error {

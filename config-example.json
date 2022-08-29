@@ -113,6 +113,14 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
+        "outputName": "Country.mmdb",
+        "overwriteList": ["cn", "private"]
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
         "outputName": "country-only-cn-private.mmdb",
         "wantedList": ["cn", "private"]
       }
