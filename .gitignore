@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-.tmp/
+tmp/
 data/
 geolite2/
 output/
