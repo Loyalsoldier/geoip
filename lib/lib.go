@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/netip"
 	"strings"
 	"sync"
 
-	"inet.af/netaddr"
+	"go4.org/netipx"
 )
 
 const (
@@ -58,16 +59,16 @@ type OutputConverter interface {
 type Entry struct {
 	name        string
 	mu          *sync.Mutex
-	ipv4Builder *netaddr.IPSetBuilder
-	ipv6Builder *netaddr.IPSetBuilder
+	ipv4Builder *netipx.IPSetBuilder
+	ipv6Builder *netipx.IPSetBuilder
 }
 
 func NewEntry(name string) *Entry {
 	return &Entry{
 		name:        strings.ToUpper(strings.TrimSpace(name)),
 		mu:          new(sync.Mutex),
-		ipv4Builder: new(netaddr.IPSetBuilder),
-		ipv6Builder: new(netaddr.IPSetBuilder),
+		ipv4Builder: new(netipx.IPSetBuilder),
+		ipv6Builder: new(netipx.IPSetBuilder),
 	}
 }
 
@@ -83,30 +84,30 @@ func (e *Entry) hasIPv6Builder() bool {
 	return e.ipv6Builder != nil
 }
 
-func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error) {
+func (e *Entry) processPrefix(src interface{}) (*netip.Prefix, IPType, error) {
 	switch src := src.(type) {
 	case net.IP:
-		ip, ok := netaddr.FromStdIP(src)
+		ip, ok := netipx.FromStdIP(src)
 		if !ok {
 			return nil, "", ErrInvalidIP
 		}
 		switch {
 		case ip.Is4():
-			prefix := netaddr.IPPrefixFrom(ip, 32)
+			prefix := netip.PrefixFrom(ip, 32)
 			return &prefix, IPv4, nil
 		case ip.Is6():
-			prefix := netaddr.IPPrefixFrom(ip, 128)
+			prefix := netip.PrefixFrom(ip, 128)
 			return &prefix, IPv6, nil
 		default:
 			return nil, "", ErrInvalidIPLength
 		}
 
 	case *net.IPNet:
-		prefix, ok := netaddr.FromStdIPNet(src)
+		prefix, ok := netipx.FromStdIPNet(src)
 		if !ok {
 			return nil, "", ErrInvalidIPNet
 		}
-		ip := prefix.IP()
+		ip := prefix.Addr()
 		switch {
 		case ip.Is4():
 			return &prefix, IPv4, nil
@@ -116,32 +117,32 @@ func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error
 			return nil, "", ErrInvalidIPLength
 		}
 
-	case netaddr.IP:
+	case netip.Addr:
 		switch {
 		case src.Is4():
-			prefix := netaddr.IPPrefixFrom(src, 32)
+			prefix := netip.PrefixFrom(src, 32)
 			return &prefix, IPv4, nil
 		case src.Is6():
-			prefix := netaddr.IPPrefixFrom(src, 128)
+			prefix := netip.PrefixFrom(src, 128)
 			return &prefix, IPv6, nil
 		default:
 			return nil, "", ErrInvalidIPLength
 		}
 
-	case *netaddr.IP:
+	case *netip.Addr:
 		switch {
 		case src.Is4():
-			prefix := netaddr.IPPrefixFrom(*src, 32)
+			prefix := netip.PrefixFrom(*src, 32)
 			return &prefix, IPv4, nil
 		case src.Is6():
-			prefix := netaddr.IPPrefixFrom(*src, 128)
+			prefix := netip.PrefixFrom(*src, 128)
 			return &prefix, IPv6, nil
 		default:
 			return nil, "", ErrInvalidIPLength
 		}
 
-	case netaddr.IPPrefix:
-		ip := src.IP()
+	case netip.Prefix:
+		ip := src.Addr()
 		switch {
 		case ip.Is4():
 			return &src, IPv4, nil
@@ -151,8 +152,8 @@ func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error
 			return nil, "", ErrInvalidIPLength
 		}
 
-	case *netaddr.IPPrefix:
-		ip := src.IP()
+	case *netip.Prefix:
+		ip := src.Addr()
 		switch {
 		case ip.Is4():
 			return src, IPv4, nil
@@ -166,11 +167,11 @@ func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error
 		_, network, err := net.ParseCIDR(src)
 		switch err {
 		case nil:
-			prefix, ok := netaddr.FromStdIPNet(network)
+			prefix, ok := netipx.FromStdIPNet(network)
 			if !ok {
 				return nil, "", ErrInvalidIPNet
 			}
-			ip := prefix.IP()
+			ip := prefix.Addr()
 			switch {
 			case ip.Is4():
 				return &prefix, IPv4, nil
@@ -179,17 +180,18 @@ func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error
 			default:
 				return nil, "", ErrInvalidIPLength
 			}
+
 		default:
-			ip, err := netaddr.ParseIP(src)
+			ip, err := netip.ParseAddr(src)
 			if err != nil {
 				return nil, "", err
 			}
 			switch {
 			case ip.Is4():
-				prefix := netaddr.IPPrefixFrom(ip, 32)
+				prefix := netip.PrefixFrom(ip, 32)
 				return &prefix, IPv4, nil
 			case ip.Is6():
-				prefix := netaddr.IPPrefixFrom(ip, 128)
+				prefix := netip.PrefixFrom(ip, 128)
 				return &prefix, IPv6, nil
 			default:
 				return nil, "", ErrInvalidIPLength
@@ -200,19 +202,19 @@ func (e *Entry) processPrefix(src interface{}) (*netaddr.IPPrefix, IPType, error
 	return nil, "", ErrInvalidPrefixType
 }
 
-func (e *Entry) add(prefix *netaddr.IPPrefix, ipType IPType) error {
+func (e *Entry) add(prefix *netip.Prefix, ipType IPType) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	switch ipType {
 	case IPv4:
 		if !e.hasIPv4Builder() {
-			e.ipv4Builder = new(netaddr.IPSetBuilder)
+			e.ipv4Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv4Builder.AddPrefix(*prefix)
 	case IPv6:
 		if !e.hasIPv6Builder() {
-			e.ipv6Builder = new(netaddr.IPSetBuilder)
+			e.ipv6Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv6Builder.AddPrefix(*prefix)
 	default:
@@ -222,7 +224,7 @@ func (e *Entry) add(prefix *netaddr.IPPrefix, ipType IPType) error {
 	return nil
 }
 
-func (e *Entry) remove(prefix *netaddr.IPPrefix, ipType IPType) error {
+func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -379,7 +381,7 @@ func (c *container) Add(entry *Entry, opts ...IgnoreIPOption) error {
 	val, found := c.GetEntry(name)
 	switch found {
 	case true:
-		var ipv4set, ipv6set *netaddr.IPSet
+		var ipv4set, ipv6set *netipx.IPSet
 		var err4, err6 error
 		if entry.hasIPv4Builder() {
 			ipv4set, err4 = entry.ipv4Builder.IPSet()
@@ -396,20 +398,20 @@ func (c *container) Add(entry *Entry, opts ...IgnoreIPOption) error {
 		switch ignoreIPType {
 		case IPv4:
 			if !val.hasIPv6Builder() {
-				val.ipv6Builder = new(netaddr.IPSetBuilder)
+				val.ipv6Builder = new(netipx.IPSetBuilder)
 			}
 			val.ipv6Builder.AddSet(ipv6set)
 		case IPv6:
 			if !val.hasIPv4Builder() {
-				val.ipv4Builder = new(netaddr.IPSetBuilder)
+				val.ipv4Builder = new(netipx.IPSetBuilder)
 			}
 			val.ipv4Builder.AddSet(ipv4set)
 		default:
 			if !val.hasIPv4Builder() {
-				val.ipv4Builder = new(netaddr.IPSetBuilder)
+				val.ipv4Builder = new(netipx.IPSetBuilder)
 			}
 			if !val.hasIPv6Builder() {
-				val.ipv6Builder = new(netaddr.IPSetBuilder)
+				val.ipv6Builder = new(netipx.IPSetBuilder)
 			}
 			val.ipv4Builder.AddSet(ipv4set)
 			val.ipv6Builder.AddSet(ipv6set)
