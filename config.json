@@ -107,6 +107,23 @@
       }
     },
     {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "outputName": "Country-asn.mmdb",
+        "wantedList": [
+          "cloudflare",
+          "cloudfront",
+          "facebook",
+          "fastly",
+          "google",
+          "netflix",
+          "telegram",
+          "twitter"
+        ]
+      }
+    },
+    {
       "type": "text",
       "action": "output"
     }
