@@ -99,7 +99,8 @@ func (m *mmdb) Output(container lib.Container) error {
 
 	writer, err := mmdbwriter.New(
 		mmdbwriter.Options{
-			DatabaseType:            "GeoIP2-Country",
+			DatabaseType:            "GeoLite2-Country",
+			Description:             map[string]string{"en": "Customized GeoLite2 Country database"},
 			RecordSize:              24,
 			IncludeReservedNetworks: true,
 		},
