@@ -84,7 +84,7 @@ func (e *Entry) hasIPv6Builder() bool {
 	return e.ipv6Builder != nil
 }
 
-func (e *Entry) processPrefix(src interface{}) (*netip.Prefix, IPType, error) {
+func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 	switch src := src.(type) {
 	case net.IP:
 		ip, ok := netipx.FromStdIP(src)
@@ -244,7 +244,7 @@ func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 	return nil
 }
 
-func (e *Entry) AddPrefix(cidr interface{}) error {
+func (e *Entry) AddPrefix(cidr any) error {
 	prefix, ipType, err := e.processPrefix(cidr)
 	if err != nil {
 		return err
@@ -360,7 +360,7 @@ func (c *container) GetEntry(name string) (*Entry, bool) {
 func (c *container) Loop() <-chan *Entry {
 	ch := make(chan *Entry, 300)
 	go func() {
-		c.entries.Range(func(key, value interface{}) bool {
+		c.entries.Range(func(key, value any) bool {
 			ch <- value.(*Entry)
 			return true
 		})
