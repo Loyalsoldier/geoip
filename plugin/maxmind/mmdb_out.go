@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	typeMaxmindMMDB = "maxmindMMDB"
-	descMaxmindMMDB = "Convert data to MaxMind mmdb database format"
+	typeMaxmindMMDBOut = "maxmindMMDB"
+	descMaxmindMMDBOut = "Convert data to MaxMind mmdb database format"
 )
 
 var (
@@ -25,15 +25,15 @@ var (
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(typeMaxmindMMDB, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newMMDB(action, data)
+	lib.RegisterOutputConfigCreator(typeMaxmindMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+		return newMMDBOut(action, data)
 	})
-	lib.RegisterOutputConverter(typeMaxmindMMDB, &mmdb{
-		Description: descMaxmindMMDB,
+	lib.RegisterOutputConverter(typeMaxmindMMDBOut, &mmdbOut{
+		Description: descMaxmindMMDBOut,
 	})
 }
 
-func newMMDB(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newMMDBOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputName string     `json:"outputName"`
 		OutputDir  string     `json:"outputDir"`
@@ -56,10 +56,10 @@ func newMMDB(action lib.Action, data json.RawMessage) (lib.OutputConverter, erro
 		tmp.OutputDir = defaultOutputDir
 	}
 
-	return &mmdb{
-		Type:        typeMaxmindMMDB,
+	return &mmdbOut{
+		Type:        typeMaxmindMMDBOut,
 		Action:      action,
-		Description: descMaxmindMMDB,
+		Description: descMaxmindMMDBOut,
 		OutputName:  tmp.OutputName,
 		OutputDir:   tmp.OutputDir,
 		Want:        tmp.Want,
@@ -68,7 +68,7 @@ func newMMDB(action lib.Action, data json.RawMessage) (lib.OutputConverter, erro
 	}, nil
 }
 
-type mmdb struct {
+type mmdbOut struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -79,19 +79,19 @@ type mmdb struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *mmdb) GetType() string {
+func (m *mmdbOut) GetType() string {
 	return m.Type
 }
 
-func (m *mmdb) GetAction() lib.Action {
+func (m *mmdbOut) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *mmdb) GetDescription() string {
+func (m *mmdbOut) GetDescription() string {
 	return m.Description
 }
 
-func (m *mmdb) Output(container lib.Container) error {
+func (m *mmdbOut) Output(container lib.Container) error {
 	writer, err := mmdbwriter.New(
 		mmdbwriter.Options{
 			DatabaseType:            "GeoLite2-Country",
@@ -128,7 +128,7 @@ func (m *mmdb) Output(container lib.Container) error {
 	return nil
 }
 
-func (m *mmdb) getEntryNameListInOrder(container lib.Container) []string {
+func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 	/*
 		Note: The IPs and/or CIDRs of the latter list will overwrite those of the former one
 		when duplicated data found due to MaxMind mmdb file format constraint.
@@ -175,7 +175,7 @@ func (m *mmdb) getEntryNameListInOrder(container lib.Container) []string {
 	return list
 }
 
-func (m *mmdb) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry) error {
+func (m *mmdbOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry) error {
 	var entryCidr []string
 	var err error
 	switch m.OnlyIPType {
@@ -209,7 +209,7 @@ func (m *mmdb) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry) error {
 	return nil
 }
 
-func (m *mmdb) writeFile(filename string, writer *mmdbwriter.Tree) error {
+func (m *mmdbOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
 	if err := os.MkdirAll(m.OutputDir, 0755); err != nil {
 		return err
 	}
