@@ -3,8 +3,9 @@ module github.com/Loyalsoldier/geoip
 go 1.19
 
 require (
-	github.com/maxmind/mmdbwriter v0.0.0-20220825163615-57af2a70279f
-	github.com/v2fly/v2ray-core/v5 v5.0.8
+	github.com/maxmind/mmdbwriter v0.0.0-20220830183856-fffdfa44ff0b
+	github.com/oschwald/maxminddb-golang v1.10.0
+	github.com/v2fly/v2ray-core/v5 v5.1.0
 	go4.org/netipx v0.0.0-20220812043211-3cc044ffd68d
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -16,7 +17,6 @@ require (
 	github.com/lucas-clemente/quic-go v0.28.1 // indirect
 	github.com/marten-seemann/qtls-go1-18 v0.1.2 // indirect
 	github.com/marten-seemann/qtls-go1-19 v0.1.0-beta.1 // indirect
-	github.com/oschwald/maxminddb-golang v1.10.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pires/go-proxyproto v0.6.2 // indirect
 	go.starlark.net v0.0.0-20220302181546-5411bad688d1 // indirect
