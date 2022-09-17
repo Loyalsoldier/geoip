@@ -28,6 +28,35 @@
       }
     },
     {
+      "type": "maxmindMMDB",
+      "action": "add"
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "add",
+      "args": {
+        "uri": "./path/to/your/mmdb/file",
+        "wantedList": ["cn", "us"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "add",
+      "args": {
+        "uri": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "remove",
+      "args": {
+        "uri": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb",
+        "wantedList": ["jp"],
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
       "type": "cutter",
       "action": "remove",
       "args": {
