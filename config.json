@@ -128,7 +128,7 @@
       "type": "text",
       "action": "output",
       "args": {
-        "outputName": "onlyCiderCNPrivate.text",
+        "outputName": "onlyCiderCNPrivate.dat",
         "wantedList": ["cn", "private"]
       }
     },
