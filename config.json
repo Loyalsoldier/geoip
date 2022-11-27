@@ -124,6 +124,14 @@
         "wantedList": ["cn", "private"]
       }
     },
+        {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputName": "Country-only-cn-private.text",
+        "wantedList": ["cn", "private"]
+      }
+    },
     {
       "type": "maxmindMMDB",
       "action": "output",
