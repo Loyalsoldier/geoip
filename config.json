@@ -129,7 +129,7 @@
       "action": "output",
       "args": {
         "outputDir": "./publish",
-        "outputName": "Country-only-cn-private.text",
+        "outputName": "Country-only-cn-private",
         "wantedList": ["cn", "private"]
       }
     },
