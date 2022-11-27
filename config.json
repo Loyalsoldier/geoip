@@ -128,8 +128,7 @@
       "type": "text",
       "action": "output",
       "args": {
-        "outputDir": "./publish",
-        "outputName": "Country-only-cn-private",
+        "outputName": "onlyCiderCNPrivate.text,
         "wantedList": ["cn", "private"]
       }
     },
