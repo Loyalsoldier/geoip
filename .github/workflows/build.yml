@@ -94,7 +94,7 @@ jobs:
           mkdir -p publish
           mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum *.gz *.zip ./publish/
           cp -fpPR ./output/text ./publish
-          cp -fpPR ./output/text/* ./publish
+          cp -fpPR ./output/text/onlyCiderCNPrivate.text ./publish
 
       - name: Git push assets to "release" branch
         run: |
