@@ -89,6 +89,14 @@
         ]
       }
     },
+        {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "outputName": "Country-only-cn-private.mmdb",
+        "wantedList": ["cn", "private"]
+      }
+    },
     {
       "type": "v2rayGeoIPDat",
       "action": "output",
