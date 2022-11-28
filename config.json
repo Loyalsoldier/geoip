@@ -130,7 +130,8 @@
       "args": {
         "outputDir": "./publish",
         "outputName": "onlyCiderCNPrivate",
-        "wantedList": ["cn", "private"]
+        "wantedList": ["cn", "private"],
+        "onlyIPType": "ipv4"
       }
     },
     {
