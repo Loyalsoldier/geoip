@@ -135,7 +135,7 @@
       "type": "text",
       "action": "output",
       "args": {
-        "onlyIPType": "ipv4"
+        
       }
     }
   ]
