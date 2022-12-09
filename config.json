@@ -133,7 +133,11 @@
     },
     {
       "type": "text",
-      "action": "output"
+      "action": "output",
+      "args": {
+        "onlyIPType": "ipv4"
+      }
+    },
     }
   ]
 }
