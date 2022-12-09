@@ -93,7 +93,7 @@ jobs:
         run: |
           mkdir -p publish
           mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum *.gz *.zip ./publish/
-          cp ./output/text/asia* ./publish
+          cp ./output/text/asia.txt ./publish
           cp -fpPR ./output/text ./publish
 
       - name: Git push assets to "release" branch
