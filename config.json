@@ -80,6 +80,14 @@
         "wantedList": ["bd","bn","bt","hk","id","in","jp","kh","kp","kr","la","lk","nm","mn","mo","my","np","ph","pk","sg","th","tw","vn","xa"]
       }
     },
+            {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputName": "asia.txt",
+        "wantedList": ["bd","bn","bt","hk","id","in","jp","kh","kp","kr","la","lk","nm","mn","mo","my","np","ph","pk","sg","th","tw","vn","xa"]
+      }
+    },
     {
       "type": "v2rayGeoIPDat",
       "action": "output",
