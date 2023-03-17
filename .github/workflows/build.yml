@@ -40,8 +40,6 @@ jobs:
 
       - name: Append more CIDRs
         run: |
-          curl -sSL https://www.cloudflare.com/ips-v4 | grep "/" >> data/cloudflare
-          curl -sSL https://www.cloudflare.com/ips-v6 | grep "/" >> data/cloudflare
           curl -sSL https://www.gstatic.com/ipranges/goog.json | jq --raw-output '.prefixes[].ipv4Prefix,.prefixes[].ipv6Prefix | select(. != null)' >> data/google
           curl -sSL https://www.gstatic.com/ipranges/cloud.json | jq --raw-output '.prefixes[].ipv4Prefix,.prefixes[].ipv6Prefix | select(. != null)' >> data/google
           curl -sSL https://api.fastly.com/public-ip-list | jq --raw-output '.addresses[],.ipv6_addresses[]' >> data/fastly
