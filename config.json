@@ -49,8 +49,7 @@
       "action": "add",
       "args": {
         "name": "cloudflare",
-        "uri": "https://www.cloudflare.com/ips-v4",
-        "onlyIPType": "ipv4"
+        "uri": "https://www.cloudflare.com/ips-v4"
       }
     },
     {
@@ -58,8 +57,7 @@
       "action": "add",
       "args": {
         "name": "cloudflare",
-        "uri": "https://www.cloudflare.com/ips-v6",
-        "onlyIPType": "ipv6"
+        "uri": "https://www.cloudflare.com/ips-v6"
       }
     },
     {
