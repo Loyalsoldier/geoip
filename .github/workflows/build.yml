@@ -17,21 +17,21 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.x.y
+      - name: Checkout codebase
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: ^1.18
+          go-version-file: ./go.mod
 
       - name: Set variables
         run: |
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "RELEASE_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
-
-      - name: Checkout codebase
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Fetch lists from ripe.net
         run: |
