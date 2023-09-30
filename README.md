@@ -17,6 +17,7 @@ This project releases GeoIP files automatically every Thursday. It also provides
   - `geoip:netflix`（`GEOIP,NETFLIX`）
   - `geoip:telegram`（`GEOIP,TELEGRAM`）
   - `geoip:twitter`（`GEOIP,TWITTER`）
+  - `geoip:yandex`（`GEOIP,YANDEX`）
 
 ## 参考配置
 
