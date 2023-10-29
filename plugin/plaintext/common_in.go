@@ -44,6 +44,13 @@ func (t *textIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 		if line == "" {
 			continue
 		}
+		line, _, _ = strings.Cut(line, "#")
+		line, _, _ = strings.Cut(line, "//")
+		line, _, _ = strings.Cut(line, "/*")
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 		if err := entry.AddPrefix(line); err != nil {
 			return err
 		}
@@ -70,7 +77,11 @@ func (t *textIn) scanFileForClashRuleSetIn(reader io.Reader, entry *lib.Entry) e
 	}
 
 	for _, cidrStr := range payload.Payload {
-		if err := entry.AddPrefix(strings.TrimSpace(cidrStr)); err != nil {
+		cidrStr = strings.TrimSpace(cidrStr)
+		if cidrStr == "" {
+			continue
+		}
+		if err := entry.AddPrefix(cidrStr); err != nil {
 			return err
 		}
 	}
@@ -88,11 +99,13 @@ func (t *textIn) scanFileForClashClassicalRuleSetInAndSurgeIn(reader io.Reader, 
 
 		switch {
 		case strings.HasPrefix(line, "ip-cidr,"), strings.HasPrefix(line, "ip-cidr6,"):
-			parts := strings.Split(line, ",")
-			if len(parts) > 1 {
-				if err := entry.AddPrefix(strings.TrimSpace(parts[1])); err != nil {
-					return err
-				}
+			_, line, _ = strings.Cut(line, ",")
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			if err := entry.AddPrefix(line); err != nil {
+				return err
 			}
 		default:
 			continue

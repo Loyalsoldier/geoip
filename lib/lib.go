@@ -164,6 +164,14 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 		}
 
 	case string:
+		src, _, _ = strings.Cut(src, "#")
+		src, _, _ = strings.Cut(src, "//")
+		src, _, _ = strings.Cut(src, "/*")
+		src = strings.TrimSpace(src)
+		if src == "" {
+			return nil, "", ErrCommentLine
+		}
+
 		_, network, err := net.ParseCIDR(src)
 		switch err {
 		case nil:
@@ -256,7 +264,7 @@ func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 
 func (e *Entry) AddPrefix(cidr any) error {
 	prefix, ipType, err := e.processPrefix(cidr)
-	if err != nil {
+	if err != nil && err != ErrCommentLine {
 		return err
 	}
 	if err := e.add(prefix, ipType); err != nil {
@@ -267,7 +275,7 @@ func (e *Entry) AddPrefix(cidr any) error {
 
 func (e *Entry) RemovePrefix(cidr string) error {
 	prefix, ipType, err := e.processPrefix(cidr)
-	if err != nil {
+	if err != nil && err != ErrCommentLine {
 		return err
 	}
 	if err := e.remove(prefix, ipType); err != nil {

@@ -11,4 +11,5 @@ var (
 	ErrInvalidIPLength     = errors.New("invalid IP address length")
 	ErrInvalidIPNet        = errors.New("invalid IPNet address")
 	ErrInvalidPrefixType   = errors.New("invalid prefix type")
+	ErrCommentLine         = errors.New("comment line")
 )
