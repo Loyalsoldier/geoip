@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	entryNameReserved = "Reserved"
-	typeReserved      = "Reserved"
-	descReserved      = "Convert LAN and Reserved network CIDR to other formats"
+	entryNameReserved = "reserved"
+	typeReserved      = "reserved"
+	descReserved      = "Convert LAN and reserved network CIDR to other formats"
 )
 
-var ReservedCIDRs = []string{
+var reservedCIDRs = []string{
 	"0.0.0.0/8",
 	"10.0.0.0/8",
 	"100.64.0.0/10",
@@ -40,40 +40,40 @@ func init() {
 	lib.RegisterInputConfigCreator(typeReserved, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newReserved(action, data)
 	})
-	lib.RegisterInputConverter(typeReserved, &Reserved{
+	lib.RegisterInputConverter(typeReserved, &reserved{
 		Description: descReserved,
 	})
 }
 
 func newReserved(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	return &Reserved{
+	return &reserved{
 		Type:        typeReserved,
 		Action:      action,
 		Description: descReserved,
 	}, nil
 }
 
-type Reserved struct {
+type reserved struct {
 	Type        string
 	Action      lib.Action
 	Description string
 }
 
-func (p *Reserved) GetType() string {
+func (p *reserved) GetType() string {
 	return p.Type
 }
 
-func (p *Reserved) GetAction() lib.Action {
+func (p *reserved) GetAction() lib.Action {
 	return p.Action
 }
 
-func (p *Reserved) GetDescription() string {
+func (p *reserved) GetDescription() string {
 	return p.Description
 }
 
-func (p *Reserved) Input(container lib.Container) (lib.Container, error) {
+func (p *reserved) Input(container lib.Container) (lib.Container, error) {
 	entry := lib.NewEntry(entryNameReserved)
-	for _, cidr := range ReservedCIDRs {
+	for _, cidr := range reservedCIDRs {
 		if err := entry.AddPrefix(cidr); err != nil {
 			return nil, err
 		}
