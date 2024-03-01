@@ -30,11 +30,11 @@ This project releases GeoIP files automatically every Thursday. It also provides
       "outboundTag": "Direct",
       "ip": [
         "geoip:cn",
-        "geoip:private",
+        "geoip:reserved",
         "ext:cn.dat:cn",
-        "ext:private.dat:private",
-        "ext:geoip-only-cn-private.dat:cn",
-        "ext:geoip-only-cn-private.dat:private"
+        "ext:reserved.dat:reserved",
+        "ext:geoip-only-cn-reserved.dat:cn",
+        "ext:geoip-only-cn-reserved.dat:reserved"
       ]
     },
     {
@@ -57,7 +57,7 @@ This project releases GeoIP files automatically every Thursday. It also provides
 
 ```yaml
 rules:
-  - GEOIP,PRIVATE,policy,no-resolve
+  - GEOIP,RESERVED,policy,no-resolve
   - GEOIP,FACEBOOK,policy
   - GEOIP,CN,policy,no-resolve
 ```
@@ -79,12 +79,12 @@ rules:
 - **geoip.dat.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat.sha256sum)
-- **geoip-only-cn-private.dat**（精简版 GeoIP，只包含 `geoip:cn` 和 `geoip:private`）：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-private.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-private.dat)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-private.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-private.dat)
-- **geoip-only-cn-private.dat.sha256sum**：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-private.dat.sha256sum)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-private.dat.sha256sum)
+- **geoip-only-cn-reserved.dat**（精简版 GeoIP，只包含 `geoip:cn` 和 `geoip:reserved`）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-reserved.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-reserved.dat)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-reserved.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-reserved.dat)
+- **geoip-only-cn-reserved.dat.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-reserved.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-only-cn-reserved.dat.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-reserved.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-only-cn-reserved.dat.sha256sum)
 - **geoip-asn.dat**（精简版 GeoIP，只包含上述新增类别）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-asn.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip-asn.dat)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-asn.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip-asn.dat)
@@ -97,12 +97,12 @@ rules:
 - **cn.dat.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/cn.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/cn.dat.sha256sum)
-- **private.dat**（精简版 GeoIP，只包含 `geoip:private`）：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat)
-- **private.dat.sha256sum**：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
+- **reserved.dat**（精简版 GeoIP，只包含 `geoip:reserved`）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/reserved.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/reserved.dat)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/reserved.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/reserved.dat)
+- **reserved.dat.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/reserved.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/reserved.dat.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/reserved.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/reserved.dat.sha256sum)
 
 ### MaxMind mmdb 格式文件
 
@@ -114,12 +114,12 @@ rules:
 - **Country.mmdb.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb.sha256sum)
-- **Country-only-cn-private.mmdb**（精简版 GeoIP，只包含 `GEOIP,CN` 和 `GEOIP,PRIVATE`）：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-private.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-private.mmdb)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-private.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-private.mmdb)
-- **Country-only-cn-private.mmdb.sha256sum**：
-  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-private.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-private.mmdb.sha256sum)
-  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-private.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-private.mmdb.sha256sum)
+- **Country-only-cn-reserved.mmdb**（精简版 GeoIP，只包含 `GEOIP,CN` 和 `GEOIP,reserved`）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-reserved.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-reserved.mmdb)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-reserved.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-reserved.mmdb)
+- **Country-only-cn-reserved.mmdb.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-reserved.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-only-cn-reserved.mmdb.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-reserved.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-only-cn-reserved.mmdb.sha256sum)
 - **Country-asn.mmdb**（精简版 GeoIP，只包含上述新增类别）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb)
@@ -157,7 +157,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 支持的 `input` 输入格式：
 
 - **text**：纯文本 IP 和 CIDR（例如：`1.1.1.1` 或 `1.0.0.0/24`）
-- **private**：局域网和私有网络 CIDR（例如：`192.168.0.0/16` 和 `127.0.0.0/8`）
+- **reserved**：局域网和私有网络 CIDR（例如：`192.168.0.0/16` 和 `127.0.0.0/8`）
 - **cutter**：用于裁剪前置步骤中的数据
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`）
 - **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
@@ -194,12 +194,12 @@ Usage of ./geoip:
 
 $ ./geoip -c config.json
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip.dat --> output/dat
-2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip-only-cn-private.dat --> output/dat
+2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip-only-cn-reserved.dat --> output/dat
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip-asn.dat --> output/dat
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] cn.dat --> output/dat
-2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] private.dat --> output/dat
+2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] reserved.dat --> output/dat
 2021/08/29 12:11:39 ✅ [maxmindMMDB] Country.mmdb --> output/maxmind
-2021/08/29 12:11:39 ✅ [maxmindMMDB] Country-only-cn-private.mmdb --> output/maxmind
+2021/08/29 12:11:39 ✅ [maxmindMMDB] Country-only-cn-reserved.mmdb --> output/maxmind
 2021/08/29 12:11:39 ✅ [text] netflix.txt --> output/text
 2021/08/29 12:11:39 ✅ [text] telegram.txt --> output/text
 2021/08/29 12:11:39 ✅ [text] cn.txt --> output/text
@@ -213,7 +213,7 @@ All available input formats:
   - v2rayGeoIPDat (Convert V2Ray GeoIP dat to other formats)
   - maxmindMMDB (Convert MaxMind mmdb database to other formats)
   - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
-  - private (Convert LAN and private network CIDR to other formats)
+  - reserved (Convert LAN and reserved network CIDR to other formats)
   - text (Convert plaintext IP & CIDR to other formats)
   - clashRuleSetClassical (Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines))
   - clashRuleSet (Convert ipcidr type of Clash RuleSet to other formats)
