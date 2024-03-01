@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	entryNamePrivate = "private"
-	typePrivate      = "private"
-	descPrivate      = "Convert LAN and private network CIDR to other formats"
+	entryNameReserved = "Reserved"
+	typeReserved      = "Reserved"
+	descReserved      = "Convert LAN and Reserved network CIDR to other formats"
 )
 
-var privateCIDRs = []string{
+var ReservedCIDRs = []string{
 	"0.0.0.0/8",
 	"10.0.0.0/8",
 	"100.64.0.0/10",
@@ -37,43 +37,43 @@ var privateCIDRs = []string{
 }
 
 func init() {
-	lib.RegisterInputConfigCreator(typePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newPrivate(action, data)
+	lib.RegisterInputConfigCreator(typeReserved, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newReserved(action, data)
 	})
-	lib.RegisterInputConverter(typePrivate, &private{
-		Description: descPrivate,
+	lib.RegisterInputConverter(typeReserved, &Reserved{
+		Description: descReserved,
 	})
 }
 
-func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	return &private{
-		Type:        typePrivate,
+func newReserved(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	return &Reserved{
+		Type:        typeReserved,
 		Action:      action,
-		Description: descPrivate,
+		Description: descReserved,
 	}, nil
 }
 
-type private struct {
+type Reserved struct {
 	Type        string
 	Action      lib.Action
 	Description string
 }
 
-func (p *private) GetType() string {
+func (p *Reserved) GetType() string {
 	return p.Type
 }
 
-func (p *private) GetAction() lib.Action {
+func (p *Reserved) GetAction() lib.Action {
 	return p.Action
 }
 
-func (p *private) GetDescription() string {
+func (p *Reserved) GetDescription() string {
 	return p.Description
 }
 
-func (p *private) Input(container lib.Container) (lib.Container, error) {
-	entry := lib.NewEntry(entryNamePrivate)
-	for _, cidr := range privateCIDRs {
+func (p *Reserved) Input(container lib.Container) (lib.Container, error) {
+	entry := lib.NewEntry(entryNameReserved)
+	for _, cidr := range ReservedCIDRs {
 		if err := entry.AddPrefix(cidr); err != nil {
 			return nil, err
 		}
@@ -85,7 +85,7 @@ func (p *private) Input(container lib.Container) (lib.Container, error) {
 			return nil, err
 		}
 	case lib.ActionRemove:
-		container.Remove(entryNamePrivate)
+		container.Remove(entryNameReserved)
 	default:
 		return nil, lib.ErrUnknownAction
 	}
