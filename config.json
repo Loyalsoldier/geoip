@@ -76,7 +76,7 @@
       }
     },
     {
-      "type": "private",
+      "type": "reserved",
       "action": "add"
     }
   ],
@@ -92,8 +92,8 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
-        "outputName": "geoip-only-cn-private.dat",
-        "wantedList": ["cn", "private"]
+        "outputName": "geoip-only-cn-reserved.dat",
+        "wantedList": ["cn", "reserved"]
       }
     },
     {
@@ -118,7 +118,7 @@
       "action": "output",
       "args": {
         "oneFilePerList": true,
-        "wantedList": ["cn", "private"]
+        "wantedList": ["cn", "reserved"]
       }
     },
     {
@@ -128,7 +128,7 @@
         "outputName": "Country.mmdb",
         "overwriteList": [
           "cn",
-          "private",
+          "reserved",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -144,8 +144,8 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
-        "outputName": "Country-only-cn-private.mmdb",
-        "wantedList": ["cn", "private"]
+        "outputName": "Country-only-cn-reserved.mmdb",
+        "wantedList": ["cn", "reserved"]
       }
     },
     {
