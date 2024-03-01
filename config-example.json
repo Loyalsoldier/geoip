@@ -98,7 +98,7 @@
       }
     },
     {
-      "type": "private",
+      "type": "reserved",
       "action": "add"
     },
     {
@@ -119,9 +119,9 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
-        "outputName": "geoip-only-cn-private.dat",
+        "outputName": "geoip-only-cn-reserved.dat",
         "outputDir": "./publish",
-        "wantedList": ["cn", "private"]
+        "wantedList": ["cn", "reserved"]
       }
     },
     {
@@ -130,7 +130,7 @@
       "args": {
         "outputDir": "./publish",
         "oneFilePerList": true,
-        "wantedList": ["cn", "private", "test"],
+        "wantedList": ["cn", "reserved", "test"],
         "onlyIPType": "ipv4"
       }
     },
@@ -143,15 +143,15 @@
       "action": "output",
       "args": {
         "outputName": "Country.mmdb",
-        "overwriteList": ["cn", "private"]
+        "overwriteList": ["cn", "reserved"]
       }
     },
     {
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
-        "outputName": "country-only-cn-private.mmdb",
-        "wantedList": ["cn", "private"]
+        "outputName": "country-only-cn-reserved.mmdb",
+        "wantedList": ["cn", "reserved"]
       }
     },
     {
@@ -159,8 +159,8 @@
       "action": "output",
       "args": {
         "outputDir": "./publish",
-        "outputName": "country-only-cn-private.mmdb",
-        "wantedList": ["cn", "private"],
+        "outputName": "country-only-cn-reserved.mmdb",
+        "wantedList": ["cn", "reserved"],
         "onlyIPType": "ipv4"
       }
     },
@@ -169,7 +169,7 @@
       "action": "output",
       "args": {
         "outputDir": "./publish",
-        "wantedList": ["cn", "us", "private"],
+        "wantedList": ["cn", "us", "reserved"],
         "onlyIPType": "ipv6"
       }
     },
@@ -177,7 +177,7 @@
       "type": "clashRuleSetClassical",
       "action": "output",
       "args": {
-        "wantedList": ["cn", "private", "test"],
+        "wantedList": ["cn", "reserved", "test"],
         "onlyIPType": "ipv4"
       }
     },
@@ -185,7 +185,7 @@
       "type": "clashRuleSet",
       "action": "output",
       "args": {
-        "wantedList": ["cn", "private", "test"],
+        "wantedList": ["cn", "reserved", "test"],
         "onlyIPType": "ipv6"
       }
     },
@@ -193,7 +193,7 @@
       "type": "surgeRuleSet",
       "action": "output",
       "args": {
-        "wantedList": ["cn", "private", "test"],
+        "wantedList": ["cn", "reserved", "test"],
         "onlyIPType": "ipv4"
       }
     }
