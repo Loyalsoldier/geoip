@@ -94,6 +94,7 @@ jobs:
           mkdir -p publish
           mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum *.gz *.zip ./publish/
           cp -fpPR ./output/text ./publish
+          cp -fpPR ./output/srs ./publish
 
       - name: Git push assets to "release" branch
         run: |
@@ -115,7 +116,7 @@ jobs:
           done
 
       - name: Remove some files to avoid publishing to GitHub release
-        run: rm -rf ./publish/*.{gz,zip} ./publish/text
+        run: rm -rf ./publish/*.{gz,zip} ./publish/text ./publish/srs
 
       - name: Upload files to GitHub release
         uses: svenstaro/upload-release-action@v2

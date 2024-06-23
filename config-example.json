@@ -57,6 +57,31 @@
       }
     },
     {
+      "type": "singboxSRS",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "uri": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/cn.srs"
+      }
+    },
+    {
+      "type": "singboxSRS",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "uri": "./srs/cn.srs",
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "singboxSRS",
+      "action": "add",
+      "args": {
+        "inputDir": "./srs",
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
       "type": "cutter",
       "action": "remove",
       "args": {
@@ -161,6 +186,28 @@
         "outputDir": "./publish",
         "outputName": "country-only-cn-private.mmdb",
         "wantedList": ["cn", "private"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "singboxSRS",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish"
+      }
+    },
+    {
+      "type": "singboxSRS",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "us"]
+      }
+    },
+    {
+      "type": "singboxSRS",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "us"],
         "onlyIPType": "ipv4"
       }
     },
