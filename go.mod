@@ -6,7 +6,7 @@ toolchain go1.21.10
 
 require (
 	github.com/maxmind/mmdbwriter v1.0.0
-	github.com/oschwald/maxminddb-golang v1.13.0
+	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.9.3
 	github.com/v2fly/v2ray-core/v5 v5.16.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
