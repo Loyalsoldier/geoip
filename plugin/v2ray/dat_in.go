@@ -81,7 +81,7 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 	var err error
 
 	switch {
-	case strings.HasPrefix(g.URI, "http://"), strings.HasPrefix(g.URI, "https://"):
+	case strings.HasPrefix(strings.ToLower(g.URI), "http://"), strings.HasPrefix(strings.ToLower(g.URI), "https://"):
 		err = g.walkRemoteFile(g.URI, entries)
 	default:
 		err = g.walkLocalFile(g.URI, entries)

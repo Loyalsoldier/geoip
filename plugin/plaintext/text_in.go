@@ -84,7 +84,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 		err = t.walkDir(t.InputDir, entries)
 	case t.Name != "" && t.URI != "":
 		switch {
-		case strings.HasPrefix(t.URI, "http://"), strings.HasPrefix(t.URI, "https://"):
+		case strings.HasPrefix(strings.ToLower(t.URI), "http://"), strings.HasPrefix(strings.ToLower(t.URI), "https://"):
 			err = t.walkRemoteFile(t.URI, t.Name, entries)
 		default:
 			err = t.walkLocalFile(t.URI, t.Name, entries)

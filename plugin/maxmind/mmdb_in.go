@@ -85,7 +85,7 @@ func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var fd io.ReadCloser
 	var err error
 	switch {
-	case strings.HasPrefix(g.URI, "http://"), strings.HasPrefix(g.URI, "https://"):
+	case strings.HasPrefix(strings.ToLower(g.URI), "http://"), strings.HasPrefix(strings.ToLower(g.URI), "https://"):
 		fd, err = g.downloadFile(g.URI)
 	default:
 		fd, err = os.Open(g.URI)
