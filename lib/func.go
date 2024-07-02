@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -14,8 +15,13 @@ var (
 
 func ListInputConverter() {
 	fmt.Println("All available input formats:")
-	for name, ic := range inputConverterMap {
-		fmt.Printf("  - %s (%s)\n", name, ic.GetDescription())
+	keys := make([]string, 0, len(inputConverterMap))
+	for name := range inputConverterMap {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		fmt.Printf("  - %s (%s)\n", name, inputConverterMap[name].GetDescription())
 	}
 }
 
@@ -30,8 +36,13 @@ func RegisterInputConverter(name string, c InputConverter) error {
 
 func ListOutputConverter() {
 	fmt.Println("All available output formats:")
-	for name, oc := range outputConverterMap {
-		fmt.Printf("  - %s (%s)\n", name, oc.GetDescription())
+	keys := make([]string, 0, len(outputConverterMap))
+	for name := range outputConverterMap {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		fmt.Printf("  - %s (%s)\n", name, outputConverterMap[name].GetDescription())
 	}
 }
 
