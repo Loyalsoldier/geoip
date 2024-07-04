@@ -123,6 +123,29 @@
       }
     },
     {
+      "type": "stdin",
+      "action": "add",
+      "args": {
+        "name": "cn"
+      }
+    },
+    {
+      "type": "stdin",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "stdin",
+      "action": "remove",
+      "args": {
+        "name": "cn",
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
       "type": "private",
       "action": "add"
     },
