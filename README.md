@@ -208,6 +208,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 支持的 `output` 输出格式：
 
 - **text**：纯文本 CIDR（例如：`1.0.0.0/24`）
+- **stdout**：将纯文本 CIDR 输出到 standard output（例如：`1.0.0.0/24`）
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`，适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go)）
 - **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`，适用于 [Clash](https://github.com/Dreamacro/clash) 和 [Leaf](https://github.com/eycorsican/leaf)）
 - **singboxSRS**：sing-box SRS 格式（`geoip-cn.srs`，适用于 [sing-box](https://github.com/SagerNet/sing-box)）
@@ -277,6 +278,7 @@ All available output formats:
   - clashRuleSet (Convert data to ipcidr type of Clash RuleSet)
   - surgeRuleSet (Convert data to Surge RuleSet)
   - text (Convert data to plaintext CIDR format)
+  - stdout (Convert data to plaintext CIDR format and output to standard output)
 ```
 
 ## License

@@ -244,6 +244,32 @@
       }
     },
     {
+      "type": "stdout",
+      "action": "output"
+    },
+    {
+      "type": "stdout",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "us", "private"]
+      }
+    },
+    {
+      "type": "stdout",
+      "action": "output",
+      "args": {
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "stdout",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "us", "private"],
+        "onlyIPType": "ipv6"
+      }
+    },
+    {
       "type": "clashRuleSetClassical",
       "action": "output",
       "args": {
