@@ -114,7 +114,7 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("type %s | action %s no entry are generated", s.Type, s.Action)
+		return nil, fmt.Errorf("type %s | action %s no entry is generated", s.Type, s.Action)
 	}
 
 	for _, entry := range entries {
@@ -124,7 +124,11 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 				return nil, err
 			}
 		case lib.ActionRemove:
-			container.Remove(entry.GetName(), ignoreIPType)
+			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, lib.ErrUnknownAction
 		}
 	}
 
@@ -200,10 +204,9 @@ func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 }
 
 func (s *srsIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
-	entry := lib.NewEntry(name)
-	if theEntry, found := entries[entry.GetName()]; found {
-		fmt.Printf("⚠️ [type %s | action %s] found duplicated entry: %s. Process anyway\n", typeSRSIn, s.Action, name)
-		entry = theEntry
+	entry, found := entries[name]
+	if !found {
+		entry = lib.NewEntry(name)
 	}
 
 	plainRuleSet, err := srs.Read(reader, true)
@@ -213,20 +216,12 @@ func (s *srsIn) generateEntries(name string, reader io.Reader, entries map[strin
 
 	for _, rule := range plainRuleSet.Rules {
 		for _, cidrStr := range rule.DefaultOptions.IPCIDR {
-			switch s.Action {
-			case lib.ActionAdd:
-				if err := entry.AddPrefix(cidrStr); err != nil {
-					return err
-				}
-			case lib.ActionRemove:
-				if err := entry.RemovePrefix(cidrStr); err != nil {
-					return err
-				}
+			if err := entry.AddPrefix(cidrStr); err != nil {
+				return err
 			}
 		}
 	}
 
-	entries[entry.GetName()] = entry
-
+	entries[name] = entry
 	return nil
 }

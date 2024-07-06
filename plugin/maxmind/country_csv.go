@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -113,6 +114,10 @@ func (g *geoLite2CountryCSV) Input(container lib.Container) (lib.Container, erro
 		}
 	}
 
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeCountryCSV, g.Action)
+	}
+
 	var ignoreIPType lib.IgnoreIPOption
 	switch g.OnlyIPType {
 	case lib.IPv4:
@@ -121,14 +126,16 @@ func (g *geoLite2CountryCSV) Input(container lib.Container) (lib.Container, erro
 		ignoreIPType = lib.IgnoreIPv4
 	}
 
-	for name, entry := range entries {
+	for _, entry := range entries {
 		switch g.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
 				return nil, err
 			}
 		case lib.ActionRemove:
-			container.Remove(name, ignoreIPType)
+			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
+				return nil, err
+			}
 		default:
 			return nil, lib.ErrUnknownAction
 		}
@@ -193,10 +200,8 @@ func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entri
 	for _, line := range lines[1:] {
 		ccID := strings.TrimSpace(line[1])
 		if countryCode, found := ccMap[ccID]; found {
-			if len(wantList) > 0 {
-				if _, found := wantList[countryCode]; !found {
-					continue
-				}
+			if len(wantList) > 0 && !wantList[countryCode] {
+				continue
 			}
 			cidrStr := strings.ToLower(strings.TrimSpace(line[0]))
 			entry, found := entries[countryCode]

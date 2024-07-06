@@ -106,7 +106,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("type %s | action %s no entry are generated", t.Type, t.Action)
+		return nil, fmt.Errorf("type %s | action %s no entry is generated", t.Type, t.Action)
 	}
 
 	for _, entry := range entries {
@@ -116,7 +116,11 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 				return nil, err
 			}
 		case lib.ActionRemove:
-			container.Remove(entry.GetName(), ignoreIPType)
+			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, lib.ErrUnknownAction
 		}
 	}
 

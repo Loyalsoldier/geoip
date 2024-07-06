@@ -7,6 +7,9 @@ const (
 
 	IPv4 IPType = "ipv4"
 	IPv6 IPType = "ipv6"
+
+	CaseRemovePrefix CaseRemove = 0
+	CaseRemoveEntry  CaseRemove = 1
 )
 
 var ActionsRegistry = map[Action]bool{
@@ -18,6 +21,8 @@ var ActionsRegistry = map[Action]bool{
 type Action string
 
 type IPType string
+
+type CaseRemove int
 
 type Typer interface {
 	GetType() string

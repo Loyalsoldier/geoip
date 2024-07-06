@@ -107,7 +107,7 @@ func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is newly generated", typeMaxmindMMDBIn, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeMaxmindMMDBIn, g.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
@@ -138,7 +138,11 @@ func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 				return nil, err
 			}
 		case lib.ActionRemove:
-			container.Remove(name, ignoreIPType)
+			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, lib.ErrUnknownAction
 		}
 	}
 
@@ -197,23 +201,14 @@ func (g *maxmindMMDBIn) generateEntries(entries map[string]*lib.Entry) error {
 			continue
 		}
 
-		var entry *lib.Entry
 		name := strings.ToUpper(record.Country.IsoCode)
-		if theEntry, found := entries[name]; found {
-			entry = theEntry
-		} else {
+		entry, found := entries[name]
+		if !found {
 			entry = lib.NewEntry(name)
 		}
 
-		switch g.Action {
-		case lib.ActionAdd:
-			if err := entry.AddPrefix(subnet); err != nil {
-				return err
-			}
-		case lib.ActionRemove:
-			if err := entry.RemovePrefix(subnet.String()); err != nil {
-				return err
-			}
+		if err := entry.AddPrefix(subnet); err != nil {
+			return err
 		}
 
 		entries[name] = entry

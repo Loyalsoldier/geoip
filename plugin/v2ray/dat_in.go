@@ -92,7 +92,7 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is newly generated", typeGeoIPdatIn, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeGeoIPdatIn, g.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
@@ -123,7 +123,11 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 				return nil, err
 			}
 		case lib.ActionRemove:
-			container.Remove(name, ignoreIPType)
+			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, lib.ErrUnknownAction
 		}
 	}
 
@@ -174,26 +178,16 @@ func (g *geoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 	}
 
 	for _, geoip := range geoipList.Entry {
-		var entry *lib.Entry
 		name := geoip.CountryCode
-		if theEntry, found := entries[name]; found {
-			fmt.Printf("⚠️ [type %s | action %s] found duplicated entry: %s. Process anyway\n", typeGeoIPdatIn, g.Action, name)
-			entry = theEntry
-		} else {
+		entry, found := entries[name]
+		if !found {
 			entry = lib.NewEntry(name)
 		}
 
 		for _, v2rayCIDR := range geoip.Cidr {
 			ipStr := net.IP(v2rayCIDR.GetIp()).String() + "/" + fmt.Sprint(v2rayCIDR.GetPrefix())
-			switch g.Action {
-			case lib.ActionAdd:
-				if err := entry.AddPrefix(ipStr); err != nil {
-					return err
-				}
-			case lib.ActionRemove:
-				if err := entry.RemovePrefix(ipStr); err != nil {
-					return err
-				}
+			if err := entry.AddPrefix(ipStr); err != nil {
+				return err
 			}
 		}
 
