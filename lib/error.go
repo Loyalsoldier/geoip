@@ -10,6 +10,8 @@ var (
 	ErrInvalidIP           = errors.New("invalid IP address")
 	ErrInvalidIPLength     = errors.New("invalid IP address length")
 	ErrInvalidIPNet        = errors.New("invalid IPNet address")
+	ErrInvalidCIDR         = errors.New("invalid CIDR")
+	ErrInvalidPrefix       = errors.New("invalid prefix")
 	ErrInvalidPrefixType   = errors.New("invalid prefix type")
 	ErrCommentLine         = errors.New("comment line")
 )
