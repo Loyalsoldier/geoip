@@ -155,10 +155,10 @@ func (g *geoIPDatOut) Output(container lib.Container) error {
 		}
 	}
 
-	// Sort to make reproducible builds
-	g.sort(geoIPList)
-
 	if !g.OneFilePerList && updated {
+		// Sort to make reproducible builds
+		g.sort(geoIPList)
+
 		geoIPBytes, err := proto.Marshal(geoIPList)
 		if err != nil {
 			return err

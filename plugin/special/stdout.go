@@ -74,31 +74,17 @@ func (s *stdout) Output(container lib.Container) error {
 		}
 	}
 
-	switch len(wantList) {
-	case 0:
-		for entry := range container.Loop() {
-			cidrList, err := s.generateCIDRList(entry)
-			if err != nil {
-				continue
-			}
-			for _, cidr := range cidrList {
-				io.WriteString(os.Stdout, cidr+"\n")
-			}
+	for entry := range container.Loop() {
+		if len(wantList) > 0 && !wantList[entry.GetName()] {
+			continue
 		}
-	default:
-		for name := range wantList {
-			entry, found := container.GetEntry(name)
-			if !found {
-				continue
-			}
 
-			cidrList, err := s.generateCIDRList(entry)
-			if err != nil {
-				continue
-			}
-			for _, cidr := range cidrList {
-				io.WriteString(os.Stdout, cidr+"\n")
-			}
+		cidrList, err := s.generateCIDRList(entry)
+		if err != nil {
+			continue
+		}
+		for _, cidr := range cidrList {
+			io.WriteString(os.Stdout, cidr+"\n")
 		}
 	}
 
