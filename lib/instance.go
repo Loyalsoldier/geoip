@@ -26,7 +26,7 @@ func (i *Instance) Init(configFile string) error {
 	var err error
 	configFile = strings.TrimSpace(configFile)
 	if strings.HasPrefix(strings.ToLower(configFile), "http://") || strings.HasPrefix(strings.ToLower(configFile), "https://") {
-		content, err = getRemoteURLContent(configFile)
+		content, err = GetRemoteURLContent(configFile)
 	} else {
 		content, err = os.ReadFile(configFile)
 	}
