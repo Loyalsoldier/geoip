@@ -227,13 +227,52 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 可通过 `go install -v github.com/Loyalsoldier/geoip@latest` 直接安装 CLI。
 
 ```bash
-$ ./geoip -h
-Usage of ./geoip:
-  -c string
-    	URI of the JSON format config file, support both local file path and remote HTTP(S) URL (default "config.json")
-  -l	List all available input and output formats
+$ ./geoip
+geoip is a convenient tool to merge, convert and lookup IP & CIDR from various formats of geoip data.
 
-$ ./geoip -c config.json
+Usage:
+  geoip [command]
+
+Available Commands:
+  convert     Convert geoip data from one format to another by using config file
+  help        Help about any command
+  list        List all available input and output formats
+
+Flags:
+  -h, --help   help for geoip
+
+Use "geoip [command] --help" for more information about a command.
+```
+
+```bash
+$ ./geoip list
+All available input formats:
+  - clashRuleSet (Convert ipcidr type of Clash RuleSet to other formats)
+  - clashRuleSetClassical (Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines))
+  - cutter (Remove data from previous steps)
+  - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
+  - maxmindMMDB (Convert MaxMind mmdb database to other formats)
+  - private (Convert LAN and private network CIDR to other formats)
+  - singboxSRS (Convert sing-box SRS data to other formats)
+  - stdin (Accept plaintext IP & CIDR from standard input, separated by newline)
+  - surgeRuleSet (Convert Surge RuleSet to other formats (just processing IP & CIDR lines))
+  - test (Convert specific CIDR to other formats (for test only))
+  - text (Convert plaintext IP & CIDR to other formats)
+  - v2rayGeoIPDat (Convert V2Ray GeoIP dat to other formats)
+
+All available output formats:
+  - clashRuleSet (Convert data to ipcidr type of Clash RuleSet)
+  - clashRuleSetClassical (Convert data to classical type of Clash RuleSet)
+  - maxmindMMDB (Convert data to MaxMind mmdb database format)
+  - singboxSRS (Convert data to sing-box SRS format)
+  - stdout (Convert data to plaintext CIDR format and output to standard output)
+  - surgeRuleSet (Convert data to Surge RuleSet)
+  - text (Convert data to plaintext CIDR format)
+  - v2rayGeoIPDat (Convert data to V2Ray GeoIP dat format)
+```
+
+```bash
+$ ./geoip convert -c config.json
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip.dat --> output/dat
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip-only-cn-private.dat --> output/dat
 2021/08/29 12:11:35 ✅ [v2rayGeoIPDat] geoip-asn.dat --> output/dat
@@ -255,30 +294,6 @@ $ ./geoip -c config.json
 2021/08/29 12:11:45 ✅ [singboxSRS] cloudfront.txt --> output/srs
 2021/08/29 12:11:45 ✅ [singboxSRS] facebook.txt --> output/srs
 2021/08/29 12:11:45 ✅ [singboxSRS] fastly.txt --> output/srs
-
-$ ./geoip -l
-All available input formats:
-  - v2rayGeoIPDat (Convert V2Ray GeoIP dat to other formats)
-  - maxmindMMDB (Convert MaxMind mmdb database to other formats)
-  - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
-  - singboxSRS (Convert sing-box SRS data to other formats)
-  - private (Convert LAN and private network CIDR to other formats)
-  - stdin (Accept plaintext IP & CIDR from standard input, separated by newline)
-  - text (Convert plaintext IP & CIDR to other formats)
-  - clashRuleSetClassical (Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines))
-  - clashRuleSet (Convert ipcidr type of Clash RuleSet to other formats)
-  - surgeRuleSet (Convert Surge RuleSet to other formats (just processing IP & CIDR lines))
-  - cutter (Remove data from previous steps)
-  - test (Convert specific CIDR to other formats (for test only))
-All available output formats:
-  - v2rayGeoIPDat (Convert data to V2Ray GeoIP dat format)
-  - maxmindMMDB (Convert data to MaxMind mmdb database format)
-  - singboxSRS (Convert data to sing-box SRS format)
-  - clashRuleSetClassical (Convert data to classical type of Clash RuleSet)
-  - clashRuleSet (Convert data to ipcidr type of Clash RuleSet)
-  - surgeRuleSet (Convert data to Surge RuleSet)
-  - text (Convert data to plaintext CIDR format)
-  - stdout (Convert data to plaintext CIDR format and output to standard output)
 ```
 
 ## License

@@ -56,7 +56,8 @@ jobs:
 
       - name: Build geoip files
         run: |
-          go run ./
+          go build ./
+          ./geoip convert -c ./config.json
 
       - name: Verify mmdb files
         run: |
