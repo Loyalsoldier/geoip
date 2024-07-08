@@ -237,6 +237,7 @@ Available Commands:
   convert     Convert geoip data from one format to another by using config file
   help        Help about any command
   list        List all available input and output formats
+  merge       Merge plaintext IP & CIDR from standard input, then print to standard output
 
 Flags:
   -h, --help   help for geoip
@@ -269,6 +270,17 @@ All available output formats:
   - surgeRuleSet (Convert data to Surge RuleSet)
   - text (Convert data to plaintext CIDR format)
   - v2rayGeoIPDat (Convert data to V2Ray GeoIP dat format)
+```
+
+```bash
+$ curl -s https://core.telegram.org/resources/cidr.txt | ./geoip merge -t ipv4
+91.105.192.0/23
+91.108.4.0/22
+91.108.8.0/21
+91.108.16.0/21
+91.108.56.0/22
+149.154.160.0/20
+185.76.151.0/24
 ```
 
 ```bash

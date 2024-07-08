@@ -49,6 +49,22 @@ func (i *Instance) Init(configFile string) error {
 	return nil
 }
 
+func (i *Instance) InitFromBytes(content []byte) error {
+	if err := json.Unmarshal(content, &i.config); err != nil {
+		return err
+	}
+
+	for _, input := range i.config.Input {
+		i.input = append(i.input, input.converter)
+	}
+
+	for _, output := range i.config.Output {
+		i.output = append(i.output, output.converter)
+	}
+
+	return nil
+}
+
 func (i *Instance) Run() error {
 	if len(i.input) == 0 || len(i.output) == 0 {
 		return errors.New("input type and output type must be specified")
