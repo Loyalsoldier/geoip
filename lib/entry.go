@@ -5,24 +5,21 @@ import (
 	"net"
 	"net/netip"
 	"strings"
-	"sync"
 
 	"go4.org/netipx"
 )
 
 type Entry struct {
 	name        string
-	mu          *sync.Mutex
 	ipv4Builder *netipx.IPSetBuilder
 	ipv6Builder *netipx.IPSetBuilder
+	ipv4Set     *netipx.IPSet
+	ipv6Set     *netipx.IPSet
 }
 
 func NewEntry(name string) *Entry {
 	return &Entry{
-		name:        strings.ToUpper(strings.TrimSpace(name)),
-		mu:          new(sync.Mutex),
-		ipv4Builder: new(netipx.IPSetBuilder),
-		ipv6Builder: new(netipx.IPSetBuilder),
+		name: strings.ToUpper(strings.TrimSpace(name)),
 	}
 }
 
@@ -36,6 +33,38 @@ func (e *Entry) hasIPv4Builder() bool {
 
 func (e *Entry) hasIPv6Builder() bool {
 	return e.ipv6Builder != nil
+}
+
+func (e *Entry) hasIPv4Set() bool {
+	return e.ipv4Set != nil
+}
+
+func (e *Entry) hasIPv6Set() bool {
+	return e.ipv6Set != nil
+}
+
+func (e *Entry) GetIPv4Set() (*netipx.IPSet, error) {
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
+
+	if e.hasIPv4Set() {
+		return e.ipv4Set, nil
+	}
+
+	return nil, fmt.Errorf("entry %s has no ipv4 set", e.GetName())
+}
+
+func (e *Entry) GetIPv6Set() (*netipx.IPSet, error) {
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
+
+	if e.hasIPv6Set() {
+		return e.ipv6Set, nil
+	}
+
+	return nil, fmt.Errorf("entry %s has no ipv6 set", e.GetName())
 }
 
 func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
@@ -218,9 +247,6 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 }
 
 func (e *Entry) add(prefix *netip.Prefix, ipType IPType) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
 	switch ipType {
 	case IPv4:
 		if !e.hasIPv4Builder() {
@@ -240,9 +266,6 @@ func (e *Entry) add(prefix *netip.Prefix, ipType IPType) error {
 }
 
 func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
 	switch ipType {
 	case IPv4:
 		if e.hasIPv4Builder() {
@@ -281,6 +304,62 @@ func (e *Entry) RemovePrefix(cidr string) error {
 	return nil
 }
 
+func (e *Entry) buildIPSet() error {
+	if e.hasIPv4Builder() && !e.hasIPv4Set() {
+		ipv4set, err := e.ipv4Builder.IPSet()
+		if err != nil {
+			return err
+		}
+		e.ipv4Set = ipv4set
+	}
+
+	if e.hasIPv6Builder() && !e.hasIPv6Set() {
+		ipv6set, err := e.ipv6Builder.IPSet()
+		if err != nil {
+			return err
+		}
+		e.ipv6Set = ipv6set
+	}
+
+	return nil
+}
+
+func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
+	var ignoreIPType IPType
+	for _, opt := range opts {
+		if opt != nil {
+			ignoreIPType = opt()
+		}
+	}
+	disableIPv4, disableIPv6 := false, false
+	switch ignoreIPType {
+	case IPv4:
+		disableIPv4 = true
+	case IPv6:
+		disableIPv6 = true
+	}
+
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
+
+	prefixes := make([]netip.Prefix, 0, 1024)
+
+	if !disableIPv4 && e.hasIPv4Set() {
+		prefixes = append(prefixes, e.ipv4Set.Prefixes()...)
+	}
+
+	if !disableIPv6 && e.hasIPv6Set() {
+		prefixes = append(prefixes, e.ipv6Set.Prefixes()...)
+	}
+
+	if len(prefixes) > 0 {
+		return prefixes, nil
+	}
+
+	return nil, fmt.Errorf("entry %s has no prefix", e.GetName())
+}
+
 func (e *Entry) MarshalText(opts ...IgnoreIPOption) ([]string, error) {
 	var ignoreIPType IPType
 	for _, opt := range opts {
@@ -296,32 +375,26 @@ func (e *Entry) MarshalText(opts ...IgnoreIPOption) ([]string, error) {
 		disableIPv6 = true
 	}
 
-	prefixSet := make([]string, 0, 1024)
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
 
-	if !disableIPv4 && e.hasIPv4Builder() {
-		ipv4set, err := e.ipv4Builder.IPSet()
-		if err != nil {
-			return nil, err
-		}
-		prefixes := ipv4set.Prefixes()
-		for _, prefix := range prefixes {
-			prefixSet = append(prefixSet, prefix.String())
+	cidrList := make([]string, 0, 1024)
+
+	if !disableIPv4 && e.hasIPv4Set() {
+		for _, prefix := range e.ipv4Set.Prefixes() {
+			cidrList = append(cidrList, prefix.String())
 		}
 	}
 
-	if !disableIPv6 && e.hasIPv6Builder() {
-		ipv6set, err := e.ipv6Builder.IPSet()
-		if err != nil {
-			return nil, err
-		}
-		prefixes := ipv6set.Prefixes()
-		for _, prefix := range prefixes {
-			prefixSet = append(prefixSet, prefix.String())
+	if !disableIPv6 && e.hasIPv6Set() {
+		for _, prefix := range e.ipv6Set.Prefixes() {
+			cidrList = append(cidrList, prefix.String())
 		}
 	}
 
-	if len(prefixSet) > 0 {
-		return prefixSet, nil
+	if len(cidrList) > 0 {
+		return cidrList, nil
 	}
 
 	return nil, fmt.Errorf("entry %s has no prefix", e.GetName())

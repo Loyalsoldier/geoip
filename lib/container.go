@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"net/netip"
 	"strings"
 
 	"go4.org/netipx"
@@ -12,6 +13,7 @@ type Container interface {
 	Add(entry *Entry, opts ...IgnoreIPOption) error
 	Remove(entry *Entry, rCase CaseRemove, opts ...IgnoreIPOption) error
 	Loop() <-chan *Entry
+	Lookup(ipOrCidr string, searchList ...string) ([]string, bool, error)
 }
 
 type container struct {
@@ -180,4 +182,94 @@ func (c *container) Remove(entry *Entry, rCase CaseRemove, opts ...IgnoreIPOptio
 	}
 
 	return nil
+}
+
+func (c *container) Lookup(ipOrCidr string, searchList ...string) ([]string, bool, error) {
+	switch strings.Contains(ipOrCidr, "/") {
+	case true: // CIDR
+		prefix, err := netip.ParsePrefix(ipOrCidr)
+		if err != nil {
+			return nil, false, err
+		}
+		addr := prefix.Addr().Unmap()
+		switch {
+		case addr.Is4():
+			return c.lookup(prefix, IPv4, searchList...)
+		case addr.Is6():
+			return c.lookup(prefix, IPv6, searchList...)
+		}
+
+	case false: // IP
+		addr, err := netip.ParseAddr(ipOrCidr)
+		if err != nil {
+			return nil, false, err
+		}
+		addr = addr.Unmap()
+		switch {
+		case addr.Is4():
+			return c.lookup(addr, IPv4, searchList...)
+		case addr.Is6():
+			return c.lookup(addr, IPv6, searchList...)
+		}
+	}
+
+	return nil, false, nil
+}
+
+func (c *container) lookup(addrOrPrefix any, iptype IPType, searchList ...string) ([]string, bool, error) {
+	searchMap := make(map[string]bool)
+	for _, name := range searchList {
+		if name = strings.ToUpper(strings.TrimSpace(name)); name != "" {
+			searchMap[name] = true
+		}
+	}
+
+	isfound := false
+	result := make([]string, 0, 8)
+
+	for entry := range c.Loop() {
+		if len(searchMap) > 0 && !searchMap[entry.GetName()] {
+			continue
+		}
+
+		switch iptype {
+		case IPv4:
+			ipset, err := entry.GetIPv4Set()
+			if err != nil {
+				return nil, false, err
+			}
+			switch addrOrPrefix := addrOrPrefix.(type) {
+			case netip.Prefix:
+				if found := ipset.ContainsPrefix(addrOrPrefix); found {
+					isfound = true
+					result = append(result, entry.GetName())
+				}
+			case netip.Addr:
+				if found := ipset.Contains(addrOrPrefix); found {
+					isfound = true
+					result = append(result, entry.GetName())
+				}
+			}
+
+		case IPv6:
+			ipset, err := entry.GetIPv6Set()
+			if err != nil {
+				return nil, false, err
+			}
+			switch addrOrPrefix := addrOrPrefix.(type) {
+			case netip.Prefix:
+				if found := ipset.ContainsPrefix(addrOrPrefix); found {
+					isfound = true
+					result = append(result, entry.GetName())
+				}
+			case netip.Addr:
+				if found := ipset.Contains(addrOrPrefix); found {
+					isfound = true
+					result = append(result, entry.GetName())
+				}
+			}
+		}
+	}
+
+	return result, isfound, nil
 }
