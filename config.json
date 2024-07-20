@@ -144,6 +144,25 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
+        "outputName": "Country-cn-private-asn.mmdb",
+        "wantedList": [
+          "cn",
+          "private",
+          "cloudflare",
+          "cloudfront",
+          "facebook",
+          "fastly",
+          "google",
+          "netflix",
+          "telegram",
+          "twitter"
+        ]
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
         "outputName": "Country-only-cn-private.mmdb",
         "wantedList": ["cn", "private"]
       }
