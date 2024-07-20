@@ -100,6 +100,25 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
+        "outputName": "geoip-cn-private-asn.dat",
+        "wantedList": [
+          "cn",
+          "private",
+          "cloudflare",
+          "cloudfront",
+          "facebook",
+          "fastly",
+          "google",
+          "netflix",
+          "telegram",
+          "twitter"
+        ]
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
         "outputName": "geoip-asn.dat",
         "wantedList": [
           "cloudflare",
