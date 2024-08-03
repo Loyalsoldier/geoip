@@ -100,7 +100,7 @@ func (g *geoLite2CountryCSV) Input(container lib.Container) (lib.Container, erro
 		return nil, err
 	}
 
-	entries := make(map[string]*lib.Entry)
+	entries := make(map[string]*lib.Entry, 300)
 
 	if g.IPv4File != "" {
 		if err := g.process(g.IPv4File, ccMap, entries); err != nil {
@@ -174,7 +174,7 @@ func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entri
 		return errors.New("country code list must be specified")
 	}
 	if entries == nil {
-		entries = make(map[string]*lib.Entry)
+		entries = make(map[string]*lib.Entry, 300)
 	}
 
 	fReader, err := os.Open(file)
@@ -198,7 +198,18 @@ func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entri
 	}
 
 	for _, line := range lines[1:] {
-		ccID := strings.TrimSpace(line[1])
+		ccID := ""
+		switch {
+		case strings.TrimSpace(line[1]) != "":
+			ccID = strings.TrimSpace(line[1])
+		case strings.TrimSpace(line[2]) != "":
+			ccID = strings.TrimSpace(line[2])
+		case strings.TrimSpace(line[3]) != "":
+			ccID = strings.TrimSpace(line[3])
+		default:
+			continue
+		}
+
 		if countryCode, found := ccMap[ccID]; found {
 			if len(wantList) > 0 && !wantList[countryCode] {
 				continue

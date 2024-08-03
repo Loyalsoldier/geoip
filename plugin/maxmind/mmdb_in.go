@@ -90,7 +90,7 @@ func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 		return nil, err
 	}
 
-	entries := make(map[string]*lib.Entry)
+	entries := make(map[string]*lib.Entry, 300)
 	err = g.generateEntries(content, entries)
 	if err != nil {
 		return nil, err
@@ -146,20 +146,37 @@ func (g *maxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.
 	}
 	defer db.Close()
 
-	record := struct {
-		Country struct {
-			IsoCode string `maxminddb:"iso_code"`
-		} `maxminddb:"country"`
-	}{}
-
 	networks := db.Networks(maxminddb.SkipAliasedNetworks)
 	for networks.Next() {
+		record := struct {
+			Country struct {
+				IsoCode string `maxminddb:"iso_code"`
+			} `maxminddb:"country"`
+			RegisteredCountry struct {
+				IsoCode string `maxminddb:"iso_code"`
+			} `maxminddb:"registered_country"`
+			RepresentedCountry struct {
+				IsoCode string `maxminddb:"iso_code"`
+			} `maxminddb:"represented_country"`
+		}{}
+
 		subnet, err := networks.Network(&record)
 		if err != nil {
 			continue
 		}
 
-		name := strings.ToUpper(record.Country.IsoCode)
+		name := ""
+		switch {
+		case strings.TrimSpace(record.Country.IsoCode) != "":
+			name = strings.ToUpper(strings.TrimSpace(record.Country.IsoCode))
+		case strings.TrimSpace(record.RegisteredCountry.IsoCode) != "":
+			name = strings.ToUpper(strings.TrimSpace(record.RegisteredCountry.IsoCode))
+		case strings.TrimSpace(record.RepresentedCountry.IsoCode) != "":
+			name = strings.ToUpper(strings.TrimSpace(record.RepresentedCountry.IsoCode))
+		default:
+			continue
+		}
+
 		entry, found := entries[name]
 		if !found {
 			entry = lib.NewEntry(name)
