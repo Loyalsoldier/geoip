@@ -147,28 +147,31 @@ func (t *textIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 }
 
 func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+	entryName := ""
 	name = strings.TrimSpace(name)
-	var filename string
 	if name != "" {
-		filename = name
+		entryName = name
 	} else {
-		filename = filepath.Base(path)
+		entryName = filepath.Base(path)
+
+		// check filename
+		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
+			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
+		}
+
+		// remove file extension but not hidden files of which filename starts with "."
+		dotIndex := strings.LastIndex(entryName, ".")
+		if dotIndex > 0 {
+			entryName = entryName[:dotIndex]
+		}
 	}
 
-	// check filename
-	if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(filename) {
-		return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", filename)
-	}
-	dotIndex := strings.LastIndex(filename, ".")
-	if dotIndex > 0 {
-		filename = filename[:dotIndex]
+	entryName = strings.ToUpper(entryName)
+	if _, found := entries[entryName]; found {
+		return fmt.Errorf("found duplicated list %s", entryName)
 	}
 
-	if _, found := entries[filename]; found {
-		return fmt.Errorf("found duplicated file %s", filename)
-	}
-
-	entry := lib.NewEntry(filename)
+	entry := lib.NewEntry(entryName)
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -178,7 +181,7 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 		return err
 	}
 
-	entries[filename] = entry
+	entries[entryName] = entry
 
 	return nil
 }
@@ -194,11 +197,13 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
 	}
 
+	name = strings.ToUpper(name)
 	entry := lib.NewEntry(name)
 	if err := t.scanFile(resp.Body, entry); err != nil {
 		return err
 	}
 
 	entries[name] = entry
+
 	return nil
 }
