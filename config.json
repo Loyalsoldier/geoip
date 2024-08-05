@@ -122,6 +122,13 @@
       }
     },
     {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "oneFilePerList": true
+      }
+    },
+    {
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
@@ -171,6 +178,18 @@
     },
     {
       "type": "text",
+      "action": "output"
+    },
+    {
+      "type": "clashRuleSetClassical",
+      "action": "output"
+    },
+    {
+      "type": "clashRuleSet",
+      "action": "output"
+    },
+    {
+      "type": "surgeRuleSet",
       "action": "output"
     }
   ]
