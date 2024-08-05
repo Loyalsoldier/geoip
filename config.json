@@ -85,6 +85,7 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "geoip.dat"
       }
     },
@@ -92,6 +93,7 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "geoip-only-cn-private.dat",
         "wantedList": ["cn", "private"]
       }
@@ -100,6 +102,7 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "geoip-asn.dat",
         "wantedList": [
           "cloudflare",
@@ -117,6 +120,7 @@
       "type": "v2rayGeoIPDat",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "oneFilePerList": true,
         "wantedList": ["cn", "private"]
       }
@@ -132,6 +136,7 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "Country.mmdb",
         "overwriteList": [
           "cn",
@@ -151,6 +156,7 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "Country-only-cn-private.mmdb",
         "wantedList": ["cn", "private"]
       }
@@ -159,6 +165,7 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
+        "outputDir": "./output",
         "outputName": "Country-asn.mmdb",
         "wantedList": [
           "cloudflare",

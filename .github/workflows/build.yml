@@ -61,7 +61,7 @@ jobs:
 
       - name: Verify mmdb files
         run: |
-          cd ./output/maxmind || exit 1
+          cd ./output || exit 1
           go install -v github.com/maxmind/mmdbverify@latest
           for name in $(ls *.mmdb); do
             $(go env GOPATH)/bin/mmdbverify -file ${name}
@@ -69,14 +69,14 @@ jobs:
 
       - name: Generate sha256 checksum for dat files
         run: |
-          cd ./output/dat || exit 1
+          cd ./output || exit 1
           for name in $(ls *.dat); do
             sha256sum ${name} > ./${name}.sha256sum
           done
 
       - name: Generate sha256 checksum for mmdb files
         run: |
-          cd ./output/maxmind || exit 1
+          cd ./output || exit 1
           for name in $(ls *.mmdb); do
             sha256sum ${name} > ./${name}.sha256sum
           done
@@ -85,21 +85,14 @@ jobs:
         env:
           LICENSE_KEY: ${{ secrets.MAXMIND_GEOLITE2_LICENSE }}
         run: |
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o GeoLite2-ASN.tar.gz
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o GeoLite2-ASN-CSV.zip
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o GeoLite2-Country.tar.gz
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o GeoLite2-Country-CSV.zip
-
-      - name: Move files to publish directory
-        run: |
-          mkdir -p publish
-          mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum *.gz *.zip ./publish/
-          cp -fpPR ./output/text ./publish
-          cp -fpPR ./output/srs ./publish
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-ASN.tar.gz
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-ASN-CSV.zip
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-Country.tar.gz
+          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-Country-CSV.zip
 
       - name: Git push assets to "release" branch
         run: |
-          cd publish || exit 1
+          cd output || exit 1
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -111,18 +104,19 @@ jobs:
 
       - name: Purge jsdelivr CDN
         run: |
-          cd publish || exit 1
+          cd output || exit 1
           for file in $(ls); do
             curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
           done
 
       - name: Remove some files to avoid publishing to GitHub release
-        run: rm -rf ./publish/*.{gz,zip} ./publish/text ./publish/srs
+        run: rm -rf ./output/*.{gz,zip} ./output/{clash,dat,srs,surge,text}
 
       - name: Upload files to GitHub release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
-          file: ./publish/*
+          file: ./output/*
+          release_name: ${{ env.RELEASE_NAME }}
           tag: ${{ env.TAG_NAME }}
