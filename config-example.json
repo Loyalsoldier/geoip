@@ -277,6 +277,23 @@
       }
     },
     {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish",
+        "onlyIPType": "ipv6",
+        "addPrefixInLine": "iptables -A INPUT -d ",
+        "addSuffixInLine": " -j DROP"
+      }
+    },
+    {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "addPrefixInLine": "deny from "
+      }
+    },
+    {
       "type": "stdout",
       "action": "output"
     },
@@ -324,6 +341,13 @@
       "args": {
         "wantedList": ["cn", "private", "test"],
         "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "surgeRuleSet",
+      "action": "output",
+      "args": {
+        "addSuffixInLine": ",no-resolve"
       }
     }
   ]
