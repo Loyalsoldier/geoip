@@ -93,9 +93,9 @@ jobs:
       - name: Move files to publish directory
         run: |
           mkdir -p publish
-          mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum *.gz *.zip ./publish/
+          mv ./output/dat/*.dat ./output/dat/*.sha256sum ./output/maxmind/*.mmdb ./output/maxmind/*.sha256sum ./output/text/*.txt *.gz *.zip ./publish/
           cp -fpPR ./output/text ./publish
-          cp -fpPR ./output/srs ./publish
+          # cp -fpPR ./output/srs ./publish
 
       - name: Git push assets to "release" branch
         run: |

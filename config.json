@@ -180,10 +180,11 @@
       "type": "text",
       "action": "output",
       "args": {
-        "outputName": "geoip-only-cn-private.txt",
         "wantedList": [
           "cn",
-          "private"
+          "private",
+          "telegram",
+          "cloudflare"
         ],
         "onlyIPType": "ipv4"
       }
