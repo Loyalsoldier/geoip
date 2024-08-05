@@ -171,6 +171,15 @@
     },
     {
       "type": "text",
+      "action": "output",
+      "args": {
+        "outputName": "geoip-only-cn-private.txt",
+        "wantedList": ["cn"， "private"],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "text",
       "action": "output"
     }
   ]
