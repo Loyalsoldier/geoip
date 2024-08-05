@@ -32,6 +32,9 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		URI        string     `json:"uri"`
 		InputDir   string     `json:"inputDir"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
+
+		RemovePrefixesInLine []string `json:"removePrefixesInLine"`
+		RemoveSuffixesInLine []string `json:"removeSuffixesInLine"`
 	}
 
 	if strings.TrimSpace(iType) == "" {
@@ -60,6 +63,9 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		URI:         tmp.URI,
 		InputDir:    tmp.InputDir,
 		OnlyIPType:  tmp.OnlyIPType,
+
+		RemovePrefixesInLine: tmp.RemovePrefixesInLine,
+		RemoveSuffixesInLine: tmp.RemoveSuffixesInLine,
 	}, nil
 }
 

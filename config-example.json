@@ -108,9 +108,42 @@
       "type": "text",
       "action": "add",
       "args": {
+        "inputDir": "./data",
+        "onlyIPType": "ipv4",
+        "removePrefixesInLine": [
+          "iptables -A INPUT -s",
+          "iptables -A INPUT -d"
+        ],
+        "removeSuffixesInLine": ["-j ACCEPT", "-j DROP"]
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
         "name": "mylist",
         "uri": "./an/example/dir/mycidr.txt",
         "onlyIPType": "ipv6"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "mylist",
+        "uri": "./an/example/dir/mycidr.txt",
+        "onlyIPType": "ipv6",
+        "removePrefixesInLine": ["allow from", "deny from"]
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "mylist",
+        "uri": "./an/example/dir/mycidr.txt",
+        "onlyIPType": "ipv6",
+        "removeSuffixesInLine": [";", ","]
       }
     },
     {

@@ -17,6 +17,9 @@ type textIn struct {
 	URI         string
 	InputDir    string
 	OnlyIPType  lib.IPType
+
+	RemovePrefixesInLine []string
+	RemoveSuffixesInLine []string
 }
 
 func (t *textIn) scanFile(reader io.Reader, entry *lib.Entry) error {
@@ -40,10 +43,8 @@ func (t *textIn) scanFile(reader io.Reader, entry *lib.Entry) error {
 func (t *textIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
+		line := scanner.Text()
+
 		line, _, _ = strings.Cut(line, "#")
 		line, _, _ = strings.Cut(line, "//")
 		line, _, _ = strings.Cut(line, "/*")
@@ -51,6 +52,19 @@ func (t *textIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 		if line == "" {
 			continue
 		}
+
+		line = strings.ToLower(line)
+		for _, prefix := range t.RemovePrefixesInLine {
+			line = strings.TrimSpace(strings.TrimPrefix(line, strings.ToLower(strings.TrimSpace(prefix))))
+		}
+		for _, suffix := range t.RemoveSuffixesInLine {
+			line = strings.TrimSpace(strings.TrimSuffix(line, strings.ToLower(strings.TrimSpace(suffix))))
+		}
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
 		if err := entry.AddPrefix(line); err != nil {
 			return err
 		}
