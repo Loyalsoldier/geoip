@@ -110,9 +110,17 @@ func (t *textIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib
 			continue
 		}
 
+		// Examples:
+		// IP-CIDR,162.208.16.0/24
+		// IP-CIDR6,2a0b:e40:1::/48
+		// IP-CIDR,162.208.16.0/24,no-resolve
+		// IP-CIDR6,2a0b:e40:1::/48,no-resolve
 		if strings.HasPrefix(line, "ip-cidr,") || strings.HasPrefix(line, "ip-cidr6,") {
-			_, line, _ = strings.Cut(line, ",")
-			line = strings.TrimSpace(line)
+			parts := strings.Split(line, ",")
+			if len(parts) < 2 {
+				continue
+			}
+			line = strings.TrimSpace(parts[1])
 			if line == "" {
 				continue
 			}
@@ -128,17 +136,27 @@ func (t *textIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib
 func (t *textIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		line := strings.ToLower(strings.TrimSpace(scanner.Text()))
+		line := scanner.Text()
+
+		line, _, _ = strings.Cut(line, "#")
+		line, _, _ = strings.Cut(line, "//")
+		line, _, _ = strings.Cut(line, "/*")
+		line = strings.ToLower(strings.TrimSpace(line))
 		if line == "" {
 			continue
 		}
 
+		// Examples:
+		// IP-CIDR,162.208.16.0/24
+		// IP-CIDR6,2a0b:e40:1::/48
+		// IP-CIDR,162.208.16.0/24,no-resolve
+		// IP-CIDR6,2a0b:e40:1::/48,no-resolve
 		if strings.HasPrefix(line, "ip-cidr,") || strings.HasPrefix(line, "ip-cidr6,") {
-			line, _, _ = strings.Cut(line, "#")
-			line, _, _ = strings.Cut(line, "//")
-			line, _, _ = strings.Cut(line, "/*")
-			_, line, _ = strings.Cut(line, ",")
-			line = strings.TrimSpace(line)
+			parts := strings.Split(line, ",")
+			if len(parts) < 2 {
+				continue
+			}
+			line = strings.TrimSpace(parts[1])
 			if line == "" {
 				continue
 			}
