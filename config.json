@@ -13,7 +13,9 @@
       "type": "cutter",
       "action": "remove",
       "args": {
-        "wantedList": ["cn"],
+        "wantedList": [
+          "cn"
+        ],
         "onlyIPType": "ipv4"
       }
     },
@@ -93,7 +95,10 @@
       "action": "output",
       "args": {
         "outputName": "geoip-only-cn-private.dat",
-        "wantedList": ["cn", "private"]
+        "wantedList": [
+          "cn",
+          "private"
+        ]
       }
     },
     {
@@ -118,7 +123,10 @@
       "action": "output",
       "args": {
         "oneFilePerList": true,
-        "wantedList": ["cn", "private"]
+        "wantedList": [
+          "cn",
+          "private"
+        ]
       }
     },
     {
@@ -145,7 +153,10 @@
       "action": "output",
       "args": {
         "outputName": "Country-only-cn-private.mmdb",
-        "wantedList": ["cn", "private"]
+        "wantedList": [
+          "cn",
+          "private"
+        ]
       }
     },
     {
@@ -174,7 +185,10 @@
       "action": "output",
       "args": {
         "outputName": "geoip-only-cn-private.txt",
-        "wantedList": ["cn"， "private"],
+        "wantedList": [
+          "cn",
+          "private"
+        ],
         "onlyIPType": "ipv4"
       }
     },
