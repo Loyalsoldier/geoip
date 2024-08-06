@@ -3,6 +3,7 @@ package plaintext
 import (
 	"encoding/json"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -36,16 +37,29 @@ func (t *textOut) GetDescription() string {
 
 func (t *textOut) Output(container lib.Container) error {
 	// Filter want list
-	wantList := make(map[string]bool)
+	wantList := make([]string, 0, 50)
 	for _, want := range t.Want {
 		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
+			wantList = append(wantList, want)
 		}
 	}
 
 	switch len(wantList) {
 	case 0:
+		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
+			list = append(list, entry.GetName())
+		}
+
+		// Sort the list
+		slices.Sort(list)
+
+		for _, name := range list {
+			entry, found := container.GetEntry(name)
+			if !found {
+				log.Printf("❌ entry %s not found", name)
+				continue
+			}
 			data, err := t.marshalBytes(entry)
 			if err != nil {
 				return err
@@ -57,7 +71,10 @@ func (t *textOut) Output(container lib.Container) error {
 		}
 
 	default:
-		for name := range wantList {
+		// Sort the list
+		slices.Sort(wantList)
+
+		for _, name := range wantList {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)

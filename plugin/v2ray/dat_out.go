@@ -94,19 +94,33 @@ func (g *geoIPDatOut) GetDescription() string {
 
 func (g *geoIPDatOut) Output(container lib.Container) error {
 	// Filter want list
-	wantList := make(map[string]bool)
+	wantList := make([]string, 0, 50)
 	for _, want := range g.Want {
 		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
+			wantList = append(wantList, want)
 		}
 	}
 
 	geoIPList := new(router.GeoIPList)
 	geoIPList.Entry = make([]*router.GeoIP, 0, 300)
 	updated := false
+
 	switch len(wantList) {
 	case 0:
+		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
+			list = append(list, entry.GetName())
+		}
+
+		// Sort the list
+		sort.Strings(list)
+
+		for _, name := range list {
+			entry, found := container.GetEntry(name)
+			if !found {
+				log.Printf("❌ entry %s not found", name)
+				continue
+			}
 			geoIP, err := g.generateGeoIP(entry)
 			if err != nil {
 				return err
@@ -128,7 +142,10 @@ func (g *geoIPDatOut) Output(container lib.Container) error {
 		}
 
 	default:
-		for name := range wantList {
+		// Sort the list
+		sort.Strings(wantList)
+
+		for _, name := range wantList {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)
