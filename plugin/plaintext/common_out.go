@@ -23,6 +23,7 @@ type textOut struct {
 	Action      lib.Action
 	Description string
 	OutputDir   string
+	OutputExt   string
 	Want        []string
 	OnlyIPType  lib.IPType
 
@@ -33,6 +34,7 @@ type textOut struct {
 func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
+		OutputExt  string     `json:"outputExtension"`
 		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 
@@ -59,11 +61,16 @@ func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.Outp
 		}
 	}
 
+	if tmp.OutputExt == "" {
+		tmp.OutputExt = ".txt"
+	}
+
 	return &textOut{
 		Type:        iType,
 		Action:      action,
 		Description: descTextOut,
 		OutputDir:   tmp.OutputDir,
+		OutputExt:   tmp.OutputExt,
 		Want:        tmp.Want,
 		OnlyIPType:  tmp.OnlyIPType,
 

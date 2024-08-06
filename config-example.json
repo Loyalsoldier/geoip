@@ -294,6 +294,26 @@
       }
     },
     {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./output/nginx/allow",
+        "outputExtension": ".conf",
+        "addPrefixInLine": "allow ",
+        "addSuffixInLine": ";"
+      }
+    },
+    {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./output/nginx/deny",
+        "outputExtension": ".conf",
+        "addPrefixInLine": "deny ",
+        "addSuffixInLine": ";"
+      }
+    },
+    {
       "type": "stdout",
       "action": "output"
     },
