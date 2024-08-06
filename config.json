@@ -217,7 +217,10 @@
     },
     {
       "type": "surgeRuleSet",
-      "action": "output"
+      "action": "output",
+      "args": {
+        "addSuffixInLine": ",no-resolve"
+      }
     }
   ]
 }
