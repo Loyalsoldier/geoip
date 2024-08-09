@@ -18,9 +18,9 @@ const (
 )
 
 var (
-	defaultCCFile   = filepath.Join("./", "geolite2", "GeoLite2-Country-Locations-en.csv")
-	defaultIPv4File = filepath.Join("./", "geolite2", "GeoLite2-Country-Blocks-IPv4.csv")
-	defaultIPv6File = filepath.Join("./", "geolite2", "GeoLite2-Country-Blocks-IPv6.csv")
+	defaultCCFile          = filepath.Join("./", "geolite2", "GeoLite2-Country-Locations-en.csv")
+	defaultCountryIPv4File = filepath.Join("./", "geolite2", "GeoLite2-Country-Blocks-IPv4.csv")
+	defaultCountryIPv6File = filepath.Join("./", "geolite2", "GeoLite2-Country-Blocks-IPv6.csv")
 )
 
 func init() {
@@ -52,11 +52,11 @@ func newGeoLite2CountryCSV(action lib.Action, data json.RawMessage) (lib.InputCo
 	}
 
 	if tmp.IPv4File == "" {
-		tmp.IPv4File = defaultIPv4File
+		tmp.IPv4File = defaultCountryIPv4File
 	}
 
 	if tmp.IPv6File == "" {
-		tmp.IPv6File = defaultIPv6File
+		tmp.IPv6File = defaultCountryIPv6File
 	}
 
 	return &geoLite2CountryCSV{

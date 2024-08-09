@@ -28,6 +28,31 @@
       }
     },
     {
+      "type": "maxmindGeoLite2ASNCSV",
+      "action": "add",
+      "args": {
+        "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
+        "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv",
+        "wantedList": {
+          "facebook": ["AS63293", "AS54115", "AS32934"],
+          "fastly": ["AS54113", "AS394192"]
+        }
+      }
+    },
+    {
+      "type": "maxmindGeoLite2ASNCSV",
+      "action": "add",
+      "args": {
+        "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
+        "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv",
+        "wantedList": {
+          "facebook": ["AS63293", "AS54115", "AS32934"],
+          "fastly": ["AS54113", "AS394192"]
+        },
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
       "type": "maxmindMMDB",
       "action": "add"
     },
