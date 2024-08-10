@@ -155,21 +155,28 @@ func (s *srsIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 }
 
 func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+	entryName := ""
 	name = strings.TrimSpace(name)
-	var filename string
 	if name != "" {
-		filename = name
+		entryName = name
 	} else {
-		filename = filepath.Base(path)
+		entryName = filepath.Base(path)
+
+		// check filename
+		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
+			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
+		}
+
+		// remove file extension but not hidden files of which filename starts with "."
+		dotIndex := strings.LastIndex(entryName, ".")
+		if dotIndex > 0 {
+			entryName = entryName[:dotIndex]
+		}
 	}
 
-	// check filename
-	if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(filename) {
-		return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", filename)
-	}
-	dotIndex := strings.LastIndex(filename, ".")
-	if dotIndex > 0 {
-		filename = filename[:dotIndex]
+	entryName = strings.ToUpper(entryName)
+	if _, found := entries[entryName]; found {
+		return fmt.Errorf("found duplicated list %s", entryName)
 	}
 
 	file, err := os.Open(path)
@@ -178,7 +185,7 @@ func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 	}
 	defer file.Close()
 
-	if err := s.generateEntries(filename, file, entries); err != nil {
+	if err := s.generateEntries(entryName, file, entries); err != nil {
 		return err
 	}
 
@@ -204,6 +211,7 @@ func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 }
 
 func (s *srsIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
+	name = strings.ToUpper(name)
 	entry, found := entries[name]
 	if !found {
 		entry = lib.NewEntry(name)
