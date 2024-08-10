@@ -213,7 +213,7 @@ func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entri
 		}
 
 		if len(record) < 4 {
-			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", typeASNCSV, g.Action, record)
+			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", typeCountryCSV, g.Action, record)
 		}
 
 		ccID := ""
