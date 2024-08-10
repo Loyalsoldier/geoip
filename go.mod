@@ -9,6 +9,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.9.3
 	github.com/spf13/cobra v1.8.1
+	github.com/tidwall/gjson v1.17.3
 	github.com/v2fly/v2ray-core/v5 v5.16.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	google.golang.org/protobuf v1.34.2
@@ -27,6 +28,8 @@ require (
 	github.com/sagernet/sing v0.4.1 // indirect
 	github.com/sagernet/sing-dns v0.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	go.starlark.net v0.0.0-20230612165344-9532f5667272 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect

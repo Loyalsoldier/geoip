@@ -33,6 +33,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		InputDir   string     `json:"inputDir"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 
+		JSONPath             []string `json:"jsonPath"`
 		RemovePrefixesInLine []string `json:"removePrefixesInLine"`
 		RemoveSuffixesInLine []string `json:"removeSuffixesInLine"`
 	}
@@ -55,6 +56,10 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		return nil, fmt.Errorf("type %s | action %s name & uri must be specified together", typeTextIn, action)
 	}
 
+	if iType == typeJSONIn && len(tmp.JSONPath) == 0 {
+		return nil, fmt.Errorf("type %s | action %s missing jsonPath", typeJSONIn, action)
+	}
+
 	return &textIn{
 		Type:        iType,
 		Action:      action,
@@ -64,6 +69,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		InputDir:    tmp.InputDir,
 		OnlyIPType:  tmp.OnlyIPType,
 
+		JSONPath:             tmp.JSONPath,
 		RemovePrefixesInLine: tmp.RemovePrefixesInLine,
 		RemoveSuffixesInLine: tmp.RemoveSuffixesInLine,
 	}, nil

@@ -181,6 +181,28 @@
       }
     },
     {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "google",
+        "uri": "https://www.gstatic.com/ipranges/goog.json",
+        "jsonPath": ["prefixes.#.ipv4Prefix", "prefixes.#.ipv6Prefix"]
+      }
+    },
+    {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "cloudfront",
+        "uri": "https://ip-ranges.amazonaws.com/ip-ranges.json",
+        "jsonPath": [
+          "prefixes.#(service==\"CLOUDFRONT\")#.ip_prefix",
+          "ipv6_prefixes.#(service==\"CLOUDFRONT\")#.ipv6_prefix"
+        ],
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
       "type": "stdin",
       "action": "add",
       "args": {

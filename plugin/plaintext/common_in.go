@@ -2,10 +2,12 @@ package plaintext
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
+	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,6 +20,7 @@ type textIn struct {
 	InputDir    string
 	OnlyIPType  lib.IPType
 
+	JSONPath             []string
 	RemovePrefixesInLine []string
 	RemoveSuffixesInLine []string
 }
@@ -27,6 +30,8 @@ func (t *textIn) scanFile(reader io.Reader, entry *lib.Entry) error {
 	switch t.Type {
 	case typeTextIn:
 		err = t.scanFileForTextIn(reader, entry)
+	case typeJSONIn:
+		err = t.scanFileForJSONIn(reader, entry)
 	case typeClashRuleSetClassicalIn:
 		err = t.scanFileForClashClassicalRuleSetIn(reader, entry)
 	case typeClashRuleSetIPCIDRIn:
@@ -181,6 +186,32 @@ func (t *textIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) e
 	}
 	if err := scanner.Err(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (t *textIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	if !gjson.ValidBytes(data) {
+		return fmt.Errorf("invalid JSON data")
+	}
+
+	// JSON Path syntax:
+	// https://github.com/tidwall/gjson/blob/master/SYNTAX.md
+	for _, path := range t.JSONPath {
+		path = strings.TrimSpace(path)
+
+		result := gjson.GetBytes(data, path)
+		for _, cidr := range result.Array() {
+			if err := entry.AddPrefix(cidr.String()); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

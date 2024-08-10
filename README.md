@@ -197,6 +197,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **stdin**：从 standard input 获取纯文本 IP 和 CIDR（例如：`1.1.1.1` 或 `1.0.0.0/24`）
 - **private**：局域网和私有网络 CIDR（例如：`192.168.0.0/16` 和 `127.0.0.0/8`）
 - **cutter**：用于裁剪前置步骤中的数据
+- **json**：JSON 数据格式
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`）
 - **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据（`GeoLite2-ASN-CSV.zip`）
@@ -254,6 +255,7 @@ All available input formats:
   - clashRuleSet (Convert ipcidr type of Clash RuleSet to other formats)
   - clashRuleSetClassical (Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines))
   - cutter (Remove data from previous steps)
+  - json (Convert JSON data to other formats)
   - maxmindGeoLite2ASNCSV (Convert MaxMind GeoLite2 ASN CSV data to other formats)
   - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
   - maxmindMMDB (Convert MaxMind mmdb database to other formats)
