@@ -69,10 +69,42 @@
       }
     },
     {
-      "type": "text",
+      "type": "json",
       "action": "add",
       "args": {
-        "inputDir": "./data"
+        "name": "google",
+        "uri": "https://www.gstatic.com/ipranges/goog.json",
+        "jsonPath": ["prefixes.#.ipv4Prefix", "prefixes.#.ipv6Prefix"]
+      }
+    },
+    {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "google",
+        "uri": "https://www.gstatic.com/ipranges/cloud.json",
+        "jsonPath": ["prefixes.#.ipv4Prefix", "prefixes.#.ipv6Prefix"]
+      }
+    },
+    {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "fastly",
+        "uri": "https://api.fastly.com/public-ip-list",
+        "jsonPath": ["addresses", "ipv6_addresses"]
+      }
+    },
+    {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "cloudfront",
+        "uri": "https://ip-ranges.amazonaws.com/ip-ranges.json",
+        "jsonPath": [
+          "prefixes.#(service==\"CLOUDFRONT\")#.ip_prefix",
+          "ipv6_prefixes.#(service==\"CLOUDFRONT\")#.ipv6_prefix"
+        ]
       }
     },
     {
