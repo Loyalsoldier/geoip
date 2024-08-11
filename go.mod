@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.21.10
 
 require (
+	github.com/klauspost/compress v1.17.9
 	github.com/maxmind/mmdbwriter v1.0.0
 	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.9.3

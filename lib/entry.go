@@ -360,6 +360,42 @@ func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
 	return nil, fmt.Errorf("entry %s has no prefix", e.GetName())
 }
 
+func (e *Entry) MarshalIPRange(opts ...IgnoreIPOption) ([]netipx.IPRange, error) {
+	var ignoreIPType IPType
+	for _, opt := range opts {
+		if opt != nil {
+			ignoreIPType = opt()
+		}
+	}
+	disableIPv4, disableIPv6 := false, false
+	switch ignoreIPType {
+	case IPv4:
+		disableIPv4 = true
+	case IPv6:
+		disableIPv6 = true
+	}
+
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
+
+	ipranges := make([]netipx.IPRange, 0, 1024)
+
+	if !disableIPv4 && e.hasIPv4Set() {
+		ipranges = append(ipranges, e.ipv4Set.Ranges()...)
+	}
+
+	if !disableIPv6 && e.hasIPv6Set() {
+		ipranges = append(ipranges, e.ipv6Set.Ranges()...)
+	}
+
+	if len(ipranges) > 0 {
+		return ipranges, nil
+	}
+
+	return nil, fmt.Errorf("entry %s has no prefix", e.GetName())
+}
+
 func (e *Entry) MarshalText(opts ...IgnoreIPOption) ([]string, error) {
 	var ignoreIPType IPType
 	for _, opt := range opts {

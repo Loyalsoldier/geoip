@@ -1,8 +1,8 @@
 # 简介
 
-本项目每周四自动生成 GeoIP 文件，同时提供命令行界面（CLI）供用户自行定制 GeoIP 文件，包括但不限于 V2Ray dat 格式路由规则文件 `geoip.dat`、MaxMind mmdb 格式文件 `Country.mmdb` 和 sing-box SRS 格式文件。
+本项目每周四自动生成 GeoIP 文件，同时提供命令行界面（CLI）供用户自行定制 GeoIP 文件，包括但不限于 V2Ray dat 格式路由规则文件 `geoip.dat`、MaxMind mmdb 格式文件 `Country.mmdb`、sing-box SRS 格式文件和 mihomo MRS 格式文件。
 
-This project releases GeoIP files automatically every Thursday. It also provides a command line interface(CLI) for users to customize their own GeoIP files, included but not limited to V2Ray dat format file `geoip.dat`, MaxMind mmdb format file `Country.mmdb` and sing-box SRS format files.
+This project releases GeoIP files automatically every Thursday. It also provides a command line interface(CLI) for users to customize their own GeoIP files, included but not limited to V2Ray dat format file `geoip.dat`, MaxMind mmdb format file `Country.mmdb`, sing-box SRS format files and mihomo MRS format files.
 
 ## 与官方版 GeoIP 的区别
 
@@ -95,6 +95,40 @@ rules:
 }
 ```
 
+在 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta) 中使用本项目 `.mrs` 格式文件的参考配置：
+
+```yaml
+rule-providers:
+  private-cidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/private.mrs"
+    path: ./mrs/geoip/private.mrs
+    interval: 86400
+
+  cn-cidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/cn.mrs"
+    path: ./mrs/geoip/cn.mrs
+    interval: 86400
+
+  google-cidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/google.mrs"
+    path: ./mrs/geoip/google.mrs
+    interval: 86400
+
+rules:
+  - RULE-SET,private-cidr,DIRECT
+  - RULE-SET,cn-cidr,DIRECT
+  - RULE-SET,google-cidr,PROXY
+```
+
 ## 下载地址
 
 > 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址 `cdn.jsdelivr.net`。
@@ -164,6 +198,12 @@ rules:
 
 请查看本项目 `release` 分支下的 [srs](https://github.com/Loyalsoldier/geoip/tree/release/srs) 目录。
 
+### mihomo MRS 格式路由规则文件
+
+> 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)。
+
+请查看本项目 `release` 分支下的 [mrs](https://github.com/Loyalsoldier/geoip/tree/release/mrs) 目录。
+
 ## 定制 GeoIP 文件
 
 可通过以下几种方式定制 GeoIP 文件：
@@ -202,6 +242,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据（`GeoLite2-ASN-CSV.zip`）
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据（`GeoLite2-Country-CSV.zip`）
+- **mihomoMRS**：mihomo MRS 格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
 - **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
@@ -214,6 +255,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **lookup**：从指定的列表中查找指定的 IP 或 CIDR
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`，适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go)）
 - **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`，适用于 [Clash](https://github.com/Dreamacro/clash) 和 [Leaf](https://github.com/eycorsican/leaf)）
+- **mihomoMRS**：mihomo MRS 格式（`geoip-cn.mrs`，适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)）
 - **singboxSRS**：sing-box SRS 格式（`geoip-cn.srs`，适用于 [sing-box](https://github.com/SagerNet/sing-box)）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
 - **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
@@ -259,6 +301,7 @@ All available input formats:
   - maxmindGeoLite2ASNCSV (Convert MaxMind GeoLite2 ASN CSV data to other formats)
   - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
   - maxmindMMDB (Convert MaxMind mmdb database to other formats)
+  - mihomoMRS (Convert mihomo MRS data to other formats)
   - private (Convert LAN and private network CIDR to other formats)
   - singboxSRS (Convert sing-box SRS data to other formats)
   - stdin (Accept plaintext IP & CIDR from standard input, separated by newline)
@@ -272,6 +315,7 @@ All available output formats:
   - clashRuleSetClassical (Convert data to classical type of Clash RuleSet)
   - lookup (Lookup specified IP or CIDR from various formats of data)
   - maxmindMMDB (Convert data to MaxMind mmdb database format)
+  - mihomoMRS (Convert data to mihomo MRS format)
   - singboxSRS (Convert data to sing-box SRS format)
   - stdout (Convert data to plaintext CIDR format and output to standard output)
   - surgeRuleSet (Convert data to Surge RuleSet)
@@ -313,6 +357,13 @@ $ ./geoip convert -c config.json
 2021/08/29 12:11:45 ✅ [singboxSRS] cloudfront.txt --> output/srs
 2021/08/29 12:11:45 ✅ [singboxSRS] facebook.txt --> output/srs
 2021/08/29 12:11:45 ✅ [singboxSRS] fastly.txt --> output/srs
+2021/08/29 12:11:50 ✅ [mihomoMRS] netflix.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] telegram.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] cn.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] cloudflare.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] cloudfront.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] facebook.txt --> output/mrs
+2021/08/29 12:11:50 ✅ [mihomoMRS] fastly.txt --> output/mrs
 ```
 
 ```bash
