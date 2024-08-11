@@ -101,7 +101,7 @@ jobs:
           done
 
       - name: Remove some files to avoid publishing to GitHub release
-        run: rm -rf ./output/*.{gz,zip} ./output/{clash,dat,nginx,srs,surge,text}
+        run: rm -rf ./output/*.{gz,zip} ./output/{clash,dat,mrs,nginx,srs,surge,text}
 
       - name: Upload files to GitHub release
         uses: svenstaro/upload-release-action@v2

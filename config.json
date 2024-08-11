@@ -275,6 +275,10 @@
       "action": "output"
     },
     {
+      "type": "mihomoMRS",
+      "action": "output"
+    },
+    {
       "type": "text",
       "action": "output"
     },
