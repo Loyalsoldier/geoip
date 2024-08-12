@@ -1,10 +1,14 @@
 # 简介
 
-本项目每周四自动生成 GeoIP 文件，同时提供命令行界面（CLI）供用户自行定制 GeoIP 文件，包括但不限于 V2Ray dat 格式路由规则文件 `geoip.dat`、MaxMind mmdb 格式文件 `Country.mmdb`、sing-box SRS 格式文件和 mihomo MRS 格式文件。
+本项目每周四自动生成多种格式 GeoIP 文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb`、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 和 Surge ruleset。
 
-This project releases GeoIP files automatically every Thursday. It also provides a command line interface(CLI) for users to customize their own GeoIP files, included but not limited to V2Ray dat format file `geoip.dat`, MaxMind mmdb format file `Country.mmdb`, sing-box SRS format files and mihomo MRS format files.
+This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface(CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb`, sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files and Surge ruleset files.
 
-## 与官方版 GeoIP 的区别
+## 与 MaxMind 官方 GeoIP 数据的区别
+
+本项目默认使用 [MaxMind GeoLite2 Country CSV 数据](https://github.com/Loyalsoldier/geoip/blob/release/GeoLite2-Country-CSV.zip)生成各个国家和地区的 GeoIP 文件。所有可供使用的国家和地区 geoip 类别（如 `geoip:cn`，两位英文字母表示国家和地区），请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)。
+
+另外，本项目对 MaxMind 官方 GeoIP 数据做了修改和新增：
 
 - 中国大陆 IPv4 地址数据融合了 [IPIP.net](https://github.com/17mon/china_ip_list/blob/master/china_ip_list.txt) 和 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china.txt)
 - 中国大陆 IPv6 地址数据融合了 MaxMind GeoLite2 和 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china6.txt)
@@ -18,125 +22,20 @@ This project releases GeoIP files automatically every Thursday. It also provides
   - `geoip:telegram`（`GEOIP,TELEGRAM`）
   - `geoip:twitter`（`GEOIP,TWITTER`）
 
-## 参考配置
+## 下载地址与使用方法
 
-在 [V2Ray](https://github.com/v2fly/v2ray-core) 中使用本项目 `.dat` 格式文件的参考配置：
-
-```json
-"routing": {
-  "rules": [
-    {
-      "type": "field",
-      "outboundTag": "Direct",
-      "ip": [
-        "geoip:cn",
-        "geoip:private",
-        "ext:cn.dat:cn",
-        "ext:private.dat:private",
-        "ext:geoip-only-cn-private.dat:cn",
-        "ext:geoip-only-cn-private.dat:private"
-      ]
-    },
-    {
-      "type": "field",
-      "outboundTag": "Proxy",
-      "ip": [
-        "geoip:us",
-        "geoip:jp",
-        "geoip:facebook",
-        "geoip:telegram",
-        "ext:geoip-asn.dat:facebook",
-        "ext:geoip-asn.dat:telegram"
-      ]
-    }
-  ]
-}
-```
-
-在 [Clash](https://github.com/Dreamacro/clash) 中使用本项目 `.mmdb` 格式文件的参考配置：
-
-```yaml
-rules:
-  - GEOIP,PRIVATE,policy,no-resolve
-  - GEOIP,FACEBOOK,policy
-  - GEOIP,CN,policy,no-resolve
-```
-
-在 [Leaf](https://github.com/eycorsican/leaf) 中使用本项目 `.mmdb` 格式文件的参考配置，查看[官方 README](https://github.com/eycorsican/leaf/blob/master/README.zh.md#geoip)。
-
-在 [sing-box](https://github.com/SagerNet/sing-box) 中使用本项目 `.srs` 格式文件的参考配置：
-
-```json
-"route": {
-  "rules": [
-    {
-      "rule_set": "geoip-cn",
-      "outbound": "direct"
-    },
-    {
-      "rule_set": "geoip-us",
-      "outbound": "block"
-    }
-  ],
-  "rule_set": [
-    {
-      "tag": "geoip-cn",
-      "type": "remote",
-      "format": "binary",
-      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/cn.srs"
-    },
-    {
-      "tag": "geoip-us",
-      "type": "remote",
-      "format": "binary",
-      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/us.srs"
-    }
-  ]
-}
-```
-
-在 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta) 中使用本项目 `.mrs` 格式文件的参考配置：
-
-```yaml
-rule-providers:
-  private-cidr:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/private.mrs"
-    path: ./mrs/geoip/private.mrs
-    interval: 86400
-
-  cn-cidr:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/cn.mrs"
-    path: ./mrs/geoip/cn.mrs
-    interval: 86400
-
-  google-cidr:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    url: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/google.mrs"
-    path: ./mrs/geoip/google.mrs
-    interval: 86400
-
-rules:
-  - RULE-SET,private-cidr,DIRECT
-  - RULE-SET,cn-cidr,DIRECT
-  - RULE-SET,google-cidr,PROXY
-```
-
-## 下载地址
+本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址：
 
 > 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址 `cdn.jsdelivr.net`。
+> 如果无法访问域名 `cdn.jsdelivr.net`，可以将其替换为 `fastly.jsdelivr.net`。
+>
 > *.sha256sum 为校验文件。
 
-### V2Ray dat 格式路由规则文件
+### V2Ray dat 格式文件
 
-> 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go)。
+> 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)。
+
+> 此 dat 格式文件不能用于 Nginx。
 
 - **geoip.dat**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)
@@ -168,10 +67,119 @@ rules:
 - **private.dat.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
+- **所有国家 / 地区 / 新增类别**的 dat 格式文件，请查看本项目 `release` 分支下的 [dat 目录](https://github.com/Loyalsoldier/geoip/tree/release/dat)。
+
+#### dat 格式文件使用方法
+
+<details>
+  <summary>点击查看在 <b>V2Ray</b> 和 <b>Xray-core</b> 中的使用方法</summary>
+  <br/>
+  <p>需要先下载 <code>.dat</code> 格式文件，并放置在程序目录内。</p>
+
+```json
+"routing": {
+  "rules": [
+    {
+      "type": "field",
+      "outboundTag": "Direct",
+      "ip": [
+        "geoip:cn",
+        "geoip:private",
+        "ext:cn.dat:cn",
+        "ext:private.dat:private",
+        "ext:geoip-only-cn-private.dat:cn",
+        "ext:geoip-only-cn-private.dat:private"
+      ]
+    },
+    {
+      "type": "field",
+      "outboundTag": "Proxy",
+      "ip": [
+        "geoip:us",
+        "geoip:jp",
+        "geoip:facebook",
+        "geoip:telegram",
+        "ext:geoip-asn.dat:facebook",
+        "ext:geoip-asn.dat:telegram"
+      ]
+    }
+  ]
+}
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>mihomo</b> 中的使用方法</summary>
+
+```yaml
+geodata-mode: true
+geox-url:
+  geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/geoip.dat"
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>hysteria</b> 中的使用方法</summary>
+  <br/>
+  <p>需要先下载 <code>.dat</code> 格式文件，并放置在 hysteria 程序目录内。</p>
+
+```
+direct(geoip:cn)
+proxy(geoip:telegram)
+proxy(geoip:us)
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>Trojan-Go</b> 中的使用方法</summary>
+  <br/>
+  <p>需要先下载 <code>.dat</code> 格式文件，并放置在 Trojan-Go 程序目录内。</p>
+
+```json
+"router": {
+  "enabled": true,
+  "bypass": ["geoip:cn"],
+  "proxy": ["geoip:telegram", "geoip:us"],
+  "block": ["geoip:jp"],
+  "default_policy": "proxy",
+  "geoip": "./geoip.dat"
+}
+```
+</details>
+
+---
 
 ### MaxMind mmdb 格式文件
 
-> 适用于 [Clash](https://github.com/Dreamacro/clash) 和 [Leaf](https://github.com/eycorsican/leaf)。
+MaxMind 官方版**国家/地区**类型 mmdb 文件：
+
+> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
+
+> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。只保留了 `country` 下的 `iso_code`（两位英文字母表示的国家/地区代码）字段。
+
+- **GeoLite2-Country.mmdb**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb)
+- **GeoLite2-Country.mmdb.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum)
+
+MaxMind 官方版 **ASN** 类型 mmdb 文件：
+
+> 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Surge](https://nssurge.com)。
+
+- **GeoLite2-ASN.mmdb**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb)
+- **GeoLite2-ASN.mmdb.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum)
+
+本项目生成的**国家/地区**类型 mmdb 文件：
+
+> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
+
+> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。只保留了 `country` 下的 `iso_code`（两位英文字母表示的国家/地区代码）字段。
 
 - **Country.mmdb**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb)
@@ -192,34 +200,239 @@ rules:
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum)
 
-### sing-box SRS 格式路由规则文件
+#### mmdb 格式文件使用方法
+
+<details>
+  <summary>点击查看在 <b>Clash</b> 中的使用方法</summary>
+  <br/>
+  <p>需要先下载 <code>.mmdb</code> 格式文件，命名为 <code>Country.mmdb</code>，并放置在 Clash 程序目录内。</p>
+
+```yaml
+rules:
+  - GEOIP,PRIVATE,policy,no-resolve
+  - GEOIP,FACEBOOK,policy
+  - GEOIP,CN,policy,no-resolve
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>mihomo</b> 中的使用方法</summary>
+
+```yaml
+geodata-mode: true
+geox-url:
+  mmdb: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb"
+  asn: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb"
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>Shadowrocket</b> 中的使用方法</summary>
+  <br/>
+  <p>需要将下载地址填入到 Shadowrocket 的设置中。</p>
+
+```conf
+[Rule]
+GEOIP,PRIVATE,DIRECT
+GEOIP,FACEBOOK,PROXY
+GEOIP,CN,DIRECT
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>Quantumult X</b> 中的使用方法</summary>
+  <br/>
+  <p>需要将下载地址填入到 Quantumult X 的设置中。</p>
+
+```conf
+[filter_local]
+GEOIP,PRIVATE,DIRECT
+GEOIP,FACEBOOK,PROXY
+GEOIP,CN,DIRECT
+```
+</details>
+
+<details>
+  <summary>点击查看在 <b>Surge</b> 中的使用方法</summary>
+  <br/>
+  <p>需要将下载地址填入到 Surge 的设置中。</p>
+
+```conf
+[Rule]
+GEOIP,PRIVATE,policy,no-resolve
+GEOIP,FACEBOOK,policy
+GEOIP,CN,policy,no-resolve
+```
+</details>
+
+---
+
+### sing-box SRS 格式文件
 
 > 适用于 [sing-box](https://github.com/SagerNet/sing-box)。
 
-请查看本项目 `release` 分支下的 [srs](https://github.com/Loyalsoldier/geoip/tree/release/srs) 目录。
+请查看本项目 `release` 分支下的 [srs 目录](https://github.com/Loyalsoldier/geoip/tree/release/srs)。
 
-### mihomo MRS 格式路由规则文件
+#### SRS 格式文件使用方法
+
+<details>
+  <summary>点击查看在 <b>sing-box</b> 中的使用方法</summary>
+
+```json
+"route": {
+  "rules": [
+    {
+      "rule_set": "geoip-cn",
+      "outbound": "direct"
+    },
+    {
+      "rule_set": "geoip-us",
+      "outbound": "block"
+    }
+  ],
+  "rule_set": [
+    {
+      "tag": "geoip-cn",
+      "type": "remote",
+      "format": "binary",
+      "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/cn.srs"
+    },
+    {
+      "tag": "geoip-us",
+      "type": "remote",
+      "format": "binary",
+      "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/us.srs"
+    }
+  ]
+}
+```
+</details>
+
+---
+
+### mihomo MRS 格式文件
 
 > 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)。
 
-请查看本项目 `release` 分支下的 [mrs](https://github.com/Loyalsoldier/geoip/tree/release/mrs) 目录。
+请查看本项目 `release` 分支下的 [mrs 目录](https://github.com/Loyalsoldier/geoip/tree/release/mrs)。
 
-## 定制 GeoIP 文件
+#### MRS 格式文件使用方法
 
-可通过以下几种方式定制 GeoIP 文件：
+<details>
+  <summary>点击查看在 <b>mihomo</b> 中的使用方法</summary>
+
+```yaml
+rule-providers:
+  cn-cidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/cn.mrs"
+    path: ./mrs/geoip/cn.mrs
+    interval: 86400
+
+  google-cidr:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/google.mrs"
+    path: ./mrs/geoip/google.mrs
+    interval: 86400
+
+rules:
+  - RULE-SET,cn-cidr,DIRECT
+  - RULE-SET,google-cidr,PROXY,no-resolve
+```
+</details>
+
+---
+
+### Clash ruleset 文件
+
+> 适用于 [Clash Premium](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)。
+
+请查看本项目 `release` 分支下的 [clash 目录](https://github.com/Loyalsoldier/geoip/tree/release/clash)。
+
+#### Clash ruleset 使用方法
+
+<details>
+  <summary>点击查看在 <b>Clash Premium</b> 和 <b>mihomo</b> 中的使用方法</summary>
+
+```yaml
+rule-providers:
+  cn-cidr:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/cn.txt"
+    path: ./ruleset/ipcidr/cn.yaml
+    interval: 86400
+
+  telegram-cidr:
+    type: http
+    behavior: ipcidr
+    format: yaml
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/telegram.txt"
+    path: ./ruleset/ipcidr/telegram.yaml
+    interval: 86400
+
+rules:
+  - RULE-SET,cn-cidr,DIRECT
+  - RULE-SET,telegram-cidr,PROXY,no-resolve
+```
+</details>
+
+---
+
+### Surge ruleset 文件
+
+> 适用于 [Surge](https://nssurge.com)。
+
+请查看本项目 `release` 分支下的 [surge 目录](https://github.com/Loyalsoldier/geoip/tree/release/surge)。
+
+#### Surge ruleset 使用方法
+
+<details>
+  <summary>点击查看在 <b>Surge</b> 中的使用方法</summary>
+
+```conf
+[Rule]
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/us.txt,REJECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/cn.txt,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.txt,PROXY,no-resolve
+```
+</details>
+
+---
+
+### 纯文本 txt 格式文件
+
+请查看本项目 `release` 分支下的 [text 目录](https://github.com/Loyalsoldier/geoip/tree/release/text)。
+
+---
+
+### Nginx `allow` 和 `deny` 文件
+
+请查看本项目 `release` 分支下的 [nginx 目录](https://github.com/Loyalsoldier/geoip/tree/release/nginx)。
+
+---
+
+## 自行定制 GeoIP 文件
+
+可通过以下几种方式自行定制 GeoIP 文件：
 
 - **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本仓库后，修改自己仓库内的配置文件 `config.json` 和 GitHub Workflow `.github/workflows/build.yml`
 - **本地生成**：
-  - 安装 [Golang](https://golang.org/dl/) 和 [Git](https://git-scm.com)
+  - 安装 [Golang](https://go.dev/dl/) 和 [Git](https://git-scm.com)
   - 拉取项目代码: `git clone https://github.com/Loyalsoldier/geoip.git`
   - 进入项目根目录：`cd geoip`
   - 修改配置文件 `config.json`
-  - 运行代码：`go run ./`
+  - 运行代码：`go run ./ convert -c ./config.json`
 
 **特别说明：**
 
-- **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，如果需要使用 MaxMind GeoLite2 Country CSV 数据文件，需要在自己仓库的 **[Settings]** 选项卡的 **[Secrets]** 页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MAXMIND 账号的 LICENSE KEY，需要[**注册 MAXMIND 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 **[Services]** 项下的 **[My License Key]** 里生成。
-- **本地生成**：如果需要使用 MaxMind GeoLite2 Country CSV 数据文件（`GeoLite2-Country-CSV.zip`），需要提前从 MaxMind 下载，或从本项目 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)[下载](https://github.com/Loyalsoldier/geoip/raw/release/GeoLite2-Country-CSV.zip)，并解压缩到名为 `geolite2` 的目录。
+- **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，如果需要使用 MaxMind GeoLite2 官方数据文件，需要在自己仓库的 **[Settings]** 页面的左侧边栏 **[Secrets and variables]** 下的 **[Actions]** 选项卡页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MaxMind 账号的 LICENSE KEY，需要[**注册 MaxMind 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 [**Manage License Keys**] 里生成。
+- **本地生成**：如果需要使用 MaxMind 官方 GeoLite2 数据文件，需要提前从 MaxMind 下载，或者从本项目 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)下载（文件名以 `GeoLite2` 为前缀的文件），并解压缩到名为 `geolite2` 的目录。
 
 ### 概念解析
 
@@ -238,12 +451,12 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **private**：局域网和私有网络 CIDR（例如：`192.168.0.0/16` 和 `127.0.0.0/8`）
 - **cutter**：用于裁剪前置步骤中的数据
 - **json**：JSON 数据格式
-- **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`）
-- **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
-- **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据（`GeoLite2-ASN-CSV.zip`）
-- **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据（`GeoLite2-Country-CSV.zip`）
-- **mihomoMRS**：mihomo MRS 格式（`geoip-cn.mrs`）
-- **singboxSRS**：sing-box SRS 格式（`geoip-cn.srs`）
+- **v2rayGeoIPDat**：V2Ray GeoIP dat 数据格式（`geoip.dat`）
+- **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
+- **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据格式（`GeoLite2-ASN-CSV.zip`）
+- **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
+- **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
+- **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
 - **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
 - **surgeRuleSet**：[Surge RuleSet](https://manual.nssurge.com/rule/ruleset.html)
@@ -253,10 +466,10 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **text**：纯文本 CIDR（例如：`1.0.0.0/24`）
 - **stdout**：将纯文本 CIDR 输出到 standard output（例如：`1.0.0.0/24`）
 - **lookup**：从指定的列表中查找指定的 IP 或 CIDR
-- **v2rayGeoIPDat**：V2Ray GeoIP dat 格式（`geoip.dat`，适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core) 和 [Trojan-Go](https://github.com/p4gefau1t/trojan-go)）
-- **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`，适用于 [Clash](https://github.com/Dreamacro/clash) 和 [Leaf](https://github.com/eycorsican/leaf)）
-- **mihomoMRS**：mihomo MRS 格式（`geoip-cn.mrs`，适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)）
-- **singboxSRS**：sing-box SRS 格式（`geoip-cn.srs`，适用于 [sing-box](https://github.com/SagerNet/sing-box)）
+- **v2rayGeoIPDat**：V2Ray GeoIP dat 数据格式（`geoip.dat`）
+- **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
+- **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
+- **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
 - **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
 - **surgeRuleSet**：[Surge RuleSet](https://manual.nssurge.com/rule/ruleset.html)
@@ -269,7 +482,16 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 
 ## CLI 功能展示
 
-可通过 `go install -v github.com/Loyalsoldier/geoip@latest` 直接安装 CLI。
+可通过 `go install -v github.com/Loyalsoldier/geoip@latest` 直接安装 CLI 工具。
+
+CLI 提供的功能如下：
+
+- 列出支持的 `input` 和 `output` 格式（`list`）
+- GeoIP 数据格式转换（`convert`）
+- 查找 IP 或 CIDR 所在类别（`lookup`）
+- 去重和合并 IP 与 CIDR（`merge`）
+
+### 总览
 
 ```bash
 $ ./geoip
@@ -290,6 +512,8 @@ Flags:
 
 Use "geoip [command] --help" for more information about a command.
 ```
+
+### 列出支持的 `input` 和 `output` 格式（`list`）
 
 ```bash
 $ ./geoip list
@@ -323,6 +547,8 @@ All available output formats:
   - v2rayGeoIPDat (Convert data to V2Ray GeoIP dat format)
 ```
 
+### 去重和合并 IP 与 CIDR（`merge`）
+
 ```bash
 $ curl -s https://core.telegram.org/resources/cidr.txt | ./geoip merge -t ipv4
 91.105.192.0/23
@@ -333,6 +559,8 @@ $ curl -s https://core.telegram.org/resources/cidr.txt | ./geoip merge -t ipv4
 149.154.160.0/20
 185.76.151.0/24
 ```
+
+### GeoIP 数据格式转换（`convert`）
 
 ```bash
 $ ./geoip convert -c config.json
@@ -365,6 +593,8 @@ $ ./geoip convert -c config.json
 2021/08/29 12:11:50 ✅ [mihomoMRS] facebook.txt --> output/mrs
 2021/08/29 12:11:50 ✅ [mihomoMRS] fastly.txt --> output/mrs
 ```
+
+### 查找 IP 或 CIDR 所在类别（`lookup`）
 
 ```bash
 # lookup one IP from local file
@@ -422,11 +652,17 @@ cn
 cn
 ```
 
+## 使用本项目的项目
+
+- [@Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)
+- [@Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules)
+- [@Loyalsoldier/surge-rules](https://github.com/Loyalsoldier/surge-rules)
+
 ## License
 
 [CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/) and [GPL-3.0](https://github.com/Loyalsoldier/geoip/blob/master/LICENSE-GPL)
 
-This product includes GeoLite2 data created by MaxMind, available from [MaxMind](http://www.maxmind.com).
+This product includes GeoLite2 data created by MaxMind, available from [MaxMind](https://www.maxmind.com).
 
 ## 项目 Star 数增长趋势
 
