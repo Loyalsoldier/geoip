@@ -442,7 +442,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 
 ### 支持的格式
 
-关于每种格式所支持的配置选项，查看本项目 [`config-example.json`](https://github.com/Loyalsoldier/geoip/blob/HEAD/config-example.json) 文件。
+关于每种格式所支持的配置选项，查看本项目 [`configuration.md`](https://github.com/Loyalsoldier/geoip/blob/HEAD/configuration.md) 文件。
 
 支持的 `input` 输入格式：
 
