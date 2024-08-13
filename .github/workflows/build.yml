@@ -8,10 +8,8 @@ on:
       - master
     paths-ignore:
       - ".gitignore"
-      - "config-example.json"
-      - "LICENSE"
-      - "README.md"
-      - ".github/dependabot.yml"
+      - "LICENSE*"
+      - "*.md"
 jobs:
   build:
     name: Build
