@@ -36,11 +36,19 @@ func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
+	// Filter want list
+	wantList := make(map[string]bool)
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+
 	return &stdout{
 		Type:        typeStdout,
 		Action:      action,
 		Description: descStdout,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -49,7 +57,7 @@ type stdout struct {
 	Type        string
 	Action      lib.Action
 	Description string
-	Want        []string
+	Want        map[string]bool
 	OnlyIPType  lib.IPType
 }
 
@@ -66,16 +74,8 @@ func (s *stdout) GetDescription() string {
 }
 
 func (s *stdout) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range s.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
 	for entry := range container.Loop() {
-		if len(wantList) > 0 && !wantList[entry.GetName()] {
+		if len(s.Want) > 0 && !s.Want[entry.GetName()] {
 			continue
 		}
 

@@ -45,12 +45,20 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 		return nil, fmt.Errorf("[type %s | action %s] uri must be specified in config", typeGeoIPdatIn, action)
 	}
 
+	// Filter want list
+	wantList := make(map[string]bool)
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+
 	return &geoIPDatIn{
 		Type:        typeGeoIPdatIn,
 		Action:      action,
 		Description: descGeoIPdatIn,
 		URI:         tmp.URI,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -60,7 +68,7 @@ type geoIPDatIn struct {
 	Action      lib.Action
 	Description string
 	URI         string
-	Want        []string
+	Want        map[string]bool
 	OnlyIPType  lib.IPType
 }
 
@@ -103,20 +111,7 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 		ignoreIPType = lib.IgnoreIPv4
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range g.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
 	for _, entry := range entries {
-		name := entry.GetName()
-		if len(wantList) > 0 && !wantList[name] {
-			continue
-		}
-
 		switch g.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
@@ -178,7 +173,12 @@ func (g *geoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 	}
 
 	for _, geoip := range geoipList.Entry {
-		name := geoip.CountryCode
+		name := strings.ToUpper(strings.TrimSpace(geoip.CountryCode))
+
+		if len(g.Want) > 0 && !g.Want[name] {
+			continue
+		}
+
 		entry, found := entries[name]
 		if !found {
 			entry = lib.NewEntry(name)

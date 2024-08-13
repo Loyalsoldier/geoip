@@ -31,6 +31,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
 		InputDir   string     `json:"inputDir"`
+		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 
 		JSONPath             []string `json:"jsonPath"`
@@ -60,6 +61,14 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		return nil, fmt.Errorf("type %s | action %s missing jsonPath", typeJSONIn, action)
 	}
 
+	// Filter want list
+	wantList := make(map[string]bool)
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+
 	return &textIn{
 		Type:        iType,
 		Action:      action,
@@ -67,6 +76,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		InputDir:    tmp.InputDir,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 
 		JSONPath:             tmp.JSONPath,
@@ -179,6 +189,10 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 	}
 
 	entryName = strings.ToUpper(entryName)
+
+	if len(t.Want) > 0 && !t.Want[entryName] {
+		return nil
+	}
 	if _, found := entries[entryName]; found {
 		return fmt.Errorf("found duplicated list %s", entryName)
 	}
@@ -210,6 +224,11 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	}
 
 	name = strings.ToUpper(name)
+
+	if len(t.Want) > 0 && !t.Want[name] {
+		return nil
+	}
+
 	entry := lib.NewEntry(name)
 	if err := t.scanFile(resp.Body, entry); err != nil {
 		return err

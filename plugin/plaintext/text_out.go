@@ -36,15 +36,7 @@ func (t *textOut) GetDescription() string {
 }
 
 func (t *textOut) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make([]string, 0, 50)
-	for _, want := range t.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
-	switch len(wantList) {
+	switch len(t.Want) {
 	case 0:
 		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
@@ -72,9 +64,9 @@ func (t *textOut) Output(container lib.Container) error {
 
 	default:
 		// Sort the list
-		slices.Sort(wantList)
+		slices.Sort(t.Want)
 
-		for _, name := range wantList {
+		for _, name := range t.Want {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)

@@ -51,12 +51,20 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		tmp.OutputDir = defaultOutputDir
 	}
 
+	// Filter want list
+	wantList := make([]string, 0, len(tmp.Want))
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList = append(wantList, want)
+		}
+	}
+
 	return &mrsOut{
 		Type:        typeMRSOut,
 		Action:      action,
 		Description: descMRSOut,
 		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -83,15 +91,7 @@ func (m *mrsOut) GetDescription() string {
 }
 
 func (m *mrsOut) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make([]string, 0, len(m.Want))
-	for _, want := range m.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
-	switch len(wantList) {
+	switch len(m.Want) {
 	case 0:
 		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
@@ -114,9 +114,9 @@ func (m *mrsOut) Output(container lib.Container) error {
 
 	default:
 		// Sort the list
-		slices.Sort(wantList)
+		slices.Sort(m.Want)
 
-		for _, name := range wantList {
+		for _, name := range m.Want {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)

@@ -57,13 +57,21 @@ func newGeoIPDat(action lib.Action, data json.RawMessage) (lib.OutputConverter, 
 		tmp.OutputDir = defaultOutputDir
 	}
 
+	// Filter want list
+	wantList := make([]string, 0, len(tmp.Want))
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList = append(wantList, want)
+		}
+	}
+
 	return &geoIPDatOut{
 		Type:           typeGeoIPdatOut,
 		Action:         action,
 		Description:    descGeoIPdatOut,
 		OutputName:     tmp.OutputName,
 		OutputDir:      tmp.OutputDir,
-		Want:           tmp.Want,
+		Want:           wantList,
 		OneFilePerList: tmp.OneFilePerList,
 		OnlyIPType:     tmp.OnlyIPType,
 	}, nil
@@ -93,19 +101,11 @@ func (g *geoIPDatOut) GetDescription() string {
 }
 
 func (g *geoIPDatOut) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make([]string, 0, 50)
-	for _, want := range g.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
 	geoIPList := new(router.GeoIPList)
 	geoIPList.Entry = make([]*router.GeoIP, 0, 300)
 	updated := false
 
-	switch len(wantList) {
+	switch len(g.Want) {
 	case 0:
 		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
@@ -143,9 +143,9 @@ func (g *geoIPDatOut) Output(container lib.Container) error {
 
 	default:
 		// Sort the list
-		sort.Strings(wantList)
+		sort.Strings(g.Want)
 
-		for _, name := range wantList {
+		for _, name := range g.Want {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)

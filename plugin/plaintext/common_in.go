@@ -18,6 +18,7 @@ type textIn struct {
 	Name        string
 	URI         string
 	InputDir    string
+	Want        map[string]bool
 	OnlyIPType  lib.IPType
 
 	JSONPath             []string

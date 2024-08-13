@@ -140,7 +140,7 @@ func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 		The order of names in wantedList has a higher priority than which of the overwriteList.
 	*/
 
-	wantList := make([]string, 0, 200)
+	wantList := make([]string, 0, len(m.Want))
 	for _, want := range m.Want {
 		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
 			wantList = append(wantList, want)
@@ -151,7 +151,7 @@ func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 		return wantList
 	}
 
-	overwriteList := make([]string, 0, 200)
+	overwriteList := make([]string, 0, len(m.Overwrite))
 	overwriteMap := make(map[string]bool)
 	for _, overwrite := range m.Overwrite {
 		if overwrite = strings.ToUpper(strings.TrimSpace(overwrite)); overwrite != "" {

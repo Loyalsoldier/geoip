@@ -50,12 +50,20 @@ func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		tmp.OutputDir = defaultOutputDir
 	}
 
+	// Filter want list
+	wantList := make([]string, 0, len(tmp.Want))
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList = append(wantList, want)
+		}
+	}
+
 	return &srsOut{
 		Type:        typeSRSOut,
 		Action:      action,
 		Description: descSRSOut,
 		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -82,15 +90,7 @@ func (s *srsOut) GetDescription() string {
 }
 
 func (s *srsOut) Output(container lib.Container) error {
-	// Filter want list
-	wantList := make([]string, 0, 50)
-	for _, want := range s.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
-	switch len(wantList) {
+	switch len(s.Want) {
 	case 0:
 		list := make([]string, 0, 300)
 		for entry := range container.Loop() {
@@ -113,9 +113,9 @@ func (s *srsOut) Output(container lib.Container) error {
 
 	default:
 		// Sort the list
-		slices.Sort(wantList)
+		slices.Sort(s.Want)
 
-		for _, name := range wantList {
+		for _, name := range s.Want {
 			entry, found := container.GetEntry(name)
 			if !found {
 				log.Printf("❌ entry %s not found", name)

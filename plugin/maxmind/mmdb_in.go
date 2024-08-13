@@ -46,12 +46,20 @@ func newMaxmindMMDBIn(action lib.Action, data json.RawMessage) (lib.InputConvert
 		tmp.URI = defaultMMDBFile
 	}
 
+	// Filter want list
+	wantList := make(map[string]bool)
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+
 	return &maxmindMMDBIn{
 		Type:        typeMaxmindMMDBIn,
 		Action:      action,
 		Description: descMaxmindMMDBIn,
 		URI:         tmp.URI,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -61,68 +69,55 @@ type maxmindMMDBIn struct {
 	Action      lib.Action
 	Description string
 	URI         string
-	Want        []string
+	Want        map[string]bool
 	OnlyIPType  lib.IPType
 }
 
-func (g *maxmindMMDBIn) GetType() string {
-	return g.Type
+func (m *maxmindMMDBIn) GetType() string {
+	return m.Type
 }
 
-func (g *maxmindMMDBIn) GetAction() lib.Action {
-	return g.Action
+func (m *maxmindMMDBIn) GetAction() lib.Action {
+	return m.Action
 }
 
-func (g *maxmindMMDBIn) GetDescription() string {
-	return g.Description
+func (m *maxmindMMDBIn) GetDescription() string {
+	return m.Description
 }
 
-func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (m *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
-	case strings.HasPrefix(strings.ToLower(g.URI), "http://"), strings.HasPrefix(strings.ToLower(g.URI), "https://"):
-		content, err = lib.GetRemoteURLContent(g.URI)
+	case strings.HasPrefix(strings.ToLower(m.URI), "http://"), strings.HasPrefix(strings.ToLower(m.URI), "https://"):
+		content, err = lib.GetRemoteURLContent(m.URI)
 	default:
-		content, err = os.ReadFile(g.URI)
+		content, err = os.ReadFile(m.URI)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	entries := make(map[string]*lib.Entry, 300)
-	err = g.generateEntries(content, entries)
+	err = m.generateEntries(content, entries)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeMaxmindMMDBIn, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeMaxmindMMDBIn, m.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
-	switch g.OnlyIPType {
+	switch m.OnlyIPType {
 	case lib.IPv4:
 		ignoreIPType = lib.IgnoreIPv6
 	case lib.IPv6:
 		ignoreIPType = lib.IgnoreIPv4
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range g.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
 	for _, entry := range entries {
-		name := entry.GetName()
-		if len(wantList) > 0 && !wantList[name] {
-			continue
-		}
-
-		switch g.Action {
+		switch m.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
 				return nil, err
@@ -139,7 +134,7 @@ func (g *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (g *maxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (m *maxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.FromBytes(content)
 	if err != nil {
 		return err
@@ -174,6 +169,10 @@ func (g *maxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.
 		case strings.TrimSpace(record.RepresentedCountry.IsoCode) != "":
 			name = strings.ToUpper(strings.TrimSpace(record.RepresentedCountry.IsoCode))
 		default:
+			continue
+		}
+
+		if len(m.Want) > 0 && !m.Want[name] {
 			continue
 		}
 

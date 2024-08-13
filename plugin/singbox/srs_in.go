@@ -33,6 +33,7 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
 		InputDir   string     `json:"inputDir"`
+		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
 
@@ -50,6 +51,14 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		return nil, fmt.Errorf("type %s | action %s name & uri must be specified together", typeSRSIn, action)
 	}
 
+	// Filter want list
+	wantList := make(map[string]bool)
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+
 	return &srsIn{
 		Type:        typeSRSIn,
 		Action:      action,
@@ -57,6 +66,7 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		InputDir:    tmp.InputDir,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -68,6 +78,7 @@ type srsIn struct {
 	Name        string
 	URI         string
 	InputDir    string
+	Want        map[string]bool
 	OnlyIPType  lib.IPType
 }
 
@@ -105,16 +116,16 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 		return nil, err
 	}
 
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("type %s | action %s no entry is generated", s.Type, s.Action)
+	}
+
 	var ignoreIPType lib.IgnoreIPOption
 	switch s.OnlyIPType {
 	case lib.IPv4:
 		ignoreIPType = lib.IgnoreIPv6
 	case lib.IPv6:
 		ignoreIPType = lib.IgnoreIPv4
-	}
-
-	if len(entries) == 0 {
-		return nil, fmt.Errorf("type %s | action %s no entry is generated", s.Type, s.Action)
 	}
 
 	for _, entry := range entries {
@@ -212,6 +223,11 @@ func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 
 func (s *srsIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
+
+	if len(s.Want) > 0 && !s.Want[name] {
+		return nil
+	}
+
 	entry, found := entries[name]
 	if !found {
 		entry = lib.NewEntry(name)

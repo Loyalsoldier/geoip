@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -65,13 +66,21 @@ func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.Outp
 		tmp.OutputExt = ".txt"
 	}
 
+	// Filter want list
+	wantList := make([]string, 0, len(tmp.Want))
+	for _, want := range tmp.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList = append(wantList, want)
+		}
+	}
+
 	return &textOut{
 		Type:        iType,
 		Action:      action,
 		Description: descTextOut,
 		OutputDir:   tmp.OutputDir,
 		OutputExt:   tmp.OutputExt,
-		Want:        tmp.Want,
+		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 
 		AddPrefixInLine: tmp.AddPrefixInLine,
