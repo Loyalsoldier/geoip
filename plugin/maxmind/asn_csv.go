@@ -163,13 +163,21 @@ func (g *geoLite2ASNCSV) process(file string, entries map[string]*lib.Entry) err
 		entries = make(map[string]*lib.Entry)
 	}
 
-	fReader, err := os.Open(file)
+	var f io.ReadCloser
+	var err error
+	switch {
+	case strings.HasPrefix(strings.ToLower(file), "http://"), strings.HasPrefix(strings.ToLower(file), "https://"):
+		f, err = lib.GetRemoteURLReader(file)
+	default:
+		f, err = os.Open(file)
+	}
+
 	if err != nil {
 		return err
 	}
-	defer fReader.Close()
+	defer f.Close()
 
-	reader := csv.NewReader(fReader)
+	reader := csv.NewReader(f)
 	reader.Read() // skip header
 
 	for {
