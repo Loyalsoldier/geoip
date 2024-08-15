@@ -46,6 +46,10 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 		}
 	}
 
+	if len(wantList) == 0 {
+		return nil, fmt.Errorf("type %s wantedList must be specified", typeCutter)
+	}
+
 	return &cutter{
 		Type:        typeCutter,
 		Action:      action,
