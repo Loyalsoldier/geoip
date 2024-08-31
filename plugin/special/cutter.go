@@ -35,7 +35,7 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 	}
 
 	if action != lib.ActionRemove {
-		return nil, fmt.Errorf("type %s only supports `remove` action", typeCutter)
+		return nil, fmt.Errorf("❌ [type %s] only supports `remove` action", typeCutter)
 	}
 
 	// Filter want list
@@ -47,7 +47,7 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 	}
 
 	if len(wantList) == 0 {
-		return nil, fmt.Errorf("type %s wantedList must be specified", typeCutter)
+		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", typeCutter)
 	}
 
 	return &cutter{

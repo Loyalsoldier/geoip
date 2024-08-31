@@ -44,11 +44,11 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}
 
 	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("type %s | action %s missing inputdir or name or uri", typeSRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputdir or name or uri", typeSRSIn, action)
 	}
 
 	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("type %s | action %s name & uri must be specified together", typeSRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", typeSRSIn, action)
 	}
 
 	// Filter want list
@@ -109,7 +109,7 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 			err = s.walkLocalFile(s.URI, s.Name, entries)
 		}
 	default:
-		return nil, fmt.Errorf("config missing argument inputDir or name or uri")
+		return nil, fmt.Errorf("❌ [type %s | action %s] config missing argument inputDir or name or uri", s.Type, s.Action)
 	}
 
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("type %s | action %s no entry is generated", s.Type, s.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", s.Type, s.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
@@ -175,7 +175,7 @@ func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 
 		// check filename
 		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
-			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
+			return fmt.Errorf("❌ [type %s | action %s] filename %s cannot be entry name, please remove special characters in it", s.Type, s.Action, entryName)
 		}
 
 		// remove file extension but not hidden files of which filename starts with "."
@@ -187,7 +187,7 @@ func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 
 	entryName = strings.ToUpper(entryName)
 	if _, found := entries[entryName]; found {
-		return fmt.Errorf("found duplicated list %s", entryName)
+		return fmt.Errorf("❌ [type %s | action %s] found duplicated list %s", s.Type, s.Action, entryName)
 	}
 
 	file, err := os.Open(path)
@@ -211,7 +211,7 @@ func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
+		return fmt.Errorf("❌ [type %s | action %s] failed to get remote file %s, http status code %d", s.Type, s.Action, url, resp.StatusCode)
 	}
 
 	if err := s.generateEntries(name, resp.Body, entries); err != nil {

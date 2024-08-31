@@ -200,7 +200,7 @@ func (t *textIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	}
 
 	if !gjson.ValidBytes(data) {
-		return fmt.Errorf("invalid JSON data")
+		return fmt.Errorf("❌ [type %s | action %s] invalid JSON data", t.Type, t.Action)
 	}
 
 	// JSON Path syntax:

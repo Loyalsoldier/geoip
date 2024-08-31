@@ -38,7 +38,7 @@ func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	tmp.Search = strings.TrimSpace(tmp.Search)
 	if tmp.Search == "" {
-		return nil, fmt.Errorf("type %s | action %s: please specify an IP or a CIDR as search target", typeLookup, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", typeLookup, action)
 	}
 
 	return &lookup{

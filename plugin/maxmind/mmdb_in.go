@@ -105,7 +105,7 @@ func (m *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeMaxmindMMDBIn, m.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", m.Type, m.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption

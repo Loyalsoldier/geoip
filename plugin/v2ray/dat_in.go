@@ -42,7 +42,7 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 	}
 
 	if tmp.URI == "" {
-		return nil, fmt.Errorf("[type %s | action %s] uri must be specified in config", typeGeoIPdatIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", typeGeoIPdatIn, action)
 	}
 
 	// Filter want list
@@ -100,7 +100,7 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeGeoIPdatIn, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", g.Type, g.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
@@ -151,7 +151,7 @@ func (g *geoIPDatIn) walkRemoteFile(url string, entries map[string]*lib.Entry) e
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
+		return fmt.Errorf("❌ [type %s | action %s] failed to get remote file %s, http status code %d", g.Type, g.Action, url, resp.StatusCode)
 	}
 
 	if err := g.generateEntries(resp.Body, entries); err != nil {

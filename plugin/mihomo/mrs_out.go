@@ -148,7 +148,7 @@ func (m *mrsOut) generate(entry *lib.Entry) error {
 	}
 
 	if len(ipRanges) == 0 {
-		return fmt.Errorf("entry %s has no CIDR", entry.GetName())
+		return fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", m.Type, m.Action, entry.GetName())
 	}
 
 	filename := strings.ToLower(entry.GetName()) + ".mrs"

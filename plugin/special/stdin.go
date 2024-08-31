@@ -37,7 +37,7 @@ func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}
 
 	if tmp.Name == "" {
-		return nil, fmt.Errorf("type %s | action %s missing name", typeStdin, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", typeStdin, action)
 	}
 
 	return &stdin{

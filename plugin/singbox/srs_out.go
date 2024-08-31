@@ -175,7 +175,7 @@ func (s *srsOut) generateRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error)
 		return &plainRuleSet, nil
 	}
 
-	return nil, fmt.Errorf("entry %s has no CIDR", entry.GetName())
+	return nil, fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", s.Type, s.Action, entry.GetName())
 }
 
 func (s *srsOut) writeFile(filename string, ruleset *option.PlainRuleSet) error {

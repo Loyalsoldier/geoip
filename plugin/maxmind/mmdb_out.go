@@ -123,7 +123,7 @@ func (m *mmdbOut) Output(container lib.Container) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("type %s | action %s failed to write file", m.Type, m.Action)
+		return fmt.Errorf("❌ [type %s | action %s] failed to write file", m.Type, m.Action)
 	}
 
 	return nil

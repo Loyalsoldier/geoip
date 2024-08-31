@@ -123,7 +123,7 @@ func (g *geoLite2CountryCSV) Input(container lib.Container) (lib.Container, erro
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", typeCountryCSV, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", g.Type, g.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
@@ -176,7 +176,7 @@ func (g *geoLite2CountryCSV) getCountryCode() (map[string]string, error) {
 	ccMap := make(map[string]string)
 	for _, line := range lines[1:] {
 		if len(line) < 5 {
-			return nil, fmt.Errorf("❌ [type %s | action %s] invalid record: %v", typeCountryCSV, g.Action, line)
+			return nil, fmt.Errorf("❌ [type %s | action %s] invalid record: %v", g.Type, g.Action, line)
 		}
 
 		id := strings.TrimSpace(line[0])
@@ -193,7 +193,7 @@ func (g *geoLite2CountryCSV) getCountryCode() (map[string]string, error) {
 	}
 
 	if len(ccMap) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] invalid country code data", typeCountryCSV, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] invalid country code data", g.Type, g.Action)
 	}
 
 	return ccMap, nil
@@ -201,7 +201,7 @@ func (g *geoLite2CountryCSV) getCountryCode() (map[string]string, error) {
 
 func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entries map[string]*lib.Entry) error {
 	if len(ccMap) == 0 {
-		return fmt.Errorf("❌ [type %s | action %s] invalid country code data", typeCountryCSV, g.Action)
+		return fmt.Errorf("❌ [type %s | action %s] invalid country code data", g.Type, g.Action)
 	}
 	if entries == nil {
 		entries = make(map[string]*lib.Entry, len(ccMap))
@@ -234,7 +234,7 @@ func (g *geoLite2CountryCSV) process(file string, ccMap map[string]string, entri
 		}
 
 		if len(record) < 4 {
-			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", typeCountryCSV, g.Action, record)
+			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", g.Type, g.Action, record)
 		}
 
 		ccID := ""

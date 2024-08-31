@@ -219,7 +219,7 @@ func (g *geoIPDatOut) generateGeoIP(entry *lib.Entry) (*router.GeoIP, error) {
 		}, nil
 	}
 
-	return nil, fmt.Errorf("entry %s has no CIDR", entry.GetName())
+	return nil, fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", g.Type, g.Action, entry.GetName())
 }
 
 // Sort by country code to make reproducible builds

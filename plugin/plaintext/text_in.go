@@ -55,7 +55,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 	}
 
 	if iType == typeJSONIn && len(tmp.JSONPath) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", typeJSONIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", iType, action)
 	}
 
 	if tmp.InputDir == "" {
@@ -131,7 +131,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 		err = t.appendIPOrCIDR(t.IPOrCIDR, t.Name, entries)
 
 	default:
-		return nil, fmt.Errorf("config missing argument inputDir or name or uri")
+		return nil, fmt.Errorf("❌ [type %s | action %s] config missing argument inputDir or name or uri or ipOrCIDR", t.Type, t.Action)
 	}
 
 	if err != nil {
@@ -147,7 +147,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("type %s | action %s no entry is generated", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", t.Type, t.Action)
 	}
 
 	for _, entry := range entries {
@@ -197,7 +197,7 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 
 		// check filename
 		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
-			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
+			return fmt.Errorf("❌ [type %s | action %s] filename %s cannot be entry name, please remove special characters in it", t.Type, t.Action, entryName)
 		}
 
 		// remove file extension but not hidden files of which filename starts with "."
@@ -213,7 +213,7 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 		return nil
 	}
 	if _, found := entries[entryName]; found {
-		return fmt.Errorf("found duplicated list %s", entryName)
+		return fmt.Errorf("❌ [type %s | action %s] found duplicated list %s", t.Type, t.Action, entryName)
 	}
 
 	entry := lib.NewEntry(entryName)
@@ -239,7 +239,7 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
+		return fmt.Errorf("❌ [type %s | action %s] failed to get remote file %s, http status code %d", t.Type, t.Action, url, resp.StatusCode)
 	}
 
 	name = strings.ToUpper(name)
