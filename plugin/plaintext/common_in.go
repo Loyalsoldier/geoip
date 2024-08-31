@@ -17,6 +17,7 @@ type textIn struct {
 	Description string
 	Name        string
 	URI         string
+	IPOrCIDR    []string
 	InputDir    string
 	Want        map[string]bool
 	OnlyIPType  lib.IPType

@@ -570,10 +570,11 @@
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
 - **args**：（必须）
-  - **name**：类别名称。（不能与 `inputDir` 同时使用；需要与 `uri` 同时使用）
-  - **uri**：纯文本 txt 文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。（不能与 `inputDir` 同时使用；需要与 `name` 同时使用）
-  - **inputDir**：需要遍历的输入目录（不遍历子目录）。（遍历的文件名作为类别名称；不能与 `name` 和 `uri` 同时使用）
-  - **wantedList**：（可选，数组）指定需要的类别/文件。（与 `inputDir` 同时使用）
+  - **name**：（可选）类别名称。（不能与 `inputDir` 同时使用；需要与 `uri` 或 `ipOrCIDR` 同时使用）
+  - **uri**：（可选）纯文本 txt 文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。（不能与 `inputDir` 同时使用；需要与 `name` 同时使用；可与 `ipOrCIDR` 同时使用）
+  - **ipOrCIDR**：（可选，数组）纯文本 IP 地址或 CIDR。（不能与 `inputDir` 同时使用；需要与 `name` 同时使用；可与 `uri` 同时使用）
+  - **inputDir**：（可选）需要遍历的输入目录（不遍历子目录）。（遍历的文件名作为类别名称；不能与 `name`、`uri` 和 `ipOrCIDR` 同时使用）
+  - **wantedList**：（可选，数组）指定需要的文件。（与 `inputDir` 同时使用）
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
   - **removePrefixesInLine**：（可选，数组）每一行需要移除的字符串前缀
   - **removeSuffixesInLine**：（可选，数组）每一行需要移除的字符串后缀
@@ -587,6 +588,40 @@
     "uri": "./cn.txt",                            // 读取本地文件 cn.txt 的 IPv4 和 IPv6 地址，并添加到 cn 类别中
     "removePrefixesInLine": ["Host,", "IP-CIDR"], // 从读取的文件中移除多种不同的行前缀
     "removeSuffixesInLine": [",no-resolve"]       // 从读取的文件中移除行后缀
+  }
+}
+```
+
+```jsonc
+{
+  "type": "text",
+  "action": "add",                        // 添加 IP 地址
+  "args": {
+    "name": "cn",
+    "ipOrCIDR": ["1.0.0.1", "1.0.0.1/24"] // 添加 IP 或 CIDR 到 cn 类别
+  }
+}
+```
+
+```jsonc
+{
+  "type": "text",
+  "action": "remove",                     // 移除 IP 地址
+  "args": {
+    "name": "cn",
+    "ipOrCIDR": ["1.0.0.1", "1.0.0.1/24"] // 从 cn 类别移除 IP 或 CIDR
+  }
+}
+```
+
+```jsonc
+{
+  "type": "text",
+  "action": "add",                        // 添加 IP 地址
+  "args": {
+    "name": "cn",
+    "uri": "./cn.txt",                    // 读取本地文件 cn.txt 的 IPv4 和 IPv6 地址，并添加到 cn 类别中
+    "ipOrCIDR": ["1.0.0.1", "1.0.0.1/24"] // 添加 IP 或 CIDR 到 cn 类别
   }
 }
 ```

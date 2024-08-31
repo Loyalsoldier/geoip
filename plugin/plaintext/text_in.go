@@ -30,6 +30,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
+		IPOrCIDR   []string   `json:"ipOrCIDR"`
 		InputDir   string     `json:"inputDir"`
 		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
@@ -49,16 +50,23 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		}
 	}
 
-	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("type %s | action %s missing inputdir or name or uri", typeTextIn, action)
-	}
-
-	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("type %s | action %s name & uri must be specified together", typeTextIn, action)
+	if iType != typeTextIn && len(tmp.IPOrCIDR) > 0 {
+		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", iType, action)
 	}
 
 	if iType == typeJSONIn && len(tmp.JSONPath) == 0 {
-		return nil, fmt.Errorf("type %s | action %s missing jsonPath", typeJSONIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", typeJSONIn, action)
+	}
+
+	if tmp.InputDir == "" {
+		if tmp.Name == "" {
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name", iType, action)
+		}
+		if tmp.URI == "" && len(tmp.IPOrCIDR) == 0 {
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing uri or ipOrCIDR", iType, action)
+		}
+	} else if tmp.Name != "" || tmp.URI != "" || len(tmp.IPOrCIDR) > 0 {
+		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", iType, action)
 	}
 
 	// Filter want list
@@ -75,6 +83,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		Description: descTextIn,
 		Name:        tmp.Name,
 		URI:         tmp.URI,
+		IPOrCIDR:    tmp.IPOrCIDR,
 		InputDir:    tmp.InputDir,
 		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
@@ -104,6 +113,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 	switch {
 	case t.InputDir != "":
 		err = t.walkDir(t.InputDir, entries)
+
 	case t.Name != "" && t.URI != "":
 		switch {
 		case strings.HasPrefix(strings.ToLower(t.URI), "http://"), strings.HasPrefix(strings.ToLower(t.URI), "https://"):
@@ -111,6 +121,15 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 		default:
 			err = t.walkLocalFile(t.URI, t.Name, entries)
 		}
+		if err != nil {
+			return nil, err
+		}
+
+		fallthrough
+
+	case t.Name != "" && len(t.IPOrCIDR) > 0:
+		err = t.appendIPOrCIDR(t.IPOrCIDR, t.Name, entries)
+
 	default:
 		return nil, fmt.Errorf("config missing argument inputDir or name or uri")
 	}
@@ -232,6 +251,25 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	entry := lib.NewEntry(name)
 	if err := t.scanFile(resp.Body, entry); err != nil {
 		return err
+	}
+
+	entries[name] = entry
+
+	return nil
+}
+
+func (t *textIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
+	name = strings.ToUpper(name)
+
+	entry, found := entries[name]
+	if !found {
+		entry = lib.NewEntry(name)
+	}
+
+	for _, cidr := range ipOrCIDR {
+		if err := entry.AddPrefix(strings.TrimSpace(cidr)); err != nil {
+			return err
+		}
 	}
 
 	entries[name] = entry
