@@ -2,7 +2,7 @@ name: Build geoip files
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * 4"
+    - cron: "0 22 * * *"
   push:
     branches:
       - master
