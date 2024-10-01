@@ -5,7 +5,7 @@
       "action": "add",
       "args": {
         "name": "cn",
-        "uri": "https://raw.githubusercontent.com/misakaio/chnroutes2/refs/heads/master/chnroutes.txt",
+        "uri": "https://raw.githubusercontent.com/misakaio/chnroutes2/master/chnroutes.txt",
         "onlyIPType": "ipv4"
       }
     },
@@ -33,6 +33,7 @@
     "type": "surgeRuleSet",
     "action": "output",
     "args": {
+      "outputDir": "./output",
       "outputExtension": ".conf"
       }
     }
