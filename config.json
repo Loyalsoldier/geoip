@@ -29,5 +29,12 @@
         "wantedList": ["cn"]
       }
     }
+    {
+    "type": "surgeRuleSet",
+    "action": "output",
+    "args": {
+      "outputExtension": ".conf"
+      }
+    }
   ]
 }
