@@ -26,7 +26,6 @@
       "args": {
         "outputDir": "./output",
         "outputName": "CN.mmdb",
-        "wantedList": ["cn"]
       }
     },
     {
