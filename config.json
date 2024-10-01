@@ -25,7 +25,7 @@
       "action": "output",
       "args": {
         "outputDir": "./output",
-        "outputName": "CN.mmdb",
+        "outputName": "CN.mmdb"
       }
     },
     {
