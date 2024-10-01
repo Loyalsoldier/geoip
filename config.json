@@ -28,7 +28,7 @@
         "outputName": "CN.mmdb",
         "wantedList": ["cn"]
       }
-    }
+    },
     {
     "type": "surgeRuleSet",
     "action": "output",
