@@ -35,6 +35,14 @@
       "outputDir": "./output",
       "outputExtension": ".conf"
       }
+    },
+    {
+    "type": "clashRuleSet",
+    "action": "output",
+      "args": {
+        "outputDir": "./output",
+        "outputExtension": ".yaml"
+      }
     }
   ]
 }
