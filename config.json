@@ -1,11 +1,11 @@
 {
   "input": [
     {
-      "type": "clashRuleSet",
+      "type": "surgeRuleSet",
       "action": "add",
       "args": {
         "name": "cn",
-        "uri": "https://ruleset.skk.moe/Clash/ip/china_ip.txt",
+        "uri": "https://ruleset.skk.moe/List/ip/china_ip.conf",
         "onlyIPType": "ipv4"
       }
     },
