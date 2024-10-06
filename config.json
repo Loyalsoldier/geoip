@@ -37,11 +37,10 @@
       }
     },
     {
-    "type": "clashRuleSet",
+    "type": "text",
     "action": "output",
       "args": {
-        "outputDir": "./output",
-        "outputExtension": ".yaml"
+        "outputDir": "./output"
       }
     }
   ]
