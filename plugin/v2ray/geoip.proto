@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package geoip.plugin.v2ray;
+option go_package = "github.com/Loyalsoldier/geoip/plugin/v2ray";
+
+message CIDR {
+  // IP address, should be either 4 or 16 bytes.
+  bytes ip = 1;
+
+  // Number of leading ones in the network mask.
+  uint32 prefix = 2;
+}
+
+message GeoIP {
+  string country_code = 1;
+  repeated CIDR cidr = 2;
+}
+
+message GeoIPList {
+  repeated GeoIP entry = 1;
+}
