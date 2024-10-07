@@ -1,6 +1,24 @@
 {
   "input": [
     {
+      "type": "maxmindMMDB",
+      "action": "add",
+      "args": {
+        "uri": "https://git.io/GeoLite2-Country.mmdb"
+      }
+    },
+    {
+      "type": "cutter",
+      "action": "remove",
+      "args":{
+        "wantedList": ["cn"]
+      }
+    },
+    {
+      "type": "private",
+      "action": "add"
+    },
+    {
       "type": "surgeRuleSet",
       "action": "add",
       "args": {
@@ -25,13 +43,23 @@
       "action": "output",
       "args": {
         "outputDir": "./output",
-        "outputName": "CN.mmdb"
+        "outputName": "Country.mmdb"
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "wantedList": ["cn", "private"],
+        "outputDir": "./output",
+        "outputName": "Country-only-cn-private.mmdb"
       }
     },
     {
     "type": "surgeRuleSet",
     "action": "output",
     "args": {
+      "wantedList": ["cn"],
       "outputDir": "./output",
       "outputExtension": ".conf"
       }
@@ -40,6 +68,7 @@
     "type": "text",
     "action": "output",
       "args": {
+        "wantedList": ["cn"],
         "outputDir": "./output"
       }
     }
