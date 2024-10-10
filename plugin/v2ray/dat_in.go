@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
-	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -167,7 +166,7 @@ func (g *geoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 		return err
 	}
 
-	var geoipList router.GeoIPList
+	var geoipList GeoIPList
 	if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
 		return err
 	}

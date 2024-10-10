@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
-	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/rule"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -101,8 +100,8 @@ func (g *geoIPDatOut) GetDescription() string {
 }
 
 func (g *geoIPDatOut) Output(container lib.Container) error {
-	geoIPList := new(router.GeoIPList)
-	geoIPList.Entry = make([]*router.GeoIP, 0, 300)
+	geoIPList := new(GeoIPList)
+	geoIPList.Entry = make([]*GeoIP, 0, 300)
 	updated := false
 
 	switch len(g.Want) {
@@ -188,32 +187,31 @@ func (g *geoIPDatOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (g *geoIPDatOut) generateGeoIP(entry *lib.Entry) (*router.GeoIP, error) {
-	var entryCidr []string
+func (g *geoIPDatOut) generateGeoIP(entry *lib.Entry) (*GeoIP, error) {
+	var entryCidr []netip.Prefix
 	var err error
 	switch g.OnlyIPType {
 	case lib.IPv4:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv6)
+		entryCidr, err = entry.MarshalPrefix(lib.IgnoreIPv6)
 	case lib.IPv6:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv4)
+		entryCidr, err = entry.MarshalPrefix(lib.IgnoreIPv4)
 	default:
-		entryCidr, err = entry.MarshalText()
+		entryCidr, err = entry.MarshalPrefix()
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	v2rayCIDR := make([]*router.CIDR, 0, 1024)
-	for _, cidrStr := range entryCidr {
-		cidr, err := rule.ParseIP(cidrStr)
-		if err != nil {
-			return nil, err
-		}
-		v2rayCIDR = append(v2rayCIDR, cidr)
+	v2rayCIDR := make([]*CIDR, 0, len(entryCidr))
+	for _, prefix := range entryCidr {
+		v2rayCIDR = append(v2rayCIDR, &CIDR{
+			Ip:     prefix.Addr().AsSlice(),
+			Prefix: uint32(prefix.Bits()),
+		})
 	}
 
 	if len(v2rayCIDR) > 0 {
-		return &router.GeoIP{
+		return &GeoIP{
 			CountryCode: entry.GetName(),
 			Cidr:        v2rayCIDR,
 		}, nil
@@ -223,7 +221,7 @@ func (g *geoIPDatOut) generateGeoIP(entry *lib.Entry) (*router.GeoIP, error) {
 }
 
 // Sort by country code to make reproducible builds
-func (g *geoIPDatOut) sort(list *router.GeoIPList) {
+func (g *geoIPDatOut) sort(list *GeoIPList) {
 	sort.SliceStable(list.Entry, func(i, j int) bool {
 		return list.Entry[i].CountryCode < list.Entry[j].CountryCode
 	})
