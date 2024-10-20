@@ -59,7 +59,7 @@
       "action": "output",
       "args": {
         "outputDir": "./output",
-        "wantedList": ["cn", "private"],
+        "wantedList": ["cn", "private", "telegram"],
         "outputName": "geoip-lite.dat"
       }
     },
