@@ -36,6 +36,13 @@ jobs:
           go build ./
           ./geoip convert -c ./config.json
 
+      - name: Generate sha256 checksum for dat files
+        run: |
+          cd ./output || exit 1
+          for name in $(ls *.dat); do
+            sha256sum ${name} > ./${name}.sha256sum
+          done
+          
       - name: Generate sha256 checksum for mmdb files
         run: |
           cd ./output || exit 1
