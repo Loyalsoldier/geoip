@@ -75,26 +75,9 @@
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
-        "wantedList": ["cn", "private"],
+        "wantedList": ["cn", "private", "telegram"],
         "outputDir": "./output",
         "outputName": "Country-Lite.mmdb"
-      }
-    },
-    {
-    "type": "surgeRuleSet",
-    "action": "output",
-    "args": {
-      "wantedList": ["cn"],
-      "outputDir": "./output",
-      "outputExtension": ".conf"
-      }
-    },
-    {
-    "type": "text",
-    "action": "output",
-      "args": {
-        "wantedList": ["cn"],
-        "outputDir": "./output"
       }
     }
   ]
