@@ -47,6 +47,23 @@
   ],
   "output": [
     {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputDir": "./output",
+        "outputName": "geoip.dat"
+      }
+    },
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputDir": "./output",
+        "wantedList": ["cn", "private"],
+        "outputName": "geoip-lite.dat"
+      }
+    },
+    {
       "type": "maxmindMMDB",
       "action": "output",
       "args": {
@@ -60,7 +77,7 @@
       "args": {
         "wantedList": ["cn", "private"],
         "outputDir": "./output",
-        "outputName": "Country-only-cn-private.mmdb"
+        "outputName": "Country-Lite.mmdb"
       }
     },
     {
