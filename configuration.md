@@ -415,6 +415,8 @@
 
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
+- **args**：（可选）
+  - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
 
 > `private` 默认添加或移除的 CIDR 地址，见 [private.go](https://github.com/Loyalsoldier/geoip/blob/HEAD/plugin/special/private.go#L16-L36)
 
@@ -429,6 +431,26 @@
 {
   "type": "private",
   "action": "remove" // 移除 IP 地址
+}
+```
+
+```jsonc
+{
+  "type": "private",
+  "action": "add",       // 添加 IP 地址
+  "args": {
+    "onlyIPType": "ipv4" // 只添加 IPv4 地址
+  }
+}
+```
+
+```jsonc
+{
+  "type": "private",
+  "action": "remove",    // 移除 IP 地址
+  "args": {
+    "onlyIPType": "ipv6" // 只移除 IPv6 地址
+  }
 }
 ```
 
