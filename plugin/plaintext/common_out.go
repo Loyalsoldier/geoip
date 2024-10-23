@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -26,6 +25,7 @@ type textOut struct {
 	OutputDir   string
 	OutputExt   string
 	Want        []string
+	Exclude     []string
 	OnlyIPType  lib.IPType
 
 	AddPrefixInLine string
@@ -37,6 +37,7 @@ func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.Outp
 		OutputDir  string     `json:"outputDir"`
 		OutputExt  string     `json:"outputExtension"`
 		Want       []string   `json:"wantedList"`
+		Exclude    []string   `json:"excludedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 
 		AddPrefixInLine string `json:"addPrefixInLine"`
@@ -66,21 +67,14 @@ func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.Outp
 		tmp.OutputExt = ".txt"
 	}
 
-	// Filter want list
-	wantList := make([]string, 0, len(tmp.Want))
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
 	return &textOut{
 		Type:        iType,
 		Action:      action,
 		Description: descTextOut,
 		OutputDir:   tmp.OutputDir,
 		OutputExt:   tmp.OutputExt,
-		Want:        wantList,
+		Want:        tmp.Want,
+		Exclude:     tmp.Exclude,
 		OnlyIPType:  tmp.OnlyIPType,
 
 		AddPrefixInLine: tmp.AddPrefixInLine,

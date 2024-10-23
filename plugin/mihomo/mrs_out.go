@@ -38,6 +38,7 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
+		Exclude    []string   `json:"excludedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
 
@@ -51,20 +52,13 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		tmp.OutputDir = defaultOutputDir
 	}
 
-	// Filter want list
-	wantList := make([]string, 0, len(tmp.Want))
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList = append(wantList, want)
-		}
-	}
-
 	return &mrsOut{
 		Type:        typeMRSOut,
 		Action:      action,
 		Description: descMRSOut,
 		OutputDir:   tmp.OutputDir,
-		Want:        wantList,
+		Want:        tmp.Want,
+		Exclude:     tmp.Exclude,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -75,6 +69,7 @@ type mrsOut struct {
 	Description string
 	OutputDir   string
 	Want        []string
+	Exclude     []string
 	OnlyIPType  lib.IPType
 }
 
@@ -91,45 +86,55 @@ func (m *mrsOut) GetDescription() string {
 }
 
 func (m *mrsOut) Output(container lib.Container) error {
-	switch len(m.Want) {
-	case 0:
-		list := make([]string, 0, 300)
-		for entry := range container.Loop() {
-			list = append(list, entry.GetName())
+	for _, name := range m.filterAndSortList(container) {
+		entry, found := container.GetEntry(name)
+		if !found {
+			log.Printf("❌ entry %s not found\n", name)
+			continue
 		}
 
-		// Sort the list
-		slices.Sort(list)
-
-		for _, name := range list {
-			entry, found := container.GetEntry(name)
-			if !found {
-				log.Printf("❌ entry %s not found", name)
-				continue
-			}
-			if err := m.generate(entry); err != nil {
-				return err
-			}
-		}
-
-	default:
-		// Sort the list
-		slices.Sort(m.Want)
-
-		for _, name := range m.Want {
-			entry, found := container.GetEntry(name)
-			if !found {
-				log.Printf("❌ entry %s not found", name)
-				continue
-			}
-
-			if err := m.generate(entry); err != nil {
-				return err
-			}
+		if err := m.generate(entry); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func (m *mrsOut) filterAndSortList(container lib.Container) []string {
+	excludeMap := make(map[string]bool)
+	for _, exclude := range m.Exclude {
+		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
+			excludeMap[exclude] = true
+		}
+	}
+
+	wantList := make([]string, 0, len(m.Want))
+	for _, want := range m.Want {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" && !excludeMap[want] {
+			wantList = append(wantList, want)
+		}
+	}
+
+	if len(wantList) > 0 {
+		// Sort the list
+		slices.Sort(wantList)
+		return wantList
+	}
+
+	list := make([]string, 0, 300)
+	for entry := range container.Loop() {
+		name := entry.GetName()
+		if excludeMap[name] {
+			continue
+		}
+		list = append(list, name)
+	}
+
+	// Sort the list
+	slices.Sort(list)
+
+	return list
 }
 
 func (m *mrsOut) generate(entry *lib.Entry) error {

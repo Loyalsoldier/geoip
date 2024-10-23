@@ -2,7 +2,6 @@ package maxmind
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -40,6 +39,7 @@ func newMMDBOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, e
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
 		Overwrite  []string   `json:"overwriteList"`
+		Exclude    []string   `json:"excludedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
 
@@ -65,6 +65,7 @@ func newMMDBOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, e
 		OutputDir:   tmp.OutputDir,
 		Want:        tmp.Want,
 		Overwrite:   tmp.Overwrite,
+		Exclude:     tmp.Exclude,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
@@ -77,6 +78,7 @@ type mmdbOut struct {
 	OutputDir   string
 	Want        []string
 	Overwrite   []string
+	Exclude     []string
 	OnlyIPType  lib.IPType
 }
 
@@ -106,30 +108,28 @@ func (m *mmdbOut) Output(container lib.Container) error {
 	}
 
 	updated := false
-	for _, name := range m.getEntryNameListInOrder(container) {
+	for _, name := range m.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
-			log.Printf("❌ entry %s not found", name)
+			log.Printf("❌ entry %s not found\n", name)
 			continue
 		}
+
 		if err := m.marshalData(writer, entry); err != nil {
 			return err
 		}
+
 		updated = true
 	}
 
 	if updated {
-		if err := m.writeFile(m.OutputName, writer); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("❌ [type %s | action %s] failed to write file", m.Type, m.Action)
+		return m.writeFile(m.OutputName, writer)
 	}
 
 	return nil
 }
 
-func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
+func (m *mmdbOut) filterAndSortList(container lib.Container) []string {
 	/*
 		Note: The IPs and/or CIDRs of the latter list will overwrite those of the former one
 		when duplicated data found due to MaxMind mmdb file format constraint.
@@ -140,9 +140,16 @@ func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 		The order of names in wantedList has a higher priority than which of the overwriteList.
 	*/
 
+	excludeMap := make(map[string]bool)
+	for _, exclude := range m.Exclude {
+		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
+			excludeMap[exclude] = true
+		}
+	}
+
 	wantList := make([]string, 0, len(m.Want))
 	for _, want := range m.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" && !excludeMap[want] {
 			wantList = append(wantList, want)
 		}
 	}
@@ -154,7 +161,7 @@ func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 	overwriteList := make([]string, 0, len(m.Overwrite))
 	overwriteMap := make(map[string]bool)
 	for _, overwrite := range m.Overwrite {
-		if overwrite = strings.ToUpper(strings.TrimSpace(overwrite)); overwrite != "" {
+		if overwrite = strings.ToUpper(strings.TrimSpace(overwrite)); overwrite != "" && !excludeMap[overwrite] {
 			overwriteList = append(overwriteList, overwrite)
 			overwriteMap[overwrite] = true
 		}
@@ -163,8 +170,7 @@ func (m *mmdbOut) getEntryNameListInOrder(container lib.Container) []string {
 	list := make([]string, 0, 300)
 	for entry := range container.Loop() {
 		name := entry.GetName()
-		_, found := overwriteMap[name]
-		if found {
+		if excludeMap[name] || overwriteMap[name] {
 			continue
 		}
 		list = append(list, name)
