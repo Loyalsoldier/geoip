@@ -248,6 +248,25 @@
       "action": "output",
       "args": {
         "outputDir": "./output",
+        "outputName": "Country-without-asn.mmdb",
+        "overwriteList": ["cn", "private"],
+        "excludedList": [
+          "cloudflare",
+          "cloudfront",
+          "facebook",
+          "fastly",
+          "google",
+          "netflix",
+          "telegram",
+          "twitter"
+        ]
+      }
+    },
+    {
+      "type": "maxmindMMDB",
+      "action": "output",
+      "args": {
+        "outputDir": "./output",
         "outputName": "Country-only-cn-private.mmdb",
         "wantedList": ["cn", "private"]
       }

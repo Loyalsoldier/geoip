@@ -181,7 +181,13 @@ MaxMind 官方版 **ASN** 类型 mmdb 文件：
 
 > 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。只保留了 `country` 下的 `iso_code`（两位英文字母表示的国家/地区代码）字段。
 
-- **Country.mmdb**：
+- **Country-without-asn.mmdb**（传统版 GeoIP，只包含国家/地区类别，不包含上述新增类别。建议优先使用）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb)
+- **Country-without-asn.mmdb.sha256sum**：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum)
+- **Country.mmdb**（增强版 GeoIP，包含国家/地区类别，以及上述新增类别。但由于 MaxMind mmdb 格式限制，部分国家/地区类别的 IP 地址数据不如上述 **Country-without-asn.mmdb** 准确）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb)
 - **Country.mmdb.sha256sum**：
