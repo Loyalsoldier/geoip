@@ -1,8 +1,8 @@
 module github.com/Loyalsoldier/geoip
 
-go 1.22
+go 1.23
 
-toolchain go1.22.6
+toolchain go1.23.2
 
 require (
 	github.com/klauspost/compress v1.17.10
@@ -10,6 +10,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.9.7
 	github.com/spf13/cobra v1.8.1
+	github.com/tailscale/hujson v0.0.0-20241010212012-29efb4a0184b
 	github.com/tidwall/gjson v1.18.0
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	google.golang.org/protobuf v1.35.1
