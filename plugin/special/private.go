@@ -46,10 +46,21 @@ func init() {
 }
 
 func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	var tmp struct {
+		OnlyIPType lib.IPType `json:"onlyIPType"`
+	}
+
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return nil, err
+		}
+	}
+
 	return &private{
 		Type:        typePrivate,
 		Action:      action,
 		Description: descPrivate,
+		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
@@ -57,6 +68,7 @@ type private struct {
 	Type        string
 	Action      lib.Action
 	Description string
+	OnlyIPType  lib.IPType
 }
 
 func (p *private) GetType() string {
@@ -72,20 +84,32 @@ func (p *private) GetDescription() string {
 }
 
 func (p *private) Input(container lib.Container) (lib.Container, error) {
-	entry := lib.NewEntry(entryNamePrivate)
+	entry, found := container.GetEntry(entryNamePrivate)
+	if !found {
+		entry = lib.NewEntry(entryNamePrivate)
+	}
+
 	for _, cidr := range privateCIDRs {
 		if err := entry.AddPrefix(cidr); err != nil {
 			return nil, err
 		}
 	}
 
+	var ignoreIPType lib.IgnoreIPOption
+	switch p.OnlyIPType {
+	case lib.IPv4:
+		ignoreIPType = lib.IgnoreIPv6
+	case lib.IPv6:
+		ignoreIPType = lib.IgnoreIPv4
+	}
+
 	switch p.Action {
 	case lib.ActionAdd:
-		if err := container.Add(entry); err != nil {
+		if err := container.Add(entry, ignoreIPType); err != nil {
 			return nil, err
 		}
 	case lib.ActionRemove:
-		if err := container.Remove(entry, lib.CaseRemovePrefix); err != nil {
+		if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
 			return nil, err
 		}
 	default:

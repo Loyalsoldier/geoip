@@ -220,10 +220,10 @@
 
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
-- **args**：（可选）
+- **args**：（必须）
   - **ipv4**：（可选）MaxMind GeoLite2 ASN IPv4 文件路径（`GeoLite2-ASN-Blocks-IPv4.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **ipv6**：（可选）MaxMind GeoLite2 ASN IPv6 文件路径（`GeoLite2-ASN-Blocks-IPv6.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
-  - **wantedList**：（可选）指定需要的类别/文件。
+  - **wantedList**：（必须，对象，键为字符串类别名，值为 ASN 字符串数组）指定类别名及其包含的 ASN。
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`。
 
 ```jsonc
@@ -232,27 +232,12 @@
 // ./geolite2/GeoLite2-ASN-Blocks-IPv6.csv
 {
   "type": "maxmindGeoLite2ASNCSV",
-  "action": "add" // 添加 IP 地址
-}
-```
-
-```jsonc
-{
-  "type": "maxmindGeoLite2ASNCSV",
-  "action": "add", // 添加 IP 地址
+  "action": "add",                                   // 添加 IP 地址
   "args": {
-    "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
-    "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv"
-  }
-}
-```
-
-```jsonc
-{
-  "type": "maxmindGeoLite2ASNCSV",
-  "action": "add",                   // 添加 IP 地址
-  "args": {
-    "wantedList": ["cn", "us", "jp"] // 只需要添加名为 cn、us、jp 的这三个类别的 IPv4 地址 和 IPv6 地址
+    "wantedList": {
+      "facebook": ["AS63293", "AS54115", "AS32934"], // 将隶属于 ASN 的 IPv4 地址 和 IPv6 地址添加到 facebook 类别中
+      "fastly":   ["AS54113", "AS394192"]            // 将隶属于 ASN 的 IPv4 地址 和 IPv6 地址添加到 fastly 类别中
+    }
   }
 }
 ```
@@ -264,7 +249,10 @@
   "args": {
     "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
     "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv",    
-    "wantedList": ["cn", "us", "jp"],                  // 只移除名为 cn、us、jp 的这三个类别的 IPv6 地址
+    "wantedList": {
+      "facebook": ["AS63293", "AS54115", "AS32934"],   // 从 facebook 类别中移除隶属于 ASN 的 IPv6 地址
+      "fastly":   ["AS54113", "AS394192"]              // 从 fastly 类别中移除隶属于 ASN 的 IPv6 地址
+    },
     "onlyIPType": "ipv6"                               // 只移除 IPv6 地址
   }
 }
@@ -427,6 +415,8 @@
 
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
+- **args**：（可选）
+  - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
 
 > `private` 默认添加或移除的 CIDR 地址，见 [private.go](https://github.com/Loyalsoldier/geoip/blob/HEAD/plugin/special/private.go#L16-L36)
 
@@ -441,6 +431,26 @@
 {
   "type": "private",
   "action": "remove" // 移除 IP 地址
+}
+```
+
+```jsonc
+{
+  "type": "private",
+  "action": "add",       // 添加 IP 地址
+  "args": {
+    "onlyIPType": "ipv4" // 只添加 IPv4 地址
+  }
+}
+```
+
+```jsonc
+{
+  "type": "private",
+  "action": "remove",    // 移除 IP 地址
+  "args": {
+    "onlyIPType": "ipv6" // 只移除 IPv6 地址
+  }
 }
 ```
 
