@@ -602,60 +602,186 @@ $ ./geoip convert -c config.json
 
 ### 查找 IP 或 CIDR 所在类别（`lookup`）
 
+可能的返回结果：
+
+- 查询的字符串不是有效的 IP 或 CIDR，返回 `false`
+- 查询的 IP 或 CIDR 不存在于任何一个类别中，返回 `false`
+- 查询的 IP 或 CIDR 存在于某种格式文件的单个类别中：
+  - 若该格式文件只包含一个类别，返回 `true`
+  - 若该格式文件包含多个类别，返回匹配的类别名称
+- 查询的 IP 或 CIDR 存在于多个类别中，返回以英文逗号分隔的类别名称，如 `au,cloudflare`
+
 ```bash
-# lookup one IP from local file
-$ ./geoip lookup -f text -u ./cn.txt -n cn 1.0.1.1
+# ================= One-time Mode ================= #
+
+# 从 text 格式的本地文件（只包含一个类别）中查找某个 IP 地址
+# lookup IP from local file (with only one list) in text format
+$ ./geoip lookup -f text -u ./cn.txt 1.0.1.1
+true
+
+
+# 从 text 格式的本地文件（只包含一个类别）中查找某个 IP 地址
+# lookup IP from local file (with only one list) in text format
+$ ./geoip lookup -f text -u ./cn.txt 2.2.2.2
+false
+
+
+# 从 text 格式的本地文件（只包含一个类别）中查找某个 CIDR
+# lookup CIDR from local file (with only one list) in text format
+$ ./geoip lookup -f text -u ./cn.txt 1.0.1.1/24
+true
+
+
+# 从 text 格式的本地文件（只包含一个类别）中查找某个 CIDR
+# lookup CIDR from local file (with only one list) in text format
+$ ./geoip lookup -f text -u ./cn.txt 1.0.1.1/23
+false
+
+
+# 从 text 格式的远程 URL（只包含一个类别）中查找某个 IP 地址
+# lookup IP from remote URL (with only one list) in text format
+$ ./geoip lookup -f text -u https://example.com/cn.txt 1.0.1.1
+true
+
+
+# 从 v2rayGeoIPDat 格式的本地文件（只包含一个类别）中查找某个 IP 地址
+# lookup IP from local file (with only one list) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u ./cn.dat 1.0.1.1
+true
+
+
+# 从 v2rayGeoIPDat 格式的本地文件（包含多个类别）中查找某个 IP 地址
+# lookup IP from local file (with multiple lists) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u ./geoip.dat 1.0.1.1
 cn
 
 
-# lookup one CIDR from local file
-$ ./geoip lookup -f text -u ./cn.txt -n cn 1.0.1.1/24
-cn
+# 从 v2rayGeoIPDat 格式的本地文件（包含多个类别）中查找某个 IP 地址
+# lookup IP from local file (with multiple lists) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u ./geoip.dat 1.0.0.1
+au,cloudflare
 
 
-# lookup IP or CIDR in REPL mode from local file
-$ ./geoip lookup -f text -u ./cn.txt -n cn
-Enter IP or CIDR (type `exit` to quit):
+# 从 v2rayGeoIPDat 格式的远程 URL（包含多个类别）中查找某个 CIDR
+# lookup CIDR from remote URL (with multiple lists) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u https://example.com/geoip.dat 1.0.0.1/24
+au,cloudflare
+
+
+
+
+# ================= REPL Mode ================= #
+
+# 从 text 格式的本地文件（只包含一个类别）中查找某个 IP 地址或 CIDR
+# lookup IP or CIDR from local file (with only one list) in text format
+$ ./geoip lookup -f text -u ./cn.txt
+Enter IP or CIDR (type "exit" to quit):
+>> 1.0.1.1
+true
+
+>> 1.0.1.1/24
+true
+
+>> 1.0.1.1/23
+false
+
+>> 2.2.2.2
+false
+
+>> 2.2.2.2/24
+false
+
+>> 300.300.300.300
+false
+
+>> 300.300.300.300/24
+false
+
+>> exit
+
+
+# 从 text 格式的远程 URL（只包含一个类别）中查找某个 IP 地址或 CIDR
+# lookup IP or CIDR from remote URL (with only one list) in text format
+$ ./geoip lookup -f text -u https://example.com/cn.txt
+Enter IP or CIDR (type "exit" to quit):
+>> 1.0.1.1
+true
+
+>> 1.0.1.1/24
+true
+
+>> 1.0.1.1/23
+false
+
+>> 2.2.2.2
+false
+
+>> 2.2.2.2/24
+false
+
+>> 300.300.300.300
+false
+
+>> 300.300.300.300/24
+false
+
+>> exit
+
+
+# 从 v2rayGeoIPDat 格式的本地文件（只包含一个类别）中查找某个 IP 地址或 CIDR
+# lookup IP or CIDR from local file (with only one list) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u ./cn.dat
+Enter IP or CIDR (type "exit" to quit):
+>> 1.0.1.1
+true
+
+>> 1.0.1.1/24
+true
+
+>> 1.0.1.1/23
+false
+
+>> 2.2.2.2
+false
+
+>> 2.2.2.2/24
+false
+
+>> 300.300.300.300
+false
+
+>> 300.300.300.300/24
+false
+
+>> exit
+
+
+# 从 v2rayGeoIPDat 格式的远程 URL（包含多个类别）中查找某个 IP 地址或 CIDR
+# lookup IP or CIDR from remote URL (with multiple list) in v2rayGeoIPDat format
+$ ./geoip lookup -f v2rayGeoIPDat -u https://example.com/geoip.dat
+Enter IP or CIDR (type "exit" to quit):
 >> 1.0.1.1
 cn
+
 >> 1.0.1.1/24
 cn
 
+>> 1.0.1.1/23
+false
 
-# lookup IP or CIDR in REPL mode from remote file
-$ ./geoip lookup -f text -u https://example.com/cn.txt -n cn
-Enter IP or CIDR (type `exit` to quit):
->> 1.0.1.1
-cn
->> 1.0.1.1/24
-cn
+>> 1.0.0.1
+au,cloudflare
 
+>> 1.0.0.1/24
+au,cloudflare
 
-# lookup IP or CIDR in REPL mode from local directory, got two lists joined with comma
-$ ./geoip lookup -f text -d ./path/to/your/directory/
-Enter IP or CIDR (type `exit` to quit):
->> 1.0.1.1
-cn,my-custom-list
->> 1.0.1.1/24
-cn,my-custom-list
+>> 300.300.300.300
+false
 
+>> 300.300.300.300/24
+false
 
-# lookup IP or CIDR in REPL mode from specified lists in local directory
-$ ./geoip lookup -f text -d ./path/to/your/directory/ -l cn,us,jp
-Enter IP or CIDR (type `exit` to quit):
->> 1.0.1.1
-cn
->> 1.0.1.1/24
-cn
-
-
-# lookup IP or CIDR in REPL mode with another format from specified lists in remote file
-$ ./geoip lookup -f v2rayGeoIPDat -u https://example.com/geoip.dat -l cn,us,jp
-Enter IP or CIDR (type `exit` to quit):
->> 1.0.1.1
-cn
->> 1.0.1.1/24
-cn
+>> exit
 ```
 
 ## 使用本项目的项目

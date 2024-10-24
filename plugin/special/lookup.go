@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/netip"
+	"slices"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -85,7 +86,10 @@ func (l *lookup) Output(container lib.Container) error {
 
 	lists, found, _ := container.Lookup(l.Search, l.SearchList...)
 	if found {
+		slices.Sort(lists)
 		fmt.Println(strings.ToLower(strings.Join(lists, ",")))
+	} else {
+		fmt.Println("false")
 	}
 
 	return nil
