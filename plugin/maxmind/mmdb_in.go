@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	typeMaxmindMMDBIn = "maxmindMMDB"
-	descMaxmindMMDBIn = "Convert MaxMind mmdb database to other formats"
+	TypeMaxmindMMDBIn = "maxmindMMDB"
+	DescMaxmindMMDBIn = "Convert MaxMind mmdb database to other formats"
 )
 
 var (
@@ -21,11 +21,11 @@ var (
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeMaxmindMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeMaxmindMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newMaxmindMMDBIn(action, data)
 	})
-	lib.RegisterInputConverter(typeMaxmindMMDBIn, &maxmindMMDBIn{
-		Description: descMaxmindMMDBIn,
+	lib.RegisterInputConverter(TypeMaxmindMMDBIn, &MaxmindMMDBIn{
+		Description: DescMaxmindMMDBIn,
 	})
 }
 
@@ -54,17 +54,17 @@ func newMaxmindMMDBIn(action lib.Action, data json.RawMessage) (lib.InputConvert
 		}
 	}
 
-	return &maxmindMMDBIn{
-		Type:        typeMaxmindMMDBIn,
+	return &MaxmindMMDBIn{
+		Type:        TypeMaxmindMMDBIn,
 		Action:      action,
-		Description: descMaxmindMMDBIn,
+		Description: DescMaxmindMMDBIn,
 		URI:         tmp.URI,
 		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
-type maxmindMMDBIn struct {
+type MaxmindMMDBIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -73,19 +73,19 @@ type maxmindMMDBIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *maxmindMMDBIn) GetType() string {
+func (m *MaxmindMMDBIn) GetType() string {
 	return m.Type
 }
 
-func (m *maxmindMMDBIn) GetAction() lib.Action {
+func (m *MaxmindMMDBIn) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *maxmindMMDBIn) GetDescription() string {
+func (m *MaxmindMMDBIn) GetDescription() string {
 	return m.Description
 }
 
-func (m *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (m *MaxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
@@ -134,7 +134,7 @@ func (m *maxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (m *maxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (m *MaxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.FromBytes(content)
 	if err != nil {
 		return err

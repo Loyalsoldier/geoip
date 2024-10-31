@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	typeASNCSV = "maxmindGeoLite2ASNCSV"
-	descASNCSV = "Convert MaxMind GeoLite2 ASN CSV data to other formats"
+	TypeASNCSV = "maxmindGeoLite2ASNCSV"
+	DescASNCSV = "Convert MaxMind GeoLite2 ASN CSV data to other formats"
 )
 
 var (
@@ -23,11 +23,11 @@ var (
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeASNCSV, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeASNCSV, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newGeoLite2ASNCSV(action, data)
 	})
-	lib.RegisterInputConverter(typeASNCSV, &geoLite2ASNCSV{
-		Description: descASNCSV,
+	lib.RegisterInputConverter(TypeASNCSV, &GeoLite2ASNCSV{
+		Description: DescASNCSV,
 	})
 }
 
@@ -77,13 +77,13 @@ func newGeoLite2ASNCSV(action lib.Action, data json.RawMessage) (lib.InputConver
 	}
 
 	if len(wantList) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] wantedList must be specified in config", typeASNCSV, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] wantedList must be specified in config", TypeASNCSV, action)
 	}
 
-	return &geoLite2ASNCSV{
-		Type:        typeASNCSV,
+	return &GeoLite2ASNCSV{
+		Type:        TypeASNCSV,
 		Action:      action,
-		Description: descASNCSV,
+		Description: DescASNCSV,
 		IPv4File:    tmp.IPv4File,
 		IPv6File:    tmp.IPv6File,
 		Want:        wantList,
@@ -91,7 +91,7 @@ func newGeoLite2ASNCSV(action lib.Action, data json.RawMessage) (lib.InputConver
 	}, nil
 }
 
-type geoLite2ASNCSV struct {
+type GeoLite2ASNCSV struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -101,19 +101,19 @@ type geoLite2ASNCSV struct {
 	OnlyIPType  lib.IPType
 }
 
-func (g *geoLite2ASNCSV) GetType() string {
+func (g *GeoLite2ASNCSV) GetType() string {
 	return g.Type
 }
 
-func (g *geoLite2ASNCSV) GetAction() lib.Action {
+func (g *GeoLite2ASNCSV) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *geoLite2ASNCSV) GetDescription() string {
+func (g *GeoLite2ASNCSV) GetDescription() string {
 	return g.Description
 }
 
-func (g *geoLite2ASNCSV) Input(container lib.Container) (lib.Container, error) {
+func (g *GeoLite2ASNCSV) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 
 	if g.IPv4File != "" {
@@ -158,7 +158,7 @@ func (g *geoLite2ASNCSV) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (g *geoLite2ASNCSV) process(file string, entries map[string]*lib.Entry) error {
+func (g *GeoLite2ASNCSV) process(file string, entries map[string]*lib.Entry) error {
 	if entries == nil {
 		entries = make(map[string]*lib.Entry)
 	}

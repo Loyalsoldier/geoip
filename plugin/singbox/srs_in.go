@@ -15,16 +15,16 @@ import (
 )
 
 const (
-	typeSRSIn = "singboxSRS"
-	descSRSIn = "Convert sing-box SRS data to other formats"
+	TypeSRSIn = "singboxSRS"
+	DescSRSIn = "Convert sing-box SRS data to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeSRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeSRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newSRSIn(action, data)
 	})
-	lib.RegisterInputConverter(typeSRSIn, &srsIn{
-		Description: descSRSIn,
+	lib.RegisterInputConverter(TypeSRSIn, &SRSIn{
+		Description: DescSRSIn,
 	})
 }
 
@@ -44,11 +44,11 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}
 
 	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputdir or name or uri", typeSRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputdir or name or uri", TypeSRSIn, action)
 	}
 
 	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", typeSRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", TypeSRSIn, action)
 	}
 
 	// Filter want list
@@ -59,10 +59,10 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		}
 	}
 
-	return &srsIn{
-		Type:        typeSRSIn,
+	return &SRSIn{
+		Type:        TypeSRSIn,
 		Action:      action,
-		Description: descSRSIn,
+		Description: DescSRSIn,
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		InputDir:    tmp.InputDir,
@@ -71,7 +71,7 @@ func newSRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}, nil
 }
 
-type srsIn struct {
+type SRSIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -82,19 +82,19 @@ type srsIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (s *srsIn) GetType() string {
+func (s *SRSIn) GetType() string {
 	return s.Type
 }
 
-func (s *srsIn) GetAction() lib.Action {
+func (s *SRSIn) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *srsIn) GetDescription() string {
+func (s *SRSIn) GetDescription() string {
 	return s.Description
 }
 
-func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
+func (s *SRSIn) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -146,7 +146,7 @@ func (s *srsIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (s *srsIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (s *SRSIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -165,7 +165,7 @@ func (s *srsIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (s *SRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -203,7 +203,7 @@ func (s *srsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (s *SRSIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ func (s *srsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (s *srsIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
+func (s *SRSIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
 
 	if len(s.Want) > 0 && !s.Want[name] {

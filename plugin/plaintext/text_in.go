@@ -13,16 +13,16 @@ import (
 )
 
 const (
-	typeTextIn = "text"
-	descTextIn = "Convert plaintext IP & CIDR to other formats"
+	TypeTextIn = "text"
+	DescTextIn = "Convert plaintext IP & CIDR to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(typeTextIn, action, data)
+	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newTextIn(TypeTextIn, action, data)
 	})
-	lib.RegisterInputConverter(typeTextIn, &textIn{
-		Description: descTextIn,
+	lib.RegisterInputConverter(TypeTextIn, &TextIn{
+		Description: DescTextIn,
 	})
 }
 
@@ -50,11 +50,11 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		}
 	}
 
-	if iType != typeTextIn && len(tmp.IPOrCIDR) > 0 {
+	if iType != TypeTextIn && len(tmp.IPOrCIDR) > 0 {
 		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", iType, action)
 	}
 
-	if iType == typeJSONIn && len(tmp.JSONPath) == 0 {
+	if iType == TypeJSONIn && len(tmp.JSONPath) == 0 {
 		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", iType, action)
 	}
 
@@ -77,10 +77,10 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 		}
 	}
 
-	return &textIn{
+	return &TextIn{
 		Type:        iType,
 		Action:      action,
-		Description: descTextIn,
+		Description: DescTextIn,
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		IPOrCIDR:    tmp.IPOrCIDR,
@@ -94,19 +94,19 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 	}, nil
 }
 
-func (t *textIn) GetType() string {
+func (t *TextIn) GetType() string {
 	return t.Type
 }
 
-func (t *textIn) GetAction() lib.Action {
+func (t *TextIn) GetAction() lib.Action {
 	return t.Action
 }
 
-func (t *textIn) GetDescription() string {
+func (t *TextIn) GetDescription() string {
 	return t.Description
 }
 
-func (t *textIn) Input(container lib.Container) (lib.Container, error) {
+func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -168,7 +168,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (t *textIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (t *TextIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -187,7 +187,7 @@ func (t *textIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (t *TextIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -231,7 +231,7 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (t *TextIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -258,7 +258,7 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *textIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
+func (t *TextIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
 
 	entry, found := entries[name]

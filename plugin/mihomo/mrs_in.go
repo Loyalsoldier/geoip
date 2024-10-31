@@ -21,16 +21,16 @@ import (
 var mrsMagicBytes = [4]byte{'M', 'R', 'S', 1} // MRSv1
 
 const (
-	typeMRSIn = "mihomoMRS"
-	descMRSIn = "Convert mihomo MRS data to other formats"
+	TypeMRSIn = "mihomoMRS"
+	DescMRSIn = "Convert mihomo MRS data to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeMRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeMRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newMRSIn(action, data)
 	})
-	lib.RegisterInputConverter(typeMRSIn, &mrsIn{
-		Description: descMRSIn,
+	lib.RegisterInputConverter(TypeMRSIn, &MRSIn{
+		Description: DescMRSIn,
 	})
 }
 
@@ -50,11 +50,11 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}
 
 	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name or uri", typeMRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name or uri", TypeMRSIn, action)
 	}
 
 	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", typeMRSIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", TypeMRSIn, action)
 	}
 
 	// Filter want list
@@ -65,10 +65,10 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		}
 	}
 
-	return &mrsIn{
-		Type:        typeMRSIn,
+	return &MRSIn{
+		Type:        TypeMRSIn,
 		Action:      action,
-		Description: descMRSIn,
+		Description: DescMRSIn,
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		InputDir:    tmp.InputDir,
@@ -77,7 +77,7 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}, nil
 }
 
-type mrsIn struct {
+type MRSIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -88,19 +88,19 @@ type mrsIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *mrsIn) GetType() string {
+func (m *MRSIn) GetType() string {
 	return m.Type
 }
 
-func (m *mrsIn) GetAction() lib.Action {
+func (m *MRSIn) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *mrsIn) GetDescription() string {
+func (m *MRSIn) GetDescription() string {
 	return m.Description
 }
 
-func (m *mrsIn) Input(container lib.Container) (lib.Container, error) {
+func (m *MRSIn) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -152,7 +152,7 @@ func (m *mrsIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (m *mrsIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (m *MRSIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -171,7 +171,7 @@ func (m *mrsIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (m *mrsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (m *MRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -209,7 +209,7 @@ func (m *mrsIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (m *mrsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (m *MRSIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func (m *mrsIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (m *mrsIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
+func (m *MRSIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
 
 	if len(m.Want) > 0 && !m.Want[name] {
@@ -253,7 +253,7 @@ func (m *mrsIn) generateEntries(name string, reader io.Reader, entries map[strin
 	return nil
 }
 
-func (m *mrsIn) parseMRS(data []byte, entry *lib.Entry) error {
+func (m *MRSIn) parseMRS(data []byte, entry *lib.Entry) error {
 	reader, err := zstd.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return err

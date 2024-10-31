@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	typeCutter = "cutter"
-	descCutter = "Remove data from previous steps"
+	TypeCutter = "cutter"
+	DescCutter = "Remove data from previous steps"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeCutter, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeCutter, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newCutter(action, data)
 	})
-	lib.RegisterInputConverter(typeCutter, &cutter{
-		Description: descCutter,
+	lib.RegisterInputConverter(TypeCutter, &Cutter{
+		Description: DescCutter,
 	})
 }
 
@@ -35,7 +35,7 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 	}
 
 	if action != lib.ActionRemove {
-		return nil, fmt.Errorf("❌ [type %s] only supports `remove` action", typeCutter)
+		return nil, fmt.Errorf("❌ [type %s] only supports `remove` action", TypeCutter)
 	}
 
 	// Filter want list
@@ -47,19 +47,19 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 	}
 
 	if len(wantList) == 0 {
-		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", typeCutter)
+		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", TypeCutter)
 	}
 
-	return &cutter{
-		Type:        typeCutter,
+	return &Cutter{
+		Type:        TypeCutter,
 		Action:      action,
-		Description: descCutter,
+		Description: DescCutter,
 		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
-type cutter struct {
+type Cutter struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -67,19 +67,19 @@ type cutter struct {
 	OnlyIPType  lib.IPType
 }
 
-func (c *cutter) GetType() string {
+func (c *Cutter) GetType() string {
 	return c.Type
 }
 
-func (c *cutter) GetAction() lib.Action {
+func (c *Cutter) GetAction() lib.Action {
 	return c.Action
 }
 
-func (c *cutter) GetDescription() string {
+func (c *Cutter) GetDescription() string {
 	return c.Description
 }
 
-func (c *cutter) Input(container lib.Container) (lib.Container, error) {
+func (c *Cutter) Input(container lib.Container) (lib.Container, error) {
 	var ignoreIPType lib.IgnoreIPOption
 	switch c.OnlyIPType {
 	case lib.IPv4:

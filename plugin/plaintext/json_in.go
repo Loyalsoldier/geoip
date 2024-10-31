@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	typeJSONIn = "json"
-	descJSONIn = "Convert JSON data to other formats"
+	TypeJSONIn = "json"
+	DescJSONIn = "Convert JSON data to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeJSONIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(typeJSONIn, action, data)
+	lib.RegisterInputConfigCreator(TypeJSONIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newTextIn(TypeJSONIn, action, data)
 	})
 
-	lib.RegisterInputConverter(typeJSONIn, &textIn{
-		Description: descJSONIn,
+	lib.RegisterInputConverter(TypeJSONIn, &TextIn{
+		Description: DescJSONIn,
 	})
 }

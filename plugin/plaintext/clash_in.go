@@ -12,25 +12,25 @@ which make it possible to support more formats for the project.
 */
 
 const (
-	typeClashRuleSetClassicalIn = "clashRuleSetClassical"
-	descClashClassicalIn        = "Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines)"
+	TypeClashRuleSetClassicalIn = "clashRuleSetClassical"
+	DescClashClassicalIn        = "Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines)"
 
-	typeClashRuleSetIPCIDRIn = "clashRuleSet"
-	descClashRuleSetIn       = "Convert ipcidr type of Clash RuleSet to other formats"
+	TypeClashRuleSetIPCIDRIn = "clashRuleSet"
+	DescClashRuleSetIn       = "Convert ipcidr type of Clash RuleSet to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeClashRuleSetClassicalIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(typeClashRuleSetClassicalIn, action, data)
+	lib.RegisterInputConfigCreator(TypeClashRuleSetClassicalIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newTextIn(TypeClashRuleSetClassicalIn, action, data)
 	})
-	lib.RegisterInputConverter(typeClashRuleSetClassicalIn, &textIn{
-		Description: descClashClassicalIn,
+	lib.RegisterInputConverter(TypeClashRuleSetClassicalIn, &TextIn{
+		Description: DescClashClassicalIn,
 	})
 
-	lib.RegisterInputConfigCreator(typeClashRuleSetIPCIDRIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(typeClashRuleSetIPCIDRIn, action, data)
+	lib.RegisterInputConfigCreator(TypeClashRuleSetIPCIDRIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newTextIn(TypeClashRuleSetIPCIDRIn, action, data)
 	})
-	lib.RegisterInputConverter(typeClashRuleSetIPCIDRIn, &textIn{
-		Description: descClashRuleSetIn,
+	lib.RegisterInputConverter(TypeClashRuleSetIPCIDRIn, &TextIn{
+		Description: DescClashRuleSetIn,
 	})
 }

@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	typeMRSOut = "mihomoMRS"
-	descMRSOut = "Convert data to mihomo MRS format"
+	TypeMRSOut = "mihomoMRS"
+	DescMRSOut = "Convert data to mihomo MRS format"
 )
 
 var (
@@ -26,11 +26,11 @@ var (
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(typeMRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+	lib.RegisterOutputConfigCreator(TypeMRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newMRSOut(action, data)
 	})
-	lib.RegisterOutputConverter(typeMRSOut, &mrsOut{
-		Description: descMRSOut,
+	lib.RegisterOutputConverter(TypeMRSOut, &MRSOut{
+		Description: DescMRSOut,
 	})
 }
 
@@ -52,10 +52,10 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		tmp.OutputDir = defaultOutputDir
 	}
 
-	return &mrsOut{
-		Type:        typeMRSOut,
+	return &MRSOut{
+		Type:        TypeMRSOut,
 		Action:      action,
-		Description: descMRSOut,
+		Description: DescMRSOut,
 		OutputDir:   tmp.OutputDir,
 		Want:        tmp.Want,
 		Exclude:     tmp.Exclude,
@@ -63,7 +63,7 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 	}, nil
 }
 
-type mrsOut struct {
+type MRSOut struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -73,19 +73,19 @@ type mrsOut struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *mrsOut) GetType() string {
+func (m *MRSOut) GetType() string {
 	return m.Type
 }
 
-func (m *mrsOut) GetAction() lib.Action {
+func (m *MRSOut) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *mrsOut) GetDescription() string {
+func (m *MRSOut) GetDescription() string {
 	return m.Description
 }
 
-func (m *mrsOut) Output(container lib.Container) error {
+func (m *MRSOut) Output(container lib.Container) error {
 	for _, name := range m.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -101,7 +101,7 @@ func (m *mrsOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (m *mrsOut) filterAndSortList(container lib.Container) []string {
+func (m *MRSOut) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range m.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -137,7 +137,7 @@ func (m *mrsOut) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (m *mrsOut) generate(entry *lib.Entry) error {
+func (m *MRSOut) generate(entry *lib.Entry) error {
 	var ipRanges []netipx.IPRange
 	var err error
 	switch m.OnlyIPType {
@@ -164,7 +164,7 @@ func (m *mrsOut) generate(entry *lib.Entry) error {
 	return nil
 }
 
-func (m *mrsOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
+func (m *MRSOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
 	if err := os.MkdirAll(m.OutputDir, 0755); err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (m *mrsOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
 	return nil
 }
 
-func (m *mrsOut) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error) {
+func (m *MRSOut) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error) {
 	encoder, err := zstd.NewWriter(w)
 	if err != nil {
 		return err

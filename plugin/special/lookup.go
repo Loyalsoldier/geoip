@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	typeLookup = "lookup"
-	descLookup = "Lookup specified IP or CIDR from various formats of data"
+	TypeLookup = "lookup"
+	DescLookup = "Lookup specified IP or CIDR from various formats of data"
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(typeLookup, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+	lib.RegisterOutputConfigCreator(TypeLookup, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newLookup(action, data)
 	})
-	lib.RegisterOutputConverter(typeLookup, &lookup{
-		Description: descLookup,
+	lib.RegisterOutputConverter(TypeLookup, &Lookup{
+		Description: DescLookup,
 	})
 }
 
@@ -39,19 +39,19 @@ func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	tmp.Search = strings.TrimSpace(tmp.Search)
 	if tmp.Search == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", typeLookup, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", TypeLookup, action)
 	}
 
-	return &lookup{
-		Type:        typeLookup,
+	return &Lookup{
+		Type:        TypeLookup,
 		Action:      action,
-		Description: descLookup,
+		Description: DescLookup,
 		Search:      tmp.Search,
 		SearchList:  tmp.SearchList,
 	}, nil
 }
 
-type lookup struct {
+type Lookup struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -59,19 +59,19 @@ type lookup struct {
 	SearchList  []string
 }
 
-func (l *lookup) GetType() string {
+func (l *Lookup) GetType() string {
 	return l.Type
 }
 
-func (l *lookup) GetAction() lib.Action {
+func (l *Lookup) GetAction() lib.Action {
 	return l.Action
 }
 
-func (l *lookup) GetDescription() string {
+func (l *Lookup) GetDescription() string {
 	return l.Description
 }
 
-func (l *lookup) Output(container lib.Container) error {
+func (l *Lookup) Output(container lib.Container) error {
 	switch strings.Contains(l.Search, "/") {
 	case true: // CIDR
 		if _, err := netip.ParsePrefix(l.Search); err != nil {

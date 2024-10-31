@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	typeStdin = "stdin"
-	descStdin = "Accept plaintext IP & CIDR from standard input, separated by newline"
+	TypeStdin = "stdin"
+	DescStdin = "Accept plaintext IP & CIDR from standard input, separated by newline"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(typeStdin, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeStdin, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newStdin(action, data)
 	})
-	lib.RegisterInputConverter(typeStdin, &stdin{
-		Description: descStdin,
+	lib.RegisterInputConverter(TypeStdin, &Stdin{
+		Description: DescStdin,
 	})
 }
 
@@ -37,19 +37,19 @@ func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 	}
 
 	if tmp.Name == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", typeStdin, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", TypeStdin, action)
 	}
 
-	return &stdin{
-		Type:        typeStdin,
+	return &Stdin{
+		Type:        TypeStdin,
 		Action:      action,
-		Description: descStdin,
+		Description: DescStdin,
 		Name:        tmp.Name,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
-type stdin struct {
+type Stdin struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -57,19 +57,19 @@ type stdin struct {
 	OnlyIPType  lib.IPType
 }
 
-func (s *stdin) GetType() string {
+func (s *Stdin) GetType() string {
 	return s.Type
 }
 
-func (s *stdin) GetAction() lib.Action {
+func (s *Stdin) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *stdin) GetDescription() string {
+func (s *Stdin) GetDescription() string {
 	return s.Description
 }
 
-func (s *stdin) Input(container lib.Container) (lib.Container, error) {
+func (s *Stdin) Input(container lib.Container) (lib.Container, error) {
 	entry := lib.NewEntry(s.Name)
 
 	scanner := bufio.NewScanner(os.Stdin)

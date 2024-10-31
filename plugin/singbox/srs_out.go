@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	typeSRSOut = "singboxSRS"
-	descSRSOut = "Convert data to sing-box SRS format"
+	TypeSRSOut = "singboxSRS"
+	DescSRSOut = "Convert data to sing-box SRS format"
 )
 
 var (
@@ -25,11 +25,11 @@ var (
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(typeSRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+	lib.RegisterOutputConfigCreator(TypeSRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newSRSOut(action, data)
 	})
-	lib.RegisterOutputConverter(typeSRSOut, &srsOut{
-		Description: descSRSOut,
+	lib.RegisterOutputConverter(TypeSRSOut, &SRSOut{
+		Description: DescSRSOut,
 	})
 }
 
@@ -51,10 +51,10 @@ func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		tmp.OutputDir = defaultOutputDir
 	}
 
-	return &srsOut{
-		Type:        typeSRSOut,
+	return &SRSOut{
+		Type:        TypeSRSOut,
 		Action:      action,
-		Description: descSRSOut,
+		Description: DescSRSOut,
 		OutputDir:   tmp.OutputDir,
 		Want:        tmp.Want,
 		Exclude:     tmp.Exclude,
@@ -62,7 +62,7 @@ func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 	}, nil
 }
 
-type srsOut struct {
+type SRSOut struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -72,19 +72,19 @@ type srsOut struct {
 	OnlyIPType  lib.IPType
 }
 
-func (s *srsOut) GetType() string {
+func (s *SRSOut) GetType() string {
 	return s.Type
 }
 
-func (s *srsOut) GetAction() lib.Action {
+func (s *SRSOut) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *srsOut) GetDescription() string {
+func (s *SRSOut) GetDescription() string {
 	return s.Description
 }
 
-func (s *srsOut) Output(container lib.Container) error {
+func (s *SRSOut) Output(container lib.Container) error {
 	for _, name := range s.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -100,7 +100,7 @@ func (s *srsOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (s *srsOut) filterAndSortList(container lib.Container) []string {
+func (s *SRSOut) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range s.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -136,7 +136,7 @@ func (s *srsOut) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (s *srsOut) generate(entry *lib.Entry) error {
+func (s *SRSOut) generate(entry *lib.Entry) error {
 	ruleset, err := s.marshalRuleSet(entry)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (s *srsOut) generate(entry *lib.Entry) error {
 	return nil
 }
 
-func (s *srsOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) {
+func (s *SRSOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) {
 	var entryCidr []string
 	var err error
 	switch s.OnlyIPType {
@@ -183,7 +183,7 @@ func (s *srsOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) 
 	return nil, fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", s.Type, s.Action, entry.GetName())
 }
 
-func (s *srsOut) writeFile(filename string, ruleset *option.PlainRuleSet) error {
+func (s *SRSOut) writeFile(filename string, ruleset *option.PlainRuleSet) error {
 	if err := os.MkdirAll(s.OutputDir, 0755); err != nil {
 		return err
 	}

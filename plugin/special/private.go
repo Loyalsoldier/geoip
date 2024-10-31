@@ -8,8 +8,8 @@ import (
 
 const (
 	entryNamePrivate = "private"
-	typePrivate      = "private"
-	descPrivate      = "Convert LAN and private network CIDR to other formats"
+	TypePrivate      = "private"
+	DescPrivate      = "Convert LAN and private network CIDR to other formats"
 )
 
 var privateCIDRs = []string{
@@ -37,11 +37,11 @@ var privateCIDRs = []string{
 }
 
 func init() {
-	lib.RegisterInputConfigCreator(typePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newPrivate(action, data)
 	})
-	lib.RegisterInputConverter(typePrivate, &private{
-		Description: descPrivate,
+	lib.RegisterInputConverter(TypePrivate, &Private{
+		Description: DescPrivate,
 	})
 }
 
@@ -56,34 +56,34 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 		}
 	}
 
-	return &private{
-		Type:        typePrivate,
+	return &Private{
+		Type:        TypePrivate,
 		Action:      action,
-		Description: descPrivate,
+		Description: DescPrivate,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
-type private struct {
+type Private struct {
 	Type        string
 	Action      lib.Action
 	Description string
 	OnlyIPType  lib.IPType
 }
 
-func (p *private) GetType() string {
+func (p *Private) GetType() string {
 	return p.Type
 }
 
-func (p *private) GetAction() lib.Action {
+func (p *Private) GetAction() lib.Action {
 	return p.Action
 }
 
-func (p *private) GetDescription() string {
+func (p *Private) GetDescription() string {
 	return p.Description
 }
 
-func (p *private) Input(container lib.Container) (lib.Container, error) {
+func (p *Private) Input(container lib.Container) (lib.Container, error) {
 	entry, found := container.GetEntry(entryNamePrivate)
 	if !found {
 		entry = lib.NewEntry(entryNamePrivate)

@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	typeStdout = "stdout"
-	descStdout = "Convert data to plaintext CIDR format and output to standard output"
+	TypeStdout = "stdout"
+	DescStdout = "Convert data to plaintext CIDR format and output to standard output"
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(typeStdout, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+	lib.RegisterOutputConfigCreator(TypeStdout, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newStdout(action, data)
 	})
-	lib.RegisterOutputConverter(typeStdout, &stdout{
-		Description: descStdout,
+	lib.RegisterOutputConverter(TypeStdout, &Stdout{
+		Description: DescStdout,
 	})
 }
 
@@ -38,17 +38,17 @@ func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	return &stdout{
-		Type:        typeStdout,
+	return &Stdout{
+		Type:        TypeStdout,
 		Action:      action,
-		Description: descStdout,
+		Description: DescStdout,
 		Want:        tmp.Want,
 		Exclude:     tmp.Exclude,
 		OnlyIPType:  tmp.OnlyIPType,
 	}, nil
 }
 
-type stdout struct {
+type Stdout struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -57,19 +57,19 @@ type stdout struct {
 	OnlyIPType  lib.IPType
 }
 
-func (s *stdout) GetType() string {
+func (s *Stdout) GetType() string {
 	return s.Type
 }
 
-func (s *stdout) GetAction() lib.Action {
+func (s *Stdout) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *stdout) GetDescription() string {
+func (s *Stdout) GetDescription() string {
 	return s.Description
 }
 
-func (s *stdout) Output(container lib.Container) error {
+func (s *Stdout) Output(container lib.Container) error {
 	for _, name := range s.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -89,7 +89,7 @@ func (s *stdout) Output(container lib.Container) error {
 	return nil
 }
 
-func (s *stdout) filterAndSortList(container lib.Container) []string {
+func (s *Stdout) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range s.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -125,7 +125,7 @@ func (s *stdout) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (s *stdout) generateCIDRList(entry *lib.Entry) ([]string, error) {
+func (s *Stdout) generateCIDRList(entry *lib.Entry) ([]string, error) {
 	var entryList []string
 	var err error
 	switch s.OnlyIPType {
