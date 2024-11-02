@@ -10,6 +10,7 @@ import (
 
 type Container interface {
 	GetEntry(name string) (*Entry, bool)
+	Len() int
 	Add(entry *Entry, opts ...IgnoreIPOption) error
 	Remove(entry *Entry, rCase CaseRemove, opts ...IgnoreIPOption) error
 	Loop() <-chan *Entry
@@ -39,6 +40,13 @@ func (c *container) GetEntry(name string) (*Entry, bool) {
 		return nil, false
 	}
 	return val, true
+}
+
+func (c *container) Len() int {
+	if !c.isValid() {
+		return 0
+	}
+	return len(c.entries)
 }
 
 func (c *container) Loop() <-chan *Entry {
