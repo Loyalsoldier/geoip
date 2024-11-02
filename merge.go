@@ -106,7 +106,7 @@ var mergeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		if err := instance.InitFromBytes(configBytes); err != nil {
+		if err := instance.InitConfigFromBytes(configBytes); err != nil {
 			log.Fatal(err)
 		}
 

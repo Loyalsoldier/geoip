@@ -25,7 +25,7 @@ var convertCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		if err := instance.Init(configFile); err != nil {
+		if err := instance.InitConfig(configFile); err != nil {
 			log.Fatal(err)
 		}
 
