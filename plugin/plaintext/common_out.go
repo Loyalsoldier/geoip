@@ -32,7 +32,7 @@ type TextOut struct {
 	AddSuffixInLine string
 }
 
-func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		OutputExt  string     `json:"outputExtension"`
@@ -70,7 +70,7 @@ func newTextOut(iType string, action lib.Action, data json.RawMessage) (lib.Outp
 	return &TextOut{
 		Type:        iType,
 		Action:      action,
-		Description: DescTextOut,
+		Description: iDesc,
 		OutputDir:   tmp.OutputDir,
 		OutputExt:   tmp.OutputExt,
 		Want:        tmp.Want,

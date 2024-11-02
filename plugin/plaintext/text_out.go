@@ -16,7 +16,7 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeTextOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeTextOut, action, data)
+		return newTextOut(TypeTextOut, DescTextOut, action, data)
 	})
 	lib.RegisterOutputConverter(TypeTextOut, &TextOut{
 		Description: DescTextOut,

@@ -13,7 +13,7 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeJSONIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeJSONIn, action, data)
+		return newTextIn(TypeJSONIn, DescJSONIn, action, data)
 	})
 
 	lib.RegisterInputConverter(TypeJSONIn, &TextIn{

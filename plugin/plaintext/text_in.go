@@ -19,14 +19,14 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeTextIn, action, data)
+		return newTextIn(TypeTextIn, DescTextIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeTextIn, &TextIn{
 		Description: DescTextIn,
 	})
 }
 
-func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
@@ -80,7 +80,7 @@ func newTextIn(iType string, action lib.Action, data json.RawMessage) (lib.Input
 	return &TextIn{
 		Type:        iType,
 		Action:      action,
-		Description: DescTextIn,
+		Description: iDesc,
 		Name:        tmp.Name,
 		URI:         tmp.URI,
 		IPOrCIDR:    tmp.IPOrCIDR,

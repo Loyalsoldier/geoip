@@ -21,14 +21,14 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeClashRuleSetClassicalIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeClashRuleSetClassicalIn, action, data)
+		return newTextIn(TypeClashRuleSetClassicalIn, DescClashClassicalIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeClashRuleSetClassicalIn, &TextIn{
 		Description: DescClashClassicalIn,
 	})
 
 	lib.RegisterInputConfigCreator(TypeClashRuleSetIPCIDRIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeClashRuleSetIPCIDRIn, action, data)
+		return newTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeClashRuleSetIPCIDRIn, &TextIn{
 		Description: DescClashRuleSetIn,
