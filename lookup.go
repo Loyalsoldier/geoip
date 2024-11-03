@@ -161,7 +161,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeMaxmindMMDBIn):
-		input = &maxmind.MaxmindMMDBIn{
+		input = &maxmind.MMDBIn{
 			Type:        maxmind.TypeMaxmindMMDBIn,
 			Action:      lib.ActionAdd,
 			Description: maxmind.DescMaxmindMMDBIn,

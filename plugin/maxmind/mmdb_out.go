@@ -19,55 +19,13 @@ const (
 	DescMaxmindMMDBOut = "Convert data to MaxMind mmdb database format"
 )
 
-var (
-	defaultOutputName = "Country.mmdb"
-	defaultOutputDir  = filepath.Join("./", "output", "maxmind")
-)
-
 func init() {
 	lib.RegisterOutputConfigCreator(TypeMaxmindMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newMMDBOut(action, data)
+		return newMMDBOut(TypeMaxmindMMDBOut, DescMaxmindMMDBOut, action, data)
 	})
 	lib.RegisterOutputConverter(TypeMaxmindMMDBOut, &MMDBOut{
 		Description: DescMaxmindMMDBOut,
 	})
-}
-
-func newMMDBOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-	var tmp struct {
-		OutputName string     `json:"outputName"`
-		OutputDir  string     `json:"outputDir"`
-		Want       []string   `json:"wantedList"`
-		Overwrite  []string   `json:"overwriteList"`
-		Exclude    []string   `json:"excludedList"`
-		OnlyIPType lib.IPType `json:"onlyIPType"`
-	}
-
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
-		}
-	}
-
-	if tmp.OutputName == "" {
-		tmp.OutputName = defaultOutputName
-	}
-
-	if tmp.OutputDir == "" {
-		tmp.OutputDir = defaultOutputDir
-	}
-
-	return &MMDBOut{
-		Type:        TypeMaxmindMMDBOut,
-		Action:      action,
-		Description: DescMaxmindMMDBOut,
-		OutputName:  tmp.OutputName,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Overwrite:   tmp.Overwrite,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
 }
 
 type MMDBOut struct {
@@ -95,10 +53,23 @@ func (m *MMDBOut) GetDescription() string {
 }
 
 func (m *MMDBOut) Output(container lib.Container) error {
+	dbName := ""
+	dbDesc := ""
+
+	switch m.Type {
+	case TypeMaxmindMMDBOut:
+		dbName = "GeoLite2-Country"
+		dbDesc = "Customized GeoLite2 Country database"
+
+	case TypeDBIPCountryMMDBOut:
+		dbName = "DBIP-Country-Lite"
+		dbDesc = "Customized DB-IP Country Lite database"
+	}
+
 	writer, err := mmdbwriter.New(
 		mmdbwriter.Options{
-			DatabaseType:            "GeoLite2-Country",
-			Description:             map[string]string{"en": "Customized GeoLite2 Country database"},
+			DatabaseType:            dbName,
+			Description:             map[string]string{"en": dbDesc},
 			RecordSize:              24,
 			IncludeReservedNetworks: true,
 		},

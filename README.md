@@ -461,6 +461,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据格式（`GeoLite2-ASN-CSV.zip`）
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
+- **dbipCountryMMDB**：DB-IP country mmdb 数据格式（`dbip-country-lite.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
@@ -474,6 +475,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **lookup**：从指定的列表中查找指定的 IP 或 CIDR
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 数据格式（`geoip.dat`）
 - **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
+- **dbipCountryMMDB**：DB-IP country mmdb 数据格式（`dbip-country-lite.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
@@ -527,6 +529,7 @@ All available input formats:
   - clashRuleSet (Convert ipcidr type of Clash RuleSet to other formats)
   - clashRuleSetClassical (Convert classical type of Clash RuleSet to other formats (just processing IP & CIDR lines))
   - cutter (Remove data from previous steps)
+  - dbipCountryMMDB (Convert DB-IP country mmdb database to other formats)
   - json (Convert JSON data to other formats)
   - maxmindGeoLite2ASNCSV (Convert MaxMind GeoLite2 ASN CSV data to other formats)
   - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
@@ -543,6 +546,7 @@ All available input formats:
 All available output formats:
   - clashRuleSet (Convert data to ipcidr type of Clash RuleSet)
   - clashRuleSetClassical (Convert data to classical type of Clash RuleSet)
+  - dbipCountryMMDB (Convert data to DB-IP country mmdb database format)
   - lookup (Lookup specified IP or CIDR from various formats of data)
   - maxmindMMDB (Convert data to MaxMind mmdb database format)
   - mihomoMRS (Convert data to mihomo MRS format)

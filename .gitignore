@@ -69,8 +69,10 @@ $RECYCLE.BIN/
 tmp/
 data/
 geolite2/
+db-ip/
 output/
 geoip
 *.dat
 *.mmdb
 *.srs
+*.mrs

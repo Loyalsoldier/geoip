@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
+	"github.com/oschwald/geoip2-golang"
 	"github.com/oschwald/maxminddb-golang"
 )
 
@@ -16,55 +16,16 @@ const (
 	DescMaxmindMMDBIn = "Convert MaxMind mmdb database to other formats"
 )
 
-var (
-	defaultMMDBFile = filepath.Join("./", "geolite2", "GeoLite2-Country.mmdb")
-)
-
 func init() {
 	lib.RegisterInputConfigCreator(TypeMaxmindMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newMaxmindMMDBIn(action, data)
+		return newMMDBIn(TypeMaxmindMMDBIn, DescMaxmindMMDBIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeMaxmindMMDBIn, &MaxmindMMDBIn{
+	lib.RegisterInputConverter(TypeMaxmindMMDBIn, &MMDBIn{
 		Description: DescMaxmindMMDBIn,
 	})
 }
 
-func newMaxmindMMDBIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	var tmp struct {
-		URI        string     `json:"uri"`
-		Want       []string   `json:"wantedList"`
-		OnlyIPType lib.IPType `json:"onlyIPType"`
-	}
-
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
-		}
-	}
-
-	if tmp.URI == "" {
-		tmp.URI = defaultMMDBFile
-	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &MaxmindMMDBIn{
-		Type:        TypeMaxmindMMDBIn,
-		Action:      action,
-		Description: DescMaxmindMMDBIn,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
-}
-
-type MaxmindMMDBIn struct {
+type MMDBIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -73,19 +34,19 @@ type MaxmindMMDBIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *MaxmindMMDBIn) GetType() string {
+func (m *MMDBIn) GetType() string {
 	return m.Type
 }
 
-func (m *MaxmindMMDBIn) GetAction() lib.Action {
+func (m *MMDBIn) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *MaxmindMMDBIn) GetDescription() string {
+func (m *MMDBIn) GetDescription() string {
 	return m.Description
 }
 
-func (m *MaxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (m *MMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
@@ -134,7 +95,7 @@ func (m *MaxmindMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (m *MaxmindMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (m *MMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.FromBytes(content)
 	if err != nil {
 		return err
