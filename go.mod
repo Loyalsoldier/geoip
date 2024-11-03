@@ -7,6 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/klauspost/compress v1.17.11
 	github.com/maxmind/mmdbwriter v1.0.0
+	github.com/oschwald/geoip2-golang v1.11.0
 	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.10.1
 	github.com/spf13/cobra v1.8.1
