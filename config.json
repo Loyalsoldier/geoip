@@ -48,6 +48,14 @@
       "type": "text",
       "action": "add",
       "args": {
+        "name": "tor",
+        "uri": "https://check.torproject.org/torbulkexitlist"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
         "name": "cloudflare",
         "uri": "https://www.cloudflare.com/ips-v4"
       }
@@ -203,7 +211,8 @@
           "google",
           "netflix",
           "telegram",
-          "twitter"
+          "twitter",
+          "tor"
         ]
       }
     },
@@ -231,7 +240,6 @@
         "outputName": "Country.mmdb",
         "overwriteList": [
           "cn",
-          "private",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -239,7 +247,9 @@
           "google",
           "netflix",
           "telegram",
-          "twitter"
+          "twitter",
+          "tor",
+          "private"
         ]
       }
     },
@@ -258,7 +268,8 @@
           "google",
           "netflix",
           "telegram",
-          "twitter"
+          "twitter",
+          "tor"
         ]
       }
     },
@@ -285,7 +296,8 @@
           "google",
           "netflix",
           "telegram",
-          "twitter"
+          "twitter",
+          "tor"
         ]
       }
     },
