@@ -3,6 +3,7 @@ package maxmind
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
@@ -104,21 +105,42 @@ func (m *MMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 
 	networks := db.Networks(maxminddb.SkipAliasedNetworks)
 	for networks.Next() {
-		var record geoip2.Country
-		subnet, err := networks.Network(&record)
-		if err != nil {
-			continue
+		var name string
+		var subnet *net.IPNet
+		var err error
+
+		switch m.Type {
+		case TypeMaxmindMMDBIn, TypeDBIPCountryMMDBIn:
+			var record geoip2.Country
+			subnet, err = networks.Network(&record)
+			if err != nil {
+				return err
+			}
+
+			switch {
+			case strings.TrimSpace(record.Country.IsoCode) != "":
+				name = strings.ToUpper(strings.TrimSpace(record.Country.IsoCode))
+			case strings.TrimSpace(record.RegisteredCountry.IsoCode) != "":
+				name = strings.ToUpper(strings.TrimSpace(record.RegisteredCountry.IsoCode))
+			case strings.TrimSpace(record.RepresentedCountry.IsoCode) != "":
+				name = strings.ToUpper(strings.TrimSpace(record.RepresentedCountry.IsoCode))
+			}
+
+		case TypeIPInfoCountryMMDBIn:
+			record := struct {
+				Country string `maxminddb:"country"`
+			}{}
+			subnet, err = networks.Network(&record)
+			if err != nil {
+				return err
+			}
+			name = strings.ToUpper(strings.TrimSpace(record.Country))
+
+		default:
+			return lib.ErrNotSupportedFormat
 		}
 
-		name := ""
-		switch {
-		case strings.TrimSpace(record.Country.IsoCode) != "":
-			name = strings.ToUpper(strings.TrimSpace(record.Country.IsoCode))
-		case strings.TrimSpace(record.RegisteredCountry.IsoCode) != "":
-			name = strings.ToUpper(strings.TrimSpace(record.RegisteredCountry.IsoCode))
-		case strings.TrimSpace(record.RepresentedCountry.IsoCode) != "":
-			name = strings.ToUpper(strings.TrimSpace(record.RepresentedCountry.IsoCode))
-		default:
+		if name == "" || subnet == nil {
 			continue
 		}
 

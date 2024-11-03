@@ -55,6 +55,7 @@ func (m *MMDBOut) GetDescription() string {
 func (m *MMDBOut) Output(container lib.Container) error {
 	dbName := ""
 	dbDesc := ""
+	recordSize := 28
 
 	switch m.Type {
 	case TypeMaxmindMMDBOut:
@@ -64,13 +65,18 @@ func (m *MMDBOut) Output(container lib.Container) error {
 	case TypeDBIPCountryMMDBOut:
 		dbName = "DBIP-Country-Lite"
 		dbDesc = "Customized DB-IP Country Lite database"
+
+	case TypeIPInfoCountryMMDBOut:
+		dbName = "IPInfo-Country"
+		dbDesc = "Customized IPInfo Country database"
+		recordSize = 32
 	}
 
 	writer, err := mmdbwriter.New(
 		mmdbwriter.Options{
 			DatabaseType:            dbName,
 			Description:             map[string]string{"en": dbDesc},
-			RecordSize:              24,
+			RecordSize:              recordSize,
 			IncludeReservedNetworks: true,
 		},
 	)
@@ -171,10 +177,19 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry) error {
 		return err
 	}
 
-	record := mmdbtype.Map{
-		"country": mmdbtype.Map{
-			"iso_code": mmdbtype.String(entry.GetName()),
-		},
+	var record mmdbtype.DataType
+	switch m.Type {
+	case TypeMaxmindMMDBOut, TypeDBIPCountryMMDBOut:
+		record = mmdbtype.Map{
+			"country": mmdbtype.Map{
+				"iso_code": mmdbtype.String(entry.GetName()),
+			},
+		}
+
+	case TypeIPInfoCountryMMDBOut:
+		record = mmdbtype.Map{
+			"country": mmdbtype.String(entry.GetName()),
+		}
 	}
 
 	for _, cidr := range entryCidr {

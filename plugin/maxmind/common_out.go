@@ -11,6 +11,7 @@ var (
 	defaultOutputName       = "Country.mmdb"
 	defaultMaxmindOutputDir = filepath.Join("./", "output", "maxmind")
 	defaultDBIPOutputDir    = filepath.Join("./", "output", "db-ip")
+	defaultIPInfoOutputDir  = filepath.Join("./", "output", "ipinfo")
 )
 
 func newMMDBOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
@@ -40,6 +41,9 @@ func newMMDBOut(iType string, iDesc string, action lib.Action, data json.RawMess
 
 		case TypeDBIPCountryMMDBOut:
 			tmp.OutputDir = defaultDBIPOutputDir
+
+		case TypeIPInfoCountryMMDBOut:
+			tmp.OutputDir = defaultIPInfoOutputDir
 		}
 	}
 

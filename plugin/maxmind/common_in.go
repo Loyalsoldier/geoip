@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	defaultGeoLite2MMDBFile    = filepath.Join("./", "geolite2", "GeoLite2-Country.mmdb")
-	defaultDBIPCountryMMDBFile = filepath.Join("./", "db-ip", "dbip-country-lite.mmdb")
+	defaultGeoLite2MMDBFile      = filepath.Join("./", "geolite2", "GeoLite2-Country.mmdb")
+	defaultDBIPCountryMMDBFile   = filepath.Join("./", "db-ip", "dbip-country-lite.mmdb")
+	defaultIPInfoCountryMMDBFile = filepath.Join("./", "ipinfo", "country.mmdb")
 )
 
 func newMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
@@ -33,6 +34,9 @@ func newMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 
 		case TypeDBIPCountryMMDBIn:
 			tmp.URI = defaultDBIPCountryMMDBFile
+
+		case TypeIPInfoCountryMMDBIn:
+			tmp.URI = defaultIPInfoCountryMMDBFile
 		}
 	}
 
