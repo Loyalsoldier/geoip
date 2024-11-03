@@ -35,7 +35,7 @@
 - **clashRuleSet**：ipcidr 类型的 Clash RuleSet
 - **clashRuleSetClassical**：classical 类型的 Clash RuleSet
 - **lookup**：从指定的列表中查找指定的 IP 或 CIDR
-- **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
+- **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **stdout**：将纯文本 CIDR 输出到 standard output（例如：`1.0.0.0/24`）

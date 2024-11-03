@@ -473,7 +473,7 @@ These two concepts are notable: `input` and `output`. The `input` is the data so
 - **stdout**：将纯文本 CIDR 输出到 standard output（例如：`1.0.0.0/24`）
 - **lookup**：从指定的列表中查找指定的 IP 或 CIDR
 - **v2rayGeoIPDat**：V2Ray GeoIP dat 数据格式（`geoip.dat`）
-- **maxmindMMDB**：MaxMind mmdb 数据格式（`GeoLite2-Country.mmdb`）
+- **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
