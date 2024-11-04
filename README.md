@@ -156,7 +156,7 @@ MaxMind 官方版**国家/地区**类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
 
-> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。只保留了 `country` 下的 `iso_code`（两位英文字母表示的国家/地区代码）字段。
+> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。
 
 - **GeoLite2-Country.mmdb**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb)
@@ -180,7 +180,9 @@ MaxMind 官方版 **ASN** 类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
 
-> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。只保留了 `country` 下的 `iso_code`（两位英文字母表示的国家/地区代码）字段。
+> 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。
+
+> **国家/地区**类别保留了 `Continent` 和 `Country` 里的所有字段。**新增类别**和 **geoip:private** 类别只保留了 `Country` 里的 `iso_code`（两位英文字母表示的国家/地区代号）字段。关于 Maxmind 官方 country MMDB 格式文件完整字段，请[查看代码](https://github.com/oschwald/geoip2-golang/blob/576a46d19bb59f32d0215cb43285b8928891b6bc/reader.go#L139-L171)。
 
 - **Country-without-asn.mmdb**（传统版 GeoIP，只包含国家/地区类别，不包含上述新增类别。建议优先使用）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb)
