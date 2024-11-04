@@ -238,6 +238,7 @@
       "args": {
         "outputDir": "./output",
         "outputName": "Country.mmdb",
+        "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": [
           "cn",
           "cloudflare",
@@ -259,6 +260,7 @@
       "args": {
         "outputDir": "./output",
         "outputName": "Country-without-asn.mmdb",
+        "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": ["cn", "private"],
         "excludedList": [
           "cloudflare",
@@ -279,6 +281,7 @@
       "args": {
         "outputDir": "./output",
         "outputName": "Country-only-cn-private.mmdb",
+        "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "wantedList": ["cn", "private"]
       }
     },
