@@ -238,7 +238,7 @@ func (s *SRSIn) generateEntries(name string, reader io.Reader, entries map[strin
 		return err
 	}
 
-	for _, rule := range plainRuleSet.Rules {
+	for _, rule := range plainRuleSet.Options.Rules {
 		for _, cidrStr := range rule.DefaultOptions.IPCIDR {
 			if err := entry.AddPrefix(cidrStr); err != nil {
 				return err
