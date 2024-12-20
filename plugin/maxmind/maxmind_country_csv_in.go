@@ -51,11 +51,10 @@ func newGeoLite2CountryCSV(action lib.Action, data json.RawMessage) (lib.InputCo
 		tmp.CountryCodeFile = defaultCCFile
 	}
 
-	if tmp.IPv4File == "" {
+	// When both of IP files are not specified,
+	// it means user wants to use the default ones
+	if tmp.IPv4File == "" && tmp.IPv6File == "" {
 		tmp.IPv4File = defaultCountryIPv4File
-	}
-
-	if tmp.IPv6File == "" {
 		tmp.IPv6File = defaultCountryIPv6File
 	}
 
