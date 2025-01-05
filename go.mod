@@ -9,7 +9,7 @@ require (
 	github.com/maxmind/mmdbwriter v1.0.0
 	github.com/oschwald/geoip2-golang v1.11.0
 	github.com/oschwald/maxminddb-golang v1.13.1
-	github.com/sagernet/sing-box v1.10.3
+	github.com/sagernet/sing-box v1.10.6
 	github.com/spf13/cobra v1.8.1
 	github.com/tailscale/hujson v0.0.0-20241010212012-29efb4a0184b
 	github.com/tidwall/gjson v1.18.0
@@ -29,7 +29,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 )
