@@ -328,10 +328,10 @@
 
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
-- **args**：（必须）
+- **args**：（可选）
   - **ipv4**：（可选）MaxMind GeoLite2 ASN IPv4 文件路径（`GeoLite2-ASN-Blocks-IPv4.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **ipv6**：（可选）MaxMind GeoLite2 ASN IPv6 文件路径（`GeoLite2-ASN-Blocks-IPv6.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
-  - **wantedList**：（必须，对象，键为字符串类别名，值为 ASN 字符串数组）指定类别名及其包含的 ASN。
+  - **wantedList**：（可选，数组或对象；当为数组时，值为 ASN 字符串；当为对象时，键为类别名，值为 ASN 字符串数组）指定 ASN 或类别名及其包含的 ASN。若未指定，则默认选择所有 ASN。
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`。
 
 ```jsonc
@@ -362,6 +362,54 @@
       "fastly":   ["AS54113", "AS394192"]              // 从 fastly 类别中移除隶属于 ASN 的 IPv6 地址
     },
     "onlyIPType": "ipv6"                               // 只移除 IPv6 地址
+  }
+}
+```
+
+```jsonc
+// 由于未指定 `wantedList`，自动将所有 ASN 添加为类别，类别名格式为 AS + ASN 字符串，如 `AS123`、`AS12345`
+{
+  "type": "maxmindGeoLite2ASNCSV",
+  "action": "add"                   // 添加 IP 地址
+}
+```
+
+```jsonc
+// 由于未指定 `wantedList`，自动将所有 ASN 添加为类别，类别名格式为 AS + ASN 字符串，如 `AS123`、`AS12345`
+{
+  "type": "maxmindGeoLite2ASNCSV",
+  "action": "add",                  // 添加 IP 地址
+  "args": {
+    "onlyIPType": "ipv4"            // 只添加各自的 IPv4 地址
+  }
+}
+```
+
+```jsonc
+// 由于未指定 `wantedList`，自动移除所有匹配的 ASN 类别，匹配的类别名格式为 AS + ASN 字符串，如 `AS123`、`AS12345`
+{
+  "type": "maxmindGeoLite2ASNCSV",
+  "action": "remove"                // 移除 IP 地址
+}
+```
+
+```jsonc
+{
+  "type": "maxmindGeoLite2ASNCSV",
+  "action": "add",                     // 添加 IP 地址
+  "args": {
+    "wantedList": ["AS123", "AS4567"]  // 向名为 AS123 和 AS4567 的类别中分别添加各自的 IPv4 和 IPv6 地址
+  }
+}
+```
+
+```jsonc
+{
+  "type": "maxmindGeoLite2ASNCSV",
+  "action": "remove",                   // 移除 IP 地址
+  "args": {
+    "wantedList": ["AS123", "AS4567"],  // 从名为 AS123 和 AS4567 的类别中分别移除各自的 IPv6 地址
+    "onlyIPType": "ipv6"
   }
 }
 ```

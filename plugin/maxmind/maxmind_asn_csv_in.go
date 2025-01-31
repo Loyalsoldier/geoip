@@ -33,10 +33,10 @@ func init() {
 
 func newGeoLite2ASNCSV(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 	var tmp struct {
-		IPv4File   string              `json:"ipv4"`
-		IPv6File   string              `json:"ipv6"`
-		Want       map[string][]string `json:"wantedList"`
-		OnlyIPType lib.IPType          `json:"onlyIPType"`
+		IPv4File   string                 `json:"ipv4"`
+		IPv6File   string                 `json:"ipv6"`
+		Want       lib.WantedListExtended `json:"wantedList"`
+		OnlyIPType lib.IPType             `json:"onlyIPType"`
 	}
 
 	if len(data) > 0 {
@@ -53,8 +53,9 @@ func newGeoLite2ASNCSV(action lib.Action, data json.RawMessage) (lib.InputConver
 	}
 
 	// Filter want list
-	wantList := make(map[string][]string) // map[asn][]listname
-	for list, asnList := range tmp.Want {
+	wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
+
+	for list, asnList := range tmp.Want.TypeMap {
 		list = strings.ToUpper(strings.TrimSpace(list))
 		if list == "" {
 			continue
@@ -75,8 +76,13 @@ func newGeoLite2ASNCSV(action lib.Action, data json.RawMessage) (lib.InputConver
 		}
 	}
 
-	if len(wantList) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] wantedList must be specified in config", TypeASNCSV, action)
+	for _, asn := range tmp.Want.TypeSlice {
+		asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
+		if asn == "" {
+			continue
+		}
+
+		wantList[asn] = []string{"AS" + asn}
 	}
 
 	return &GeoLite2ASNCSV{
@@ -192,16 +198,36 @@ func (g *GeoLite2ASNCSV) process(file string, entries map[string]*lib.Entry) err
 			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", g.Type, g.Action, record)
 		}
 
-		if listArr, found := g.Want[strings.TrimSpace(record[1])]; found {
-			for _, listName := range listArr {
-				entry, got := entries[listName]
-				if !got {
-					entry = lib.NewEntry(listName)
+		// Maxmind ASN CSV reference:
+		// network,autonomous_system_number,autonomous_system_organization
+		// 1.0.0.0/24,13335,CLOUDFLARENET
+		// 1.0.4.0/22,38803,"Gtelecom Pty Ltd"
+		// 1.0.16.0/24,2519,"ARTERIA Networks Corporation"
+
+		switch len(g.Want) {
+		case 0: // it means user wants all ASNs
+			asn := "AS" + strings.TrimSpace(record[1]) // default list name is in "AS12345" format
+			entry, got := entries[asn]
+			if !got {
+				entry = lib.NewEntry(asn)
+			}
+			if err := entry.AddPrefix(strings.TrimSpace(record[0])); err != nil {
+				return err
+			}
+			entries[asn] = entry
+
+		default: // it means user wants specific ASNs or customized lists with specific ASNs
+			if listArr, found := g.Want[strings.TrimSpace(record[1])]; found {
+				for _, listName := range listArr {
+					entry, got := entries[listName]
+					if !got {
+						entry = lib.NewEntry(listName)
+					}
+					if err := entry.AddPrefix(strings.TrimSpace(record[0])); err != nil {
+						return err
+					}
+					entries[listName] = entry
 				}
-				if err := entry.AddPrefix(strings.TrimSpace(record[0])); err != nil {
-					return err
-				}
-				entries[listName] = entry
 			}
 		}
 	}
