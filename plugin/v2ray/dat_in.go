@@ -14,16 +14,16 @@ import (
 )
 
 const (
-	TypeGeoIPdatIn = "v2rayGeoIPDat"
-	DescGeoIPdatIn = "Convert V2Ray GeoIP dat to other formats"
+	TypeGeoIPDatIn = "v2rayGeoIPDat"
+	DescGeoIPDatIn = "Convert V2Ray GeoIP dat to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(TypeGeoIPdatIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	lib.RegisterInputConfigCreator(TypeGeoIPDatIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newGeoIPDatIn(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoIPdatIn, &GeoIPDatIn{
-		Description: DescGeoIPdatIn,
+	lib.RegisterInputConverter(TypeGeoIPDatIn, &GeoIPDatIn{
+		Description: DescGeoIPDatIn,
 	})
 }
 
@@ -41,7 +41,7 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 	}
 
 	if tmp.URI == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", TypeGeoIPdatIn, action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", TypeGeoIPDatIn, action)
 	}
 
 	// Filter want list
@@ -53,9 +53,9 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 	}
 
 	return &GeoIPDatIn{
-		Type:        TypeGeoIPdatIn,
+		Type:        TypeGeoIPDatIn,
 		Action:      action,
-		Description: DescGeoIPdatIn,
+		Description: DescGeoIPDatIn,
 		URI:         tmp.URI,
 		Want:        wantList,
 		OnlyIPType:  tmp.OnlyIPType,

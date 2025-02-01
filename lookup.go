@@ -162,16 +162,16 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
 	switch strings.ToLower(format) {
-	case strings.ToLower(maxmind.TypeMaxmindMMDBIn):
-		input = &maxmind.MMDBIn{
-			Type:        maxmind.TypeMaxmindMMDBIn,
+	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
+		input = &maxmind.GeoLite2CountryMMDBIn{
+			Type:        maxmind.TypeGeoLite2CountryMMDBIn,
 			Action:      lib.ActionAdd,
-			Description: maxmind.DescMaxmindMMDBIn,
+			Description: maxmind.DescGeoLite2CountryMMDBIn,
 			URI:         uri,
 		}
 
 	case strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):
-		input = &maxmind.MMDBIn{
+		input = &maxmind.GeoLite2CountryMMDBIn{
 			Type:        maxmind.TypeDBIPCountryMMDBIn,
 			Action:      lib.ActionAdd,
 			Description: maxmind.DescDBIPCountryMMDBIn,
@@ -179,7 +179,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
-		input = &maxmind.MMDBIn{
+		input = &maxmind.GeoLite2CountryMMDBIn{
 			Type:        maxmind.TypeIPInfoCountryMMDBIn,
 			Action:      lib.ActionAdd,
 			Description: maxmind.DescIPInfoCountryMMDBIn,
@@ -206,11 +206,11 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 			InputDir:    dir,
 		}
 
-	case strings.ToLower(v2ray.TypeGeoIPdatIn):
+	case strings.ToLower(v2ray.TypeGeoIPDatIn):
 		input = &v2ray.GeoIPDatIn{
-			Type:        v2ray.TypeGeoIPdatIn,
+			Type:        v2ray.TypeGeoIPDatIn,
 			Action:      lib.ActionAdd,
-			Description: v2ray.DescGeoIPdatIn,
+			Description: v2ray.DescGeoIPDatIn,
 			URI:         uri,
 		}
 
@@ -228,7 +228,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		input = &plaintext.TextIn{
 			Type:        plaintext.TypeClashRuleSetIPCIDRIn,
 			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetIn,
+			Description: plaintext.DescClashRuleSetIPCIDRIn,
 			Name:        name,
 			URI:         uri,
 			InputDir:    dir,
@@ -238,7 +238,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		input = &plaintext.TextIn{
 			Type:        plaintext.TypeClashRuleSetClassicalIn,
 			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashClassicalIn,
+			Description: plaintext.DescClashRuleSetClassicalIn,
 			Name:        name,
 			URI:         uri,
 			InputDir:    dir,

@@ -16,20 +16,20 @@ import (
 )
 
 const (
-	TypeMaxmindMMDBOut = "maxmindMMDB"
-	DescMaxmindMMDBOut = "Convert data to MaxMind mmdb database format"
+	TypeGeoLite2CountryMMDBOut = "maxmindMMDB"
+	DescGeoLite2CountryMMDBOut = "Convert data to MaxMind mmdb database format"
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(TypeMaxmindMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newMMDBOut(TypeMaxmindMMDBOut, DescMaxmindMMDBOut, action, data)
+	lib.RegisterOutputConfigCreator(TypeGeoLite2CountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+		return newGeoLite2CountryMMDBOut(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeMaxmindMMDBOut, &MMDBOut{
-		Description: DescMaxmindMMDBOut,
+	lib.RegisterOutputConverter(TypeGeoLite2CountryMMDBOut, &GeoLite2CountryMMDBOut{
+		Description: DescGeoLite2CountryMMDBOut,
 	})
 }
 
-type MMDBOut struct {
+type GeoLite2CountryMMDBOut struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -43,25 +43,25 @@ type MMDBOut struct {
 	SourceMMDBURI string
 }
 
-func (m *MMDBOut) GetType() string {
-	return m.Type
+func (g *GeoLite2CountryMMDBOut) GetType() string {
+	return g.Type
 }
 
-func (m *MMDBOut) GetAction() lib.Action {
-	return m.Action
+func (g *GeoLite2CountryMMDBOut) GetAction() lib.Action {
+	return g.Action
 }
 
-func (m *MMDBOut) GetDescription() string {
-	return m.Description
+func (g *GeoLite2CountryMMDBOut) GetDescription() string {
+	return g.Description
 }
 
-func (m *MMDBOut) Output(container lib.Container) error {
+func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 	dbName := ""
 	dbDesc := ""
 	recordSize := 28
 
-	switch m.Type {
-	case TypeMaxmindMMDBOut:
+	switch g.Type {
+	case TypeGeoLite2CountryMMDBOut:
 		dbName = "GeoLite2-Country"
 		dbDesc = "Customized GeoLite2 Country database"
 
@@ -88,20 +88,20 @@ func (m *MMDBOut) Output(container lib.Container) error {
 	}
 
 	// Get extra info
-	extraInfo, err := m.GetExtraInfo()
+	extraInfo, err := g.GetExtraInfo()
 	if err != nil {
 		return err
 	}
 
 	updated := false
-	for _, name := range m.filterAndSortList(container) {
+	for _, name := range g.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
 			log.Printf("❌ entry %s not found\n", name)
 			continue
 		}
 
-		if err := m.marshalData(writer, entry, extraInfo); err != nil {
+		if err := g.marshalData(writer, entry, extraInfo); err != nil {
 			return err
 		}
 
@@ -109,13 +109,13 @@ func (m *MMDBOut) Output(container lib.Container) error {
 	}
 
 	if updated {
-		return m.writeFile(m.OutputName, writer)
+		return g.writeFile(g.OutputName, writer)
 	}
 
 	return nil
 }
 
-func (m *MMDBOut) filterAndSortList(container lib.Container) []string {
+func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []string {
 	/*
 		Note: The IPs and/or CIDRs of the latter list will overwrite those of the former one
 		when duplicated data found due to MaxMind mmdb file format constraint.
@@ -127,14 +127,14 @@ func (m *MMDBOut) filterAndSortList(container lib.Container) []string {
 	*/
 
 	excludeMap := make(map[string]bool)
-	for _, exclude := range m.Exclude {
+	for _, exclude := range g.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
 			excludeMap[exclude] = true
 		}
 	}
 
-	wantList := make([]string, 0, len(m.Want))
-	for _, want := range m.Want {
+	wantList := make([]string, 0, len(g.Want))
+	for _, want := range g.Want {
 		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" && !excludeMap[want] {
 			wantList = append(wantList, want)
 		}
@@ -144,9 +144,9 @@ func (m *MMDBOut) filterAndSortList(container lib.Container) []string {
 		return wantList
 	}
 
-	overwriteList := make([]string, 0, len(m.Overwrite))
+	overwriteList := make([]string, 0, len(g.Overwrite))
 	overwriteMap := make(map[string]bool)
-	for _, overwrite := range m.Overwrite {
+	for _, overwrite := range g.Overwrite {
 		if overwrite = strings.ToUpper(strings.TrimSpace(overwrite)); overwrite != "" && !excludeMap[overwrite] {
 			overwriteList = append(overwriteList, overwrite)
 			overwriteMap[overwrite] = true
@@ -171,10 +171,10 @@ func (m *MMDBOut) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]interface{}) error {
+func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]any) error {
 	var entryCidr []string
 	var err error
-	switch m.OnlyIPType {
+	switch g.OnlyIPType {
 	case lib.IPv4:
 		entryCidr, err = entry.MarshalText(lib.IgnoreIPv6)
 	case lib.IPv6:
@@ -187,10 +187,10 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraIn
 	}
 
 	var record mmdbtype.DataType
-	switch strings.TrimSpace(m.SourceMMDBURI) {
+	switch strings.TrimSpace(g.SourceMMDBURI) {
 	case "": // No need to get extra info
-		switch m.Type {
-		case TypeMaxmindMMDBOut, TypeDBIPCountryMMDBOut:
+		switch g.Type {
+		case TypeGeoLite2CountryMMDBOut, TypeDBIPCountryMMDBOut:
 			record = mmdbtype.Map{
 				"country": mmdbtype.Map{
 					"iso_code": mmdbtype.String(entry.GetName()),
@@ -207,11 +207,11 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraIn
 		}
 
 	default: // Get extra info
-		switch m.Type {
-		case TypeMaxmindMMDBOut:
+		switch g.Type {
+		case TypeGeoLite2CountryMMDBOut:
 			info, found := extraInfo[entry.GetName()].(geoip2.Country)
 			if !found {
-				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", m.Type, m.Action, entry.GetName())
+				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", g.Type, g.Action, entry.GetName())
 
 				record = mmdbtype.Map{
 					"country": mmdbtype.Map{
@@ -273,7 +273,7 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraIn
 		case TypeDBIPCountryMMDBOut:
 			info, found := extraInfo[entry.GetName()].(geoip2.Country)
 			if !found {
-				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", m.Type, m.Action, entry.GetName())
+				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", g.Type, g.Action, entry.GetName())
 
 				record = mmdbtype.Map{
 					"country": mmdbtype.Map{
@@ -347,7 +347,7 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraIn
 			})
 
 			if !found {
-				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", m.Type, m.Action, entry.GetName())
+				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", g.Type, g.Action, entry.GetName())
 
 				record = mmdbtype.Map{
 					"country": mmdbtype.String(entry.GetName()),
@@ -379,12 +379,12 @@ func (m *MMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraIn
 	return nil
 }
 
-func (m *MMDBOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
-	if err := os.MkdirAll(m.OutputDir, 0755); err != nil {
+func (g *GeoLite2CountryMMDBOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
+	if err := os.MkdirAll(g.OutputDir, 0755); err != nil {
 		return err
 	}
 
-	f, err := os.OpenFile(filepath.Join(m.OutputDir, filename), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	f, err := os.OpenFile(filepath.Join(g.OutputDir, filename), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -394,7 +394,7 @@ func (m *MMDBOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
 		return err
 	}
 
-	log.Printf("✅ [%s] %s --> %s", m.Type, filename, m.OutputDir)
+	log.Printf("✅ [%s] %s --> %s", g.Type, filename, g.OutputDir)
 
 	return nil
 }

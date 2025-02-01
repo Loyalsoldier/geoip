@@ -13,24 +13,24 @@ which make it possible to support more formats for the project.
 
 const (
 	TypeClashRuleSetClassicalOut = "clashRuleSetClassical"
-	DescClashClassicalOut        = "Convert data to classical type of Clash RuleSet"
+	DescClashRuleSetClassicalOut = "Convert data to classical type of Clash RuleSet"
 
 	TypeClashRuleSetIPCIDROut = "clashRuleSet"
-	DescClashRuleSetOut       = "Convert data to ipcidr type of Clash RuleSet"
+	DescClashRuleSetIPCIDROut = "Convert data to ipcidr type of Clash RuleSet"
 )
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetClassicalOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeClashRuleSetClassicalOut, DescClashClassicalOut, action, data)
+		return newTextOut(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, data)
 	})
 	lib.RegisterOutputConverter(TypeClashRuleSetClassicalOut, &TextOut{
-		Description: DescClashClassicalOut,
+		Description: DescClashRuleSetClassicalOut,
 	})
 
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetIPCIDROut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeClashRuleSetIPCIDROut, DescClashRuleSetOut, action, data)
+		return newTextOut(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, data)
 	})
 	lib.RegisterOutputConverter(TypeClashRuleSetIPCIDROut, &TextOut{
-		Description: DescClashRuleSetOut,
+		Description: DescClashRuleSetIPCIDROut,
 	})
 }

@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	TypeGeoIPdatOut = "v2rayGeoIPDat"
-	DescGeoIPdatOut = "Convert data to V2Ray GeoIP dat format"
+	TypeGeoIPDatOut = "v2rayGeoIPDat"
+	DescGeoIPDatOut = "Convert data to V2Ray GeoIP dat format"
 )
 
 var (
@@ -26,15 +26,15 @@ var (
 )
 
 func init() {
-	lib.RegisterOutputConfigCreator(TypeGeoIPdatOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoIPDat(action, data)
+	lib.RegisterOutputConfigCreator(TypeGeoIPDatOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+		return newGeoIPDatOut(action, data)
 	})
-	lib.RegisterOutputConverter(TypeGeoIPdatOut, &GeoIPDatOut{
-		Description: DescGeoIPdatOut,
+	lib.RegisterOutputConverter(TypeGeoIPDatOut, &GeoIPDatOut{
+		Description: DescGeoIPDatOut,
 	})
 }
 
-func newGeoIPDat(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newGeoIPDatOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputName     string     `json:"outputName"`
 		OutputDir      string     `json:"outputDir"`
@@ -59,9 +59,9 @@ func newGeoIPDat(action lib.Action, data json.RawMessage) (lib.OutputConverter, 
 	}
 
 	return &GeoIPDatOut{
-		Type:           TypeGeoIPdatOut,
+		Type:           TypeGeoIPDatOut,
 		Action:         action,
-		Description:    DescGeoIPdatOut,
+		Description:    DescGeoIPDatOut,
 		OutputName:     tmp.OutputName,
 		OutputDir:      tmp.OutputDir,
 		Want:           tmp.Want,

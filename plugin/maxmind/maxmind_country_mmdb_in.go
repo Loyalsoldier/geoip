@@ -13,20 +13,20 @@ import (
 )
 
 const (
-	TypeMaxmindMMDBIn = "maxmindMMDB"
-	DescMaxmindMMDBIn = "Convert MaxMind mmdb database to other formats"
+	TypeGeoLite2CountryMMDBIn = "maxmindMMDB"
+	DescGeoLite2CountryMMDBIn = "Convert MaxMind mmdb database to other formats"
 )
 
 func init() {
-	lib.RegisterInputConfigCreator(TypeMaxmindMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newMMDBIn(TypeMaxmindMMDBIn, DescMaxmindMMDBIn, action, data)
+	lib.RegisterInputConfigCreator(TypeGeoLite2CountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+		return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeMaxmindMMDBIn, &MMDBIn{
-		Description: DescMaxmindMMDBIn,
+	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &GeoLite2CountryMMDBIn{
+		Description: DescGeoLite2CountryMMDBIn,
 	})
 }
 
-type MMDBIn struct {
+type GeoLite2CountryMMDBIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -35,43 +35,43 @@ type MMDBIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (m *MMDBIn) GetType() string {
-	return m.Type
+func (g *GeoLite2CountryMMDBIn) GetType() string {
+	return g.Type
 }
 
-func (m *MMDBIn) GetAction() lib.Action {
-	return m.Action
+func (g *GeoLite2CountryMMDBIn) GetAction() lib.Action {
+	return g.Action
 }
 
-func (m *MMDBIn) GetDescription() string {
-	return m.Description
+func (g *GeoLite2CountryMMDBIn) GetDescription() string {
+	return g.Description
 }
 
-func (m *MMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
-	case strings.HasPrefix(strings.ToLower(m.URI), "http://"), strings.HasPrefix(strings.ToLower(m.URI), "https://"):
-		content, err = lib.GetRemoteURLContent(m.URI)
+	case strings.HasPrefix(strings.ToLower(g.URI), "http://"), strings.HasPrefix(strings.ToLower(g.URI), "https://"):
+		content, err = lib.GetRemoteURLContent(g.URI)
 	default:
-		content, err = os.ReadFile(m.URI)
+		content, err = os.ReadFile(g.URI)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	entries := make(map[string]*lib.Entry, 300)
-	err = m.generateEntries(content, entries)
+	err = g.generateEntries(content, entries)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(entries) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", m.Type, m.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", g.Type, g.Action)
 	}
 
 	var ignoreIPType lib.IgnoreIPOption
-	switch m.OnlyIPType {
+	switch g.OnlyIPType {
 	case lib.IPv4:
 		ignoreIPType = lib.IgnoreIPv6
 	case lib.IPv6:
@@ -79,7 +79,7 @@ func (m *MMDBIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	for _, entry := range entries {
-		switch m.Action {
+		switch g.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
 				return nil, err
@@ -96,7 +96,7 @@ func (m *MMDBIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (m *MMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (g *GeoLite2CountryMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.FromBytes(content)
 	if err != nil {
 		return err
@@ -109,8 +109,8 @@ func (m *MMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 		var subnet *net.IPNet
 		var err error
 
-		switch m.Type {
-		case TypeMaxmindMMDBIn, TypeDBIPCountryMMDBIn:
+		switch g.Type {
+		case TypeGeoLite2CountryMMDBIn, TypeDBIPCountryMMDBIn:
 			var record geoip2.Country
 			subnet, err = networks.Network(&record)
 			if err != nil {
@@ -144,7 +144,7 @@ func (m *MMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 			continue
 		}
 
-		if len(m.Want) > 0 && !m.Want[name] {
+		if len(g.Want) > 0 && !g.Want[name] {
 			continue
 		}
 
