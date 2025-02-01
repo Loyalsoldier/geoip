@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	defaultGeoLite2MMDBFile      = filepath.Join("./", "geolite2", "GeoLite2-Country.mmdb")
-	defaultDBIPCountryMMDBFile   = filepath.Join("./", "db-ip", "dbip-country-lite.mmdb")
-	defaultIPInfoCountryMMDBFile = filepath.Join("./", "ipinfo", "country.mmdb")
+	defaultGeoLite2CountryMMDBFile = filepath.Join("./", "geolite2", "GeoLite2-Country.mmdb")
+	defaultDBIPCountryMMDBFile     = filepath.Join("./", "db-ip", "dbip-country-lite.mmdb")
+	defaultIPInfoCountryMMDBFile   = filepath.Join("./", "ipinfo", "country.mmdb")
 )
 
-func newMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -29,8 +29,8 @@ func newMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 
 	if tmp.URI == "" {
 		switch iType {
-		case TypeMaxmindMMDBIn:
-			tmp.URI = defaultGeoLite2MMDBFile
+		case TypeGeoLite2CountryMMDBIn:
+			tmp.URI = defaultGeoLite2CountryMMDBFile
 
 		case TypeDBIPCountryMMDBIn:
 			tmp.URI = defaultDBIPCountryMMDBFile
@@ -48,7 +48,7 @@ func newMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 		}
 	}
 
-	return &MMDBIn{
+	return &GeoLite2CountryMMDBIn{
 		Type:        iType,
 		Action:      action,
 		Description: iDesc,

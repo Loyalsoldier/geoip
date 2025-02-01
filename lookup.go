@@ -162,16 +162,16 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
 	switch strings.ToLower(format) {
-	case strings.ToLower(maxmind.TypeMaxmindMMDBIn):
-		input = &maxmind.MMDBIn{
-			Type:        maxmind.TypeMaxmindMMDBIn,
+	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
+		input = &maxmind.GeoLite2CountryMMDBIn{
+			Type:        maxmind.TypeGeoLite2CountryMMDBIn,
 			Action:      lib.ActionAdd,
-			Description: maxmind.DescMaxmindMMDBIn,
+			Description: maxmind.DescGeoLite2CountryMMDBIn,
 			URI:         uri,
 		}
 
 	case strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):
-		input = &maxmind.MMDBIn{
+		input = &maxmind.GeoLite2CountryMMDBIn{
 			Type:        maxmind.TypeDBIPCountryMMDBIn,
 			Action:      lib.ActionAdd,
 			Description: maxmind.DescDBIPCountryMMDBIn,
@@ -179,7 +179,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
-		input = &maxmind.MMDBIn{
+		input = &maxmind.GeoLite2CountryMMDBIn{
 			Type:        maxmind.TypeIPInfoCountryMMDBIn,
 			Action:      lib.ActionAdd,
 			Description: maxmind.DescIPInfoCountryMMDBIn,
