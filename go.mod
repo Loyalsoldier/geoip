@@ -14,7 +14,7 @@ require (
 	github.com/tailscale/hujson v0.0.0-20250226034555-ec1d1c113d33
 	github.com/tidwall/gjson v1.18.0
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.7
 	gopkg.in/yaml.v2 v2.4.0
 )
 
