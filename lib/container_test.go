@@ -385,3 +385,244 @@ func TestContainerLookup(t *testing.T) {
 		})
 	}
 }
+
+// TestContainerLookupAdvanced tests more complex lookup scenarios
+func TestContainerLookupAdvanced(t *testing.T) {
+	container := NewContainer()
+	
+	// Add IPv4 entry
+	entry4 := NewEntry("ipv4-entry")
+	err := entry4.AddPrefix("192.168.1.0/24")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = container.Add(entry4)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	// Add IPv6 entry
+	entry6 := NewEntry("ipv6-entry")
+	err = entry6.AddPrefix("2001:db8::/32")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = container.Add(entry6)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	tests := []struct {
+		name         string
+		ipOrCidr     string
+		searchList   []string
+		expectFound  bool
+		expectResult []string
+		expectError  bool
+	}{
+		{
+			name:         "IPv4 CIDR lookup",
+			ipOrCidr:     "192.168.1.0/25",
+			searchList:   []string{"ipv4-entry"},
+			expectFound:  true,
+			expectResult: []string{"IPV4-ENTRY"},
+			expectError:  false,
+		},
+		{
+			name:         "IPv6 IP lookup",
+			ipOrCidr:     "2001:db8::1",
+			searchList:   []string{"ipv6-entry"},
+			expectFound:  true,
+			expectResult: []string{"IPV6-ENTRY"},
+			expectError:  false,
+		},
+		{
+			name:         "IPv6 CIDR lookup",
+			ipOrCidr:     "2001:db8::/64",
+			searchList:   []string{"ipv6-entry"},
+			expectFound:  true,
+			expectResult: []string{"IPV6-ENTRY"},
+			expectError:  false,
+		},
+		{
+			name:         "Invalid CIDR",
+			ipOrCidr:     "192.168.1.0/99",
+			searchList:   []string{"ipv4-entry"},
+			expectFound:  false,
+			expectResult: nil,
+			expectError:  true,
+		},
+		{
+			name:         "Search specific entry only",
+			ipOrCidr:     "192.168.1.100",
+			searchList:   []string{"ipv4-entry"},
+			expectFound:  true,
+			expectResult: []string{"IPV4-ENTRY"},
+			expectError:  false,
+		},
+		{
+			name:         "Search with non-existent entry",
+			ipOrCidr:     "192.168.1.100",
+			searchList:   []string{"non-existent"},
+			expectFound:  false,
+			expectResult: []string{},
+			expectError:  false,
+		},
+		{
+			name:         "Search with empty and whitespace strings",
+			ipOrCidr:     "192.168.1.100",
+			searchList:   []string{"", "  ", "ipv4-entry", "  "},
+			expectFound:  true,
+			expectResult: []string{"IPV4-ENTRY"},
+			expectError:  false,
+		},
+	}
+	
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, found, err := container.Lookup(tt.ipOrCidr, tt.searchList...)
+			
+			if tt.expectError && err == nil {
+				t.Errorf("Lookup() should return error but got nil")
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("Lookup() should not return error but got: %v", err)
+			}
+			if !tt.expectError && found != tt.expectFound {
+				t.Errorf("Lookup() found = %v; want %v", found, tt.expectFound)
+			}
+			if !tt.expectError && tt.expectResult != nil && len(result) != len(tt.expectResult) {
+				t.Errorf("Lookup() result length = %d; want %d", len(result), len(tt.expectResult))
+			}
+		})
+	}
+}
+
+// TestContainerAddAdvanced tests complex Add scenarios
+func TestContainerAddAdvanced(t *testing.T) {
+	container := NewContainer()
+	
+	// Test adding entry with ignore options
+	entry1 := NewEntry("test1")
+	err := entry1.AddPrefix("192.168.1.0/24")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = entry1.AddPrefix("2001:db8::/32")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	
+	// Add with IPv6 ignore
+	err = container.Add(entry1, IgnoreIPv6)
+	if err != nil {
+		t.Errorf("Add() with IgnoreIPv6 should not return error: %v", err)
+	}
+	
+	// Test merging entries with same name
+	entry2 := NewEntry("test1") // Same name as entry1
+	err = entry2.AddPrefix("10.0.0.0/8")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	
+	// This should merge with existing entry
+	err = container.Add(entry2)
+	if err != nil {
+		t.Errorf("Add() merging entries should not return error: %v", err)
+	}
+	
+	// Verify only one entry exists
+	if container.Len() != 1 {
+		t.Errorf("Container should have 1 entry after merging, got %d", container.Len())
+	}
+	
+	// Test adding entry with IPv4 ignore
+	entry3 := NewEntry("test2")
+	err = entry3.AddPrefix("172.16.0.0/12")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = entry3.AddPrefix("2001:db8:1::/48")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	
+	err = container.Add(entry3, IgnoreIPv4)
+	if err != nil {
+		t.Errorf("Add() with IgnoreIPv4 should not return error: %v", err)
+	}
+	
+	if container.Len() != 2 {
+		t.Errorf("Container should have 2 entries, got %d", container.Len())
+	}
+}
+
+// TestContainerLen tests Len function edge cases
+func TestContainerLen(t *testing.T) {
+	// Test with valid empty container
+	container := NewContainer()
+	if container.Len() != 0 {
+		t.Errorf("Empty container Len() should return 0, got %d", container.Len())
+	}
+	
+	// Test with entries
+	entry := NewEntry("test")
+	err := entry.AddPrefix("192.168.1.0/24")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	
+	err = container.Add(entry)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	if container.Len() != 1 {
+		t.Errorf("Container with 1 entry Len() should return 1, got %d", container.Len())
+	}
+}
+
+// TestContainerRemoveAdvanced tests Remove function with various scenarios
+func TestContainerRemoveAdvanced(t *testing.T) {
+	container := NewContainer()
+	
+	// Add an entry with both IPv4 and IPv6
+	entry := NewEntry("test")
+	err := entry.AddPrefix("192.168.1.0/24")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = entry.AddPrefix("2001:db8::/32")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = container.Add(entry)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	// Test remove with CaseRemoveEntry
+	entry2 := NewEntry("test")
+	err = container.Remove(entry2, CaseRemoveEntry)
+	if err != nil {
+		t.Errorf("Remove() with CaseRemoveEntry should not return error: %v", err)
+	}
+	
+	// Entry should be completely removed now
+	if container.Len() != 0 {
+		t.Errorf("Container should be empty after CaseRemoveEntry, got %d entries", container.Len())
+	}
+	
+	// Test removing non-existent entry
+	entry3 := NewEntry("nonexistent")
+	err = entry3.AddPrefix("10.0.0.0/8")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	
+	err = container.Remove(entry3, CaseRemoveEntry)
+	if err == nil {
+		t.Error("Remove() on non-existent entry should return error")
+	}
+}

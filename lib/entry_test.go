@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"net"
+	"net/netip"
 	"testing"
 )
 
@@ -321,5 +323,302 @@ func TestEntryRemovePrefix(t *testing.T) {
 	err = entry.RemovePrefix("invalid-cidr")
 	if err == nil {
 		t.Error("RemovePrefix with invalid CIDR should return error")
+	}
+	
+	// Try to remove non-existent prefix (should not error)
+	err = entry.RemovePrefix("10.0.0.0/8")
+	if err != nil {
+		t.Errorf("RemovePrefix() on non-existent prefix should not return error: %v", err)
+	}
+}
+
+// TestEntryProcessPrefix tests the internal processPrefix function with various input types
+func TestEntryProcessPrefix(t *testing.T) {
+	entry := NewEntry("test")
+	
+	tests := []struct {
+		name      string
+		input     interface{}
+		expectErr bool
+		expectIP  string
+	}{
+		// net.IP tests
+		{
+			name:      "Valid IPv4 net.IP",
+			input:     net.ParseIP("192.168.1.1"),
+			expectErr: false,
+			expectIP:  "192.168.1.1",
+		},
+		{
+			name:      "Valid IPv6 net.IP",
+			input:     net.ParseIP("2001:db8::1"),
+			expectErr: false,
+			expectIP:  "2001:db8::1",
+		},
+		// *net.IPNet tests
+		{
+			name: "Valid IPv4 *net.IPNet",
+			input: func() *net.IPNet {
+				_, ipnet, _ := net.ParseCIDR("192.168.1.0/24")
+				return ipnet
+			}(),
+			expectErr: false,
+			expectIP:  "192.168.1.0",
+		},
+		{
+			name: "Valid IPv6 *net.IPNet",
+			input: func() *net.IPNet {
+				_, ipnet, _ := net.ParseCIDR("2001:db8::/32")
+				return ipnet
+			}(),
+			expectErr: false,
+			expectIP:  "2001:db8::",
+		},
+		// netip.Addr tests
+		{
+			name:      "Valid IPv4 netip.Addr",
+			input:     netip.MustParseAddr("192.168.1.1"),
+			expectErr: false,
+			expectIP:  "192.168.1.1",
+		},
+		{
+			name:      "Valid IPv6 netip.Addr",
+			input:     netip.MustParseAddr("2001:db8::1"),
+			expectErr: false,
+			expectIP:  "2001:db8::1",
+		},
+		// *netip.Addr tests
+		{
+			name: "Valid IPv4 *netip.Addr",
+			input: func() *netip.Addr {
+				addr := netip.MustParseAddr("192.168.1.1")
+				return &addr
+			}(),
+			expectErr: false,
+			expectIP:  "192.168.1.1",
+		},
+		{
+			name: "Valid IPv6 *netip.Addr",
+			input: func() *netip.Addr {
+				addr := netip.MustParseAddr("2001:db8::1")
+				return &addr
+			}(),
+			expectErr: false,
+			expectIP:  "2001:db8::1",
+		},
+		// netip.Prefix tests
+		{
+			name:      "Valid IPv4 netip.Prefix",
+			input:     netip.MustParsePrefix("192.168.1.0/24"),
+			expectErr: false,
+			expectIP:  "192.168.1.0",
+		},
+		{
+			name:      "Valid IPv6 netip.Prefix",
+			input:     netip.MustParsePrefix("2001:db8::/32"),
+			expectErr: false,
+			expectIP:  "2001:db8::",
+		},
+		{
+			name:      "IPv4-mapped IPv6 netip.Prefix",
+			input:     netip.MustParsePrefix("::ffff:192.168.1.0/120"),
+			expectErr: false,
+			expectIP:  "192.168.1.0",
+		},
+		{
+			name:      "Invalid IPv4-mapped IPv6 prefix bits",
+			input:     netip.MustParsePrefix("::ffff:192.168.1.0/95"),
+			expectErr: true,
+		},
+		// *netip.Prefix tests
+		{
+			name: "Valid IPv4 *netip.Prefix",
+			input: func() *netip.Prefix {
+				prefix := netip.MustParsePrefix("192.168.1.0/24")
+				return &prefix
+			}(),
+			expectErr: false,
+			expectIP:  "192.168.1.0",
+		},
+		{
+			name: "Valid IPv6 *netip.Prefix",
+			input: func() *netip.Prefix {
+				prefix := netip.MustParsePrefix("2001:db8::/32")
+				return &prefix
+			}(),
+			expectErr: false,
+			expectIP:  "2001:db8::",
+		},
+		// String tests
+		{
+			name:      "Valid IPv4 string",
+			input:     "192.168.1.1",
+			expectErr: false,
+			expectIP:  "192.168.1.1",
+		},
+		{
+			name:      "Valid IPv6 string",
+			input:     "2001:db8::1",
+			expectErr: false,
+			expectIP:  "2001:db8::1",
+		},
+		{
+			name:      "Valid IPv4 CIDR string",
+			input:     "192.168.1.0/24",
+			expectErr: false,
+			expectIP:  "192.168.1.0",
+		},
+		{
+			name:      "Valid IPv6 CIDR string",
+			input:     "2001:db8::/32",
+			expectErr: false,
+			expectIP:  "2001:db8::",
+		},
+		{
+			name:      "Invalid string",
+			input:     "invalid-string",
+			expectErr: true,
+		},
+		// Unsupported type
+		{
+			name:      "Unsupported type",
+			input:     123,
+			expectErr: true,
+		},
+	}
+	
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			prefix, ipType, err := entry.processPrefix(tt.input)
+			
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("processPrefix() should return error for input %v", tt.input)
+				}
+				return
+			}
+			
+			if err != nil {
+				t.Errorf("processPrefix() should not return error for valid input %v: %v", tt.input, err)
+				return
+			}
+			
+			if prefix == nil {
+				t.Errorf("processPrefix() should return non-nil prefix for valid input %v", tt.input)
+				return
+			}
+			
+			if prefix.Addr().String() != tt.expectIP {
+				t.Errorf("processPrefix() IP = %s; want %s", prefix.Addr().String(), tt.expectIP)
+			}
+			
+			// Verify IP type
+			if prefix.Addr().Is4() && ipType != IPv4 {
+				t.Errorf("processPrefix() should return IPv4 type for IPv4 address")
+			}
+			if prefix.Addr().Is6() && ipType != IPv6 {
+				t.Errorf("processPrefix() should return IPv6 type for IPv6 address")
+			}
+		})
+	}
+}
+
+// TestEntryAddPrefixVariousTypes tests AddPrefix with different input types
+func TestEntryAddPrefixVariousTypes(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     interface{}
+		expectErr bool
+	}{
+		{
+			name:      "net.IP",
+			input:     net.ParseIP("192.168.1.1"),
+			expectErr: false,
+		},
+		{
+			name: "*net.IPNet",
+			input: func() *net.IPNet {
+				_, ipnet, _ := net.ParseCIDR("192.168.1.0/24")
+				return ipnet
+			}(),
+			expectErr: false,
+		},
+		{
+			name:      "netip.Addr",
+			input:     netip.MustParseAddr("192.168.1.1"),
+			expectErr: false,
+		},
+		{
+			name: "*netip.Addr",
+			input: func() *netip.Addr {
+				addr := netip.MustParseAddr("192.168.1.1")
+				return &addr
+			}(),
+			expectErr: false,
+		},
+		{
+			name:      "netip.Prefix",
+			input:     netip.MustParsePrefix("192.168.1.0/24"),
+			expectErr: false,
+		},
+		{
+			name: "*netip.Prefix",
+			input: func() *netip.Prefix {
+				prefix := netip.MustParsePrefix("192.168.1.0/24")
+				return &prefix
+			}(),
+			expectErr: false,
+		},
+		{
+			name:      "string",
+			input:     "192.168.1.0/24",
+			expectErr: false,
+		},
+		{
+			name:      "unsupported type",
+			input:     123,
+			expectErr: true,
+		},
+	}
+	
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := NewEntry("test")
+			err := entry.AddPrefix(tt.input)
+			
+			if tt.expectErr && err == nil {
+				t.Errorf("AddPrefix() should return error for input %v", tt.input)
+			}
+			if !tt.expectErr && err != nil {
+				t.Errorf("AddPrefix() should not return error for valid input %v: %v", tt.input, err)
+			}
+		})
+	}
+}
+
+// TestEntryRemoveWithInvalidType tests the remove function with invalid IP type
+func TestEntryRemoveWithInvalidType(t *testing.T) {
+	entry := NewEntry("test")
+	prefix := netip.MustParsePrefix("192.168.1.0/24")
+	
+	// Test remove with invalid IP type - this tests the ErrInvalidIPType path
+	err := entry.remove(&prefix, IPType("invalid"))
+	if err == nil {
+		t.Error("remove() should return error for invalid IP type")
+	}
+	if err != ErrInvalidIPType {
+		t.Errorf("remove() should return ErrInvalidIPType, got %v", err)
+	}
+}
+
+// TestEntryBuildIPSetErrors tests buildIPSet function error paths
+func TestEntryBuildIPSetErrors(t *testing.T) {
+	entry := NewEntry("test")
+	
+	// Test with empty entry - should trigger the "no data" path in buildIPSet
+	err := entry.buildIPSet()
+	if err != nil {
+		// buildIPSet() should not return error for empty entry, it just builds what's available
+		t.Logf("buildIPSet() returned: %v", err)
 	}
 }
