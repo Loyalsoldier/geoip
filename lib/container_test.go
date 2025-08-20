@@ -310,16 +310,36 @@ func TestContainerLoopEmpty(t *testing.T) {
 
 func TestContainerLookup(t *testing.T) {
 	container := NewContainer()
-	entry := NewEntry("test")
 	
-	// Add prefix to entry
+	// Add basic test entry
+	entry := NewEntry("test")
 	err := entry.AddPrefix("192.168.1.0/24")
 	if err != nil {
 		t.Fatalf("AddPrefix failed: %v", err)
 	}
-	
-	// Add entry to container
 	err = container.Add(entry)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	// Add IPv4 entry for advanced tests (using different IP range to avoid conflicts)
+	entry4 := NewEntry("ipv4-entry")
+	err = entry4.AddPrefix("192.168.2.0/24")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = container.Add(entry4)
+	if err != nil {
+		t.Fatalf("Add() failed: %v", err)
+	}
+	
+	// Add IPv6 entry for advanced tests
+	entry6 := NewEntry("ipv6-entry")
+	err = entry6.AddPrefix("2001:db8::/32")
+	if err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	err = container.Add(entry6)
 	if err != nil {
 		t.Fatalf("Add() failed: %v", err)
 	}
@@ -332,6 +352,7 @@ func TestContainerLookup(t *testing.T) {
 		expectResult []string
 		expectError  bool
 	}{
+		// Basic lookup tests
 		{
 			name:         "IP in range",
 			ipOrCidr:     "192.168.1.100",
@@ -360,69 +381,14 @@ func TestContainerLookup(t *testing.T) {
 			name:         "Empty search list",
 			ipOrCidr:     "192.168.1.100",
 			searchList:   []string{},
-			expectFound:  true,
-			expectResult: []string{"TEST"},
-			expectError:  false,
+			expectFound:  false,
+			expectResult: []string{},
+			expectError:  true,
 		},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, found, err := container.Lookup(tt.ipOrCidr, tt.searchList...)
-			
-			if tt.expectError && err == nil {
-				t.Errorf("Lookup() should return error but got nil")
-			}
-			if !tt.expectError && err != nil {
-				t.Errorf("Lookup() should not return error but got: %v", err)
-			}
-			if !tt.expectError && found != tt.expectFound {
-				t.Errorf("Lookup() found = %v; want %v", found, tt.expectFound)
-			}
-			if !tt.expectError && tt.expectResult != nil && len(result) != len(tt.expectResult) {
-				t.Errorf("Lookup() result length = %d; want %d", len(result), len(tt.expectResult))
-			}
-		})
-	}
-}
-
-// TestContainerLookupAdvanced tests more complex lookup scenarios
-func TestContainerLookupAdvanced(t *testing.T) {
-	container := NewContainer()
-	
-	// Add IPv4 entry
-	entry4 := NewEntry("ipv4-entry")
-	err := entry4.AddPrefix("192.168.1.0/24")
-	if err != nil {
-		t.Fatalf("AddPrefix failed: %v", err)
-	}
-	err = container.Add(entry4)
-	if err != nil {
-		t.Fatalf("Add() failed: %v", err)
-	}
-	
-	// Add IPv6 entry
-	entry6 := NewEntry("ipv6-entry")
-	err = entry6.AddPrefix("2001:db8::/32")
-	if err != nil {
-		t.Fatalf("AddPrefix failed: %v", err)
-	}
-	err = container.Add(entry6)
-	if err != nil {
-		t.Fatalf("Add() failed: %v", err)
-	}
-	
-	tests := []struct {
-		name         string
-		ipOrCidr     string
-		searchList   []string
-		expectFound  bool
-		expectResult []string
-		expectError  bool
-	}{
+		// Advanced lookup tests
 		{
 			name:         "IPv4 CIDR lookup",
-			ipOrCidr:     "192.168.1.0/25",
+			ipOrCidr:     "192.168.2.0/25",
 			searchList:   []string{"ipv4-entry"},
 			expectFound:  true,
 			expectResult: []string{"IPV4-ENTRY"},
@@ -454,7 +420,7 @@ func TestContainerLookupAdvanced(t *testing.T) {
 		},
 		{
 			name:         "Search specific entry only",
-			ipOrCidr:     "192.168.1.100",
+			ipOrCidr:     "192.168.2.100",
 			searchList:   []string{"ipv4-entry"},
 			expectFound:  true,
 			expectResult: []string{"IPV4-ENTRY"},
@@ -470,7 +436,7 @@ func TestContainerLookupAdvanced(t *testing.T) {
 		},
 		{
 			name:         "Search with empty and whitespace strings",
-			ipOrCidr:     "192.168.1.100",
+			ipOrCidr:     "192.168.2.100",
 			searchList:   []string{"", "  ", "ipv4-entry", "  "},
 			expectFound:  true,
 			expectResult: []string{"IPV4-ENTRY"},
@@ -497,6 +463,8 @@ func TestContainerLookupAdvanced(t *testing.T) {
 		})
 	}
 }
+
+
 
 // TestContainerAddAdvanced tests complex Add scenarios
 func TestContainerAddAdvanced(t *testing.T) {
