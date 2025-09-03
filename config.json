@@ -122,6 +122,7 @@
         "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
         "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv",
         "wantedList": {
+          "apple": ["AS714"],
           "cloudflare": [
             "AS395747",
             "AS394536",
@@ -204,6 +205,7 @@
         "outputDir": "./output",
         "outputName": "geoip-asn.dat",
         "wantedList": [
+          "apple",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -240,6 +242,7 @@
         "outputName": "Country.mmdb",
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": [
+          "apple",
           "cn",
           "cloudflare",
           "cloudfront",
@@ -263,6 +266,7 @@
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": ["cn", "private"],
         "excludedList": [
+          "apple",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -292,6 +296,7 @@
         "outputDir": "./output",
         "outputName": "Country-asn.mmdb",
         "wantedList": [
+          "apple",
           "cloudflare",
           "cloudfront",
           "facebook",
