@@ -122,7 +122,7 @@
         "ipv4": "./geolite2/GeoLite2-ASN-Blocks-IPv4.csv",
         "ipv6": "./geolite2/GeoLite2-ASN-Blocks-IPv6.csv",
         "wantedList": {
-          "apple": ["AS714"],
+          "apple": ["AS714", "AS6185"],
           "cloudflare": [
             "AS395747",
             "AS394536",
