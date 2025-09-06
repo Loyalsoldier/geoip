@@ -70,8 +70,8 @@ func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 		dbDesc = "Customized DB-IP Country Lite database"
 
 	case TypeIPInfoCountryMMDBOut:
-		dbName = "IPInfo-Country"
-		dbDesc = "Customized IPInfo Country database"
+		dbName = "IPInfo-Lite"
+		dbDesc = "Customized IPInfo Lite database"
 		recordSize = 32
 	}
 
@@ -199,7 +199,7 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 
 		case TypeIPInfoCountryMMDBOut:
 			record = mmdbtype.Map{
-				"country": mmdbtype.String(entry.GetName()),
+				"country_code": mmdbtype.String(entry.GetName()),
 			}
 
 		default:
@@ -339,25 +339,22 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 			}
 
 		case TypeIPInfoCountryMMDBOut:
-			info, found := extraInfo[entry.GetName()].(struct {
-				Continent     string `maxminddb:"continent"`
-				ContinentName string `maxminddb:"continent_name"`
-				Country       string `maxminddb:"country"`
-				CountryName   string `maxminddb:"country_name"`
-			})
-
+			info, found := extraInfo[entry.GetName()].(ipInfoLite)
 			if !found {
 				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", g.Type, g.Action, entry.GetName())
 
 				record = mmdbtype.Map{
-					"country": mmdbtype.String(entry.GetName()),
+					"country_code": mmdbtype.String(entry.GetName()),
 				}
 			} else {
 				record = mmdbtype.Map{
+					"as_domain":      mmdbtype.String(info.ASDomain),
+					"as_name":        mmdbtype.String(info.ASName),
+					"asn":            mmdbtype.String(info.ASN),
 					"continent":      mmdbtype.String(info.Continent),
-					"continent_name": mmdbtype.String(info.ContinentName),
-					"country":        mmdbtype.String(entry.GetName()),
-					"country_name":   mmdbtype.String(info.CountryName),
+					"continent_code": mmdbtype.String(info.ContinentCode),
+					"country":        mmdbtype.String(info.Country),
+					"country_code":   mmdbtype.String(entry.GetName()),
 				}
 			}
 

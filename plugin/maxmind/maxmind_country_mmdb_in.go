@@ -127,14 +127,12 @@ func (g *GeoLite2CountryMMDBIn) generateEntries(content []byte, entries map[stri
 			}
 
 		case TypeIPInfoCountryMMDBIn:
-			record := struct {
-				Country string `maxminddb:"country"`
-			}{}
+			var record ipInfoLite
 			subnet, err = networks.Network(&record)
 			if err != nil {
 				return err
 			}
-			name = strings.ToUpper(strings.TrimSpace(record.Country))
+			name = strings.ToUpper(strings.TrimSpace(record.CountryCode))
 
 		default:
 			return lib.ErrNotSupportedFormat

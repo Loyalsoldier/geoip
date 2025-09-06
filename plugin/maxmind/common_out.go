@@ -20,6 +20,17 @@ var (
 	defaultIPInfoOutputDir  = filepath.Join("./", "output", "ipinfo")
 )
 
+// Reference: https://ipinfo.io/lite
+type ipInfoLite struct {
+	ASN           string `maxminddb:"asn"`
+	ASName        string `maxminddb:"as_name"`
+	ASDomain      string `maxminddb:"as_domain"`
+	Continent     string `maxminddb:"continent"`
+	ContinentCode string `maxminddb:"continent_code"`
+	Country       string `maxminddb:"country"`
+	CountryCode   string `maxminddb:"country_code"`
+}
+
 func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputName string     `json:"outputName"`
@@ -144,19 +155,16 @@ func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
 			}
 
 		case TypeIPInfoCountryMMDBOut:
-			record := struct {
-				Continent     string `maxminddb:"continent"`
-				ContinentName string `maxminddb:"continent_name"`
-				Country       string `maxminddb:"country"`
-				CountryName   string `maxminddb:"country_name"`
-			}{}
-
+			var record ipInfoLite
 			_, err := networks.Network(&record)
 			if err != nil {
 				return nil, err
 			}
-			countryCode := strings.ToUpper(strings.TrimSpace(record.Country))
+			countryCode := strings.ToUpper(strings.TrimSpace(record.CountryCode))
 			if _, found := infoList[countryCode]; !found {
+				record.ASN = ""
+				record.ASName = ""
+				record.ASDomain = ""
 				infoList[countryCode] = record
 			}
 
