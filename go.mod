@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/klauspost/compress v1.18.0
-	github.com/maxmind/mmdbwriter v1.0.0
+	github.com/maxmind/mmdbwriter v1.1.0
 	github.com/oschwald/geoip2-golang v1.13.0
 	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/sagernet/sing-box v1.12.4
@@ -19,6 +19,7 @@ require (
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/miekg/dns v1.1.67 // indirect
+	github.com/oschwald/maxminddb-golang/v2 v2.0.0-beta.10 // indirect
 	github.com/sagernet/sing v0.7.6-0.20250825114712-2aeec120ce28 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
