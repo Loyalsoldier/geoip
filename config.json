@@ -116,6 +116,18 @@
       }
     },
     {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "amazon",
+        "uri": "https://ip-ranges.amazonaws.com/ip-ranges.json",
+        "jsonPath": [
+          "prefixes.#(service==\"AMAZON\")#.ip_prefix",
+          "ipv6_prefixes.#(service==\"AMAZON\")#.ipv6_prefix"
+        ]
+      }
+    },
+    {
       "type": "maxmindGeoLite2ASNCSV",
       "action": "add",
       "args": {
