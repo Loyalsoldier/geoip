@@ -225,9 +225,9 @@ func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error 
 			}
 		}
 	} else if result.Type == gjson.String {
-		path := strings.TrimSpace(result.String())
-		if path != "" {
-			if err := entry.AddPrefix(path); err != nil {
+		cidr := strings.TrimSpace(result.String())
+		if cidr != "" {
+			if err := entry.AddPrefix(cidr); err != nil {
 				return err
 			}
 		}
