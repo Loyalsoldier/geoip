@@ -209,12 +209,28 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 		path = strings.TrimSpace(path)
 
 		result := gjson.GetBytes(data, path)
-		for _, cidr := range result.Array() {
-			if err := entry.AddPrefix(cidr.String()); err != nil {
+		if err := t.processJSONResult(result, entry); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error {
+	if result.IsArray() {
+		for _, item := range result.Array() {
+			if err := t.processJSONResult(item, entry); err != nil {
+				return err
+			}
+		}
+	} else if result.Type == gjson.String {
+		path := strings.TrimSpace(result.String())
+		if path != "" {
+			if err := entry.AddPrefix(path); err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
