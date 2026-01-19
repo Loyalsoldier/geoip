@@ -210,7 +210,7 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 
 		result := gjson.GetBytes(data, path)
 		if err := t.processJSONResult(result, entry); err != nil {
-			return err
+			return fmt.Errorf("❌ [type %s | action %s] failed to process JSON: %v", t.Type, t.Action, err)
 		}
 	}
 
@@ -218,19 +218,29 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 }
 
 func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error {
-	if result.IsArray() {
+	switch {
+	case !result.Exists():
+		return fmt.Errorf("invaild IP address or CIDR (value not exist), please check your specified JSON path or JSON source")
+
+	case result.Type == gjson.String:
+		cidr := strings.TrimSpace(result.String())
+		if cidr == "" {
+			return fmt.Errorf("empty string, please check your specified JSON path or JSON source")
+		}
+		if err := entry.AddPrefix(cidr); err != nil {
+			return err
+		}
+
+	case result.IsArray():
 		for _, item := range result.Array() {
 			if err := t.processJSONResult(item, entry); err != nil {
 				return err
 			}
 		}
-	} else if result.Type == gjson.String {
-		cidr := strings.TrimSpace(result.String())
-		if cidr != "" {
-			if err := entry.AddPrefix(cidr); err != nil {
-				return err
-			}
-		}
+
+	default:
+		return fmt.Errorf("invaild IP address or CIDR, please check your specified JSON path or JSON source")
 	}
+
 	return nil
 }
