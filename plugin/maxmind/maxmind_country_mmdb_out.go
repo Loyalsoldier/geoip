@@ -12,7 +12,7 @@ import (
 	"github.com/Loyalsoldier/geoip/lib"
 	"github.com/maxmind/mmdbwriter"
 	"github.com/maxmind/mmdbwriter/mmdbtype"
-	"github.com/oschwald/geoip2-golang"
+	"github.com/oschwald/geoip2-golang/v2"
 )
 
 const (
@@ -58,16 +58,19 @@ func (g *GeoLite2CountryMMDBOut) GetDescription() string {
 func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 	dbName := ""
 	dbDesc := ""
-	recordSize := 28
+	dbLanguages := []string{"en"}
+	recordSize := 24
 
 	switch g.Type {
 	case TypeGeoLite2CountryMMDBOut:
 		dbName = "GeoLite2-Country"
 		dbDesc = "Customized GeoLite2 Country database"
+		dbLanguages = []string{"de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"}
 
 	case TypeDBIPCountryMMDBOut:
 		dbName = "DBIP-Country-Lite"
 		dbDesc = "Customized DB-IP Country Lite database"
+		dbLanguages = []string{"de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN", "fa", "ko"}
 
 	case TypeIPInfoCountryMMDBOut:
 		dbName = "IPInfo-Lite"
@@ -79,6 +82,7 @@ func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 		mmdbwriter.Options{
 			DatabaseType:            dbName,
 			Description:             map[string]string{"en": dbDesc},
+			Languages:               dbLanguages,
 			RecordSize:              recordSize,
 			IncludeReservedNetworks: true,
 		},
@@ -222,28 +226,28 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 				record = mmdbtype.Map{
 					"continent": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Continent.Names["de"]),
-							"en":    mmdbtype.String(info.Continent.Names["en"]),
-							"es":    mmdbtype.String(info.Continent.Names["es"]),
-							"fr":    mmdbtype.String(info.Continent.Names["fr"]),
-							"ja":    mmdbtype.String(info.Continent.Names["ja"]),
-							"pt-BR": mmdbtype.String(info.Continent.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Continent.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Continent.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Continent.Names.German),
+							"en":    mmdbtype.String(info.Continent.Names.English),
+							"es":    mmdbtype.String(info.Continent.Names.Spanish),
+							"fr":    mmdbtype.String(info.Continent.Names.French),
+							"ja":    mmdbtype.String(info.Continent.Names.Japanese),
+							"pt-BR": mmdbtype.String(info.Continent.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Continent.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Continent.Names.SimplifiedChinese),
 						},
 						"code":       mmdbtype.String(info.Continent.Code),
 						"geoname_id": mmdbtype.Uint32(info.Continent.GeoNameID),
 					},
 					"country": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Country.Names["de"]),
-							"en":    mmdbtype.String(info.Country.Names["en"]),
-							"es":    mmdbtype.String(info.Country.Names["es"]),
-							"fr":    mmdbtype.String(info.Country.Names["fr"]),
-							"ja":    mmdbtype.String(info.Country.Names["ja"]),
-							"pt-BR": mmdbtype.String(info.Country.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Country.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Country.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Country.Names.German),
+							"en":    mmdbtype.String(info.Country.Names.English),
+							"es":    mmdbtype.String(info.Country.Names.Spanish),
+							"fr":    mmdbtype.String(info.Country.Names.French),
+							"ja":    mmdbtype.String(info.Country.Names.Japanese),
+							"pt-BR": mmdbtype.String(info.Country.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Country.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Country.Names.SimplifiedChinese),
 						},
 						"iso_code":             mmdbtype.String(entry.GetName()),
 						"geoname_id":           mmdbtype.Uint32(info.Country.GeoNameID),
@@ -254,14 +258,14 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 				record = mmdbtype.Map{
 					"country": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Country.Names["de"]),
-							"en":    mmdbtype.String(info.Country.Names["en"]),
-							"es":    mmdbtype.String(info.Country.Names["es"]),
-							"fr":    mmdbtype.String(info.Country.Names["fr"]),
-							"ja":    mmdbtype.String(info.Country.Names["ja"]),
-							"pt-BR": mmdbtype.String(info.Country.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Country.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Country.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Country.Names.German),
+							"en":    mmdbtype.String(info.Country.Names.English),
+							"es":    mmdbtype.String(info.Country.Names.Spanish),
+							"fr":    mmdbtype.String(info.Country.Names.French),
+							"ja":    mmdbtype.String(info.Country.Names.Japanese),
+							"pt-BR": mmdbtype.String(info.Country.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Country.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Country.Names.SimplifiedChinese),
 						},
 						"iso_code":             mmdbtype.String(entry.GetName()),
 						"geoname_id":           mmdbtype.Uint32(info.Country.GeoNameID),
@@ -271,7 +275,7 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 			}
 
 		case TypeDBIPCountryMMDBOut:
-			info, found := extraInfo[entry.GetName()].(geoip2.Country)
+			info, found := extraInfo[entry.GetName()].(dbipCountry)
 			if !found {
 				log.Printf("⚠️ [type %s | action %s] not found extra info for list %s\n", g.Type, g.Action, entry.GetName())
 
@@ -284,32 +288,32 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 				record = mmdbtype.Map{
 					"continent": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Continent.Names["de"]),
-							"en":    mmdbtype.String(info.Continent.Names["en"]),
-							"es":    mmdbtype.String(info.Continent.Names["es"]),
-							"fa":    mmdbtype.String(info.Continent.Names["fa"]),
-							"fr":    mmdbtype.String(info.Continent.Names["fr"]),
-							"ja":    mmdbtype.String(info.Continent.Names["ja"]),
-							"ko":    mmdbtype.String(info.Continent.Names["ko"]),
-							"pt-BR": mmdbtype.String(info.Continent.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Continent.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Continent.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Continent.Names.German),
+							"en":    mmdbtype.String(info.Continent.Names.English),
+							"es":    mmdbtype.String(info.Continent.Names.Spanish),
+							"fa":    mmdbtype.String(info.Continent.Names.Persian),
+							"fr":    mmdbtype.String(info.Continent.Names.French),
+							"ja":    mmdbtype.String(info.Continent.Names.Japanese),
+							"ko":    mmdbtype.String(info.Continent.Names.Korean),
+							"pt-BR": mmdbtype.String(info.Continent.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Continent.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Continent.Names.SimplifiedChinese),
 						},
 						"code":       mmdbtype.String(info.Continent.Code),
 						"geoname_id": mmdbtype.Uint32(info.Continent.GeoNameID),
 					},
 					"country": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Country.Names["de"]),
-							"en":    mmdbtype.String(info.Country.Names["en"]),
-							"es":    mmdbtype.String(info.Country.Names["es"]),
-							"fa":    mmdbtype.String(info.Country.Names["fa"]),
-							"fr":    mmdbtype.String(info.Country.Names["fr"]),
-							"ja":    mmdbtype.String(info.Country.Names["ja"]),
-							"ko":    mmdbtype.String(info.Country.Names["ko"]),
-							"pt-BR": mmdbtype.String(info.Country.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Country.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Country.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Country.Names.German),
+							"en":    mmdbtype.String(info.Country.Names.English),
+							"es":    mmdbtype.String(info.Country.Names.Spanish),
+							"fa":    mmdbtype.String(info.Country.Names.Persian),
+							"fr":    mmdbtype.String(info.Country.Names.French),
+							"ja":    mmdbtype.String(info.Country.Names.Japanese),
+							"ko":    mmdbtype.String(info.Country.Names.Korean),
+							"pt-BR": mmdbtype.String(info.Country.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Country.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Country.Names.SimplifiedChinese),
 						},
 						"iso_code":             mmdbtype.String(entry.GetName()),
 						"geoname_id":           mmdbtype.Uint32(info.Country.GeoNameID),
@@ -320,16 +324,16 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 				record = mmdbtype.Map{
 					"country": mmdbtype.Map{
 						"names": mmdbtype.Map{
-							"de":    mmdbtype.String(info.Country.Names["de"]),
-							"en":    mmdbtype.String(info.Country.Names["en"]),
-							"es":    mmdbtype.String(info.Country.Names["es"]),
-							"fa":    mmdbtype.String(info.Country.Names["fa"]),
-							"fr":    mmdbtype.String(info.Country.Names["fr"]),
-							"ja":    mmdbtype.String(info.Country.Names["ja"]),
-							"ko":    mmdbtype.String(info.Country.Names["ko"]),
-							"pt-BR": mmdbtype.String(info.Country.Names["pt-BR"]),
-							"ru":    mmdbtype.String(info.Country.Names["ru"]),
-							"zh-CN": mmdbtype.String(info.Country.Names["zh-CN"]),
+							"de":    mmdbtype.String(info.Country.Names.German),
+							"en":    mmdbtype.String(info.Country.Names.English),
+							"es":    mmdbtype.String(info.Country.Names.Spanish),
+							"fa":    mmdbtype.String(info.Country.Names.Persian),
+							"fr":    mmdbtype.String(info.Country.Names.French),
+							"ja":    mmdbtype.String(info.Country.Names.Japanese),
+							"ko":    mmdbtype.String(info.Country.Names.Korean),
+							"pt-BR": mmdbtype.String(info.Country.Names.BrazilianPortuguese),
+							"ru":    mmdbtype.String(info.Country.Names.Russian),
+							"zh-CN": mmdbtype.String(info.Country.Names.SimplifiedChinese),
 						},
 						"iso_code":             mmdbtype.String(entry.GetName()),
 						"geoname_id":           mmdbtype.Uint32(info.Country.GeoNameID),
