@@ -751,6 +751,34 @@ func TestEntry_processPrefix_InvalidPrefix(t *testing.T) {
 	if err != ErrInvalidIPLength {
 		t.Errorf("expected ErrInvalidIPLength for zero prefix pointer, got %v", err)
 	}
+
+	// Test with invalid bit count for IPv4 prefix (33 bits)
+	addr := netip.MustParseAddr("192.168.1.1")
+	invalidPrefix := netip.PrefixFrom(addr, 33)
+	_, _, err = e.processPrefix(invalidPrefix)
+	if err != ErrInvalidPrefix {
+		t.Errorf("expected ErrInvalidPrefix for out-of-range bits, got %v", err)
+	}
+
+	// Test with pointer to invalid bit count prefix
+	_, _, err = e.processPrefix(&invalidPrefix)
+	if err != ErrInvalidPrefix {
+		t.Errorf("expected ErrInvalidPrefix for out-of-range bits pointer, got %v", err)
+	}
+
+	// Test with invalid bit count for IPv6 prefix (129 bits)
+	addr6 := netip.MustParseAddr("2001:db8::1")
+	invalidPrefix6 := netip.PrefixFrom(addr6, 129)
+	_, _, err = e.processPrefix(invalidPrefix6)
+	if err != ErrInvalidPrefix {
+		t.Errorf("expected ErrInvalidPrefix for IPv6 out-of-range bits, got %v", err)
+	}
+
+	// Test with pointer to invalid IPv6 prefix
+	_, _, err = e.processPrefix(&invalidPrefix6)
+	if err != ErrInvalidPrefix {
+		t.Errorf("expected ErrInvalidPrefix for IPv6 out-of-range bits pointer, got %v", err)
+	}
 }
 
 func TestEntry_processPrefix_IPv4MappedCIDRString(t *testing.T) {

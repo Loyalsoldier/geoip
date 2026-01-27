@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -91,8 +92,8 @@ func TestContainer_Len(t *testing.T) {
 	t.Run("with entries", func(t *testing.T) {
 		c := NewContainer()
 		for i := 0; i < 5; i++ {
-			e := NewEntry("test" + string(rune('A'+i)))
-			if err := e.AddPrefix("192.168." + string(rune('0'+i)) + ".0/24"); err != nil {
+			e := NewEntry(fmt.Sprintf("test%c", 'A'+i))
+			if err := e.AddPrefix(fmt.Sprintf("192.168.%d.0/24", i)); err != nil {
 				t.Fatalf("AddPrefix failed: %v", err)
 			}
 			if err := c.Add(e); err != nil {
@@ -926,6 +927,54 @@ func TestContainer_Remove_CaseRemovePrefix_IPv6Only(t *testing.T) {
 
 	// Remove with no ignore option - should create missing IPv4 builder
 	if err := c.Remove(e2, CaseRemovePrefix); err != nil {
+		t.Fatalf("Remove failed: %v", err)
+	}
+}
+
+func TestContainer_Remove_CaseRemovePrefix_IgnoreIPv4_NoIPv6Builder(t *testing.T) {
+	c := NewContainer()
+
+	// Create entry with only IPv4
+	e1 := NewEntry("test")
+	if err := e1.AddPrefix("192.168.0.0/16"); err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	if err := c.Add(e1); err != nil {
+		t.Fatalf("Add failed: %v", err)
+	}
+
+	// Create entry with IPv6 to remove
+	e2 := NewEntry("test")
+	if err := e2.AddPrefix("2001:db8::/32"); err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+
+	// Remove with IgnoreIPv4 - should create IPv6 builder on val to remove from
+	if err := c.Remove(e2, CaseRemovePrefix, IgnoreIPv4); err != nil {
+		t.Fatalf("Remove failed: %v", err)
+	}
+}
+
+func TestContainer_Remove_CaseRemovePrefix_IgnoreIPv6_NoIPv4Builder(t *testing.T) {
+	c := NewContainer()
+
+	// Create entry with only IPv6
+	e1 := NewEntry("test")
+	if err := e1.AddPrefix("2001:db8::/32"); err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+	if err := c.Add(e1); err != nil {
+		t.Fatalf("Add failed: %v", err)
+	}
+
+	// Create entry with IPv4 to remove
+	e2 := NewEntry("test")
+	if err := e2.AddPrefix("192.168.1.0/24"); err != nil {
+		t.Fatalf("AddPrefix failed: %v", err)
+	}
+
+	// Remove with IgnoreIPv6 - should create IPv4 builder on val to remove from
+	if err := c.Remove(e2, CaseRemovePrefix, IgnoreIPv6); err != nil {
 		t.Fatalf("Remove failed: %v", err)
 	}
 }
