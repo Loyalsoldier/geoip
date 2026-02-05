@@ -18,10 +18,10 @@ github.com/oschwald/maxminddb-golang/v2 v2.1.1/go.mod h1:PLdx6PR+siSIoXqqy7C7r3S
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
-github.com/sagernet/sing v0.7.14 h1:5QQRDCUvYNOMyVp3LuK/hYEBAIv0VsbD3x/l9zH467s=
-github.com/sagernet/sing v0.7.14/go.mod h1:ARkL0gM13/Iv5VCZmci/NuoOlePoIsW0m7BWfln/Hak=
-github.com/sagernet/sing-box v1.12.17 h1:Nrns3lgWuK7b5sB3IcKJnVu4SJ7B6g7MLLH1evlDDgU=
-github.com/sagernet/sing-box v1.12.17/go.mod h1:q/gYlJOSeHXubCCKM9MiDqzWWNi0cgi4ySYd1kasIts=
+github.com/sagernet/sing v0.7.18 h1:iZHkaru1/MoHugx3G+9S3WG4owMewKO/KvieE2Pzk4E=
+github.com/sagernet/sing v0.7.18/go.mod h1:ARkL0gM13/Iv5VCZmci/NuoOlePoIsW0m7BWfln/Hak=
+github.com/sagernet/sing-box v1.12.20 h1:5KarG2Q8/8k8VKXN6sywTc0Gs06HKZ4++zu2y4bw9KA=
+github.com/sagernet/sing-box v1.12.20/go.mod h1:ePKI4HpMVy+wtAumZx6pJxwq2ddiwmU+0ZoVteNdTsY=
 github.com/spf13/cobra v1.10.2 h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=
 github.com/spf13/cobra v1.10.2/go.mod h1:7C1pvHqHw5A4vrJfjNwvOdzYu0Gml16OCs2GRiTUUS4=
 github.com/spf13/pflag v1.0.9 h1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=
