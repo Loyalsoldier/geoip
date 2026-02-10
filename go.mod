@@ -3,7 +3,7 @@ module github.com/Loyalsoldier/geoip
 go 1.24.0
 
 require (
-	github.com/klauspost/compress v1.18.3
+	github.com/klauspost/compress v1.18.4
 	github.com/maxmind/mmdbwriter v1.2.0
 	github.com/oschwald/geoip2-golang/v2 v2.1.0
 	github.com/oschwald/maxminddb-golang/v2 v2.1.1
