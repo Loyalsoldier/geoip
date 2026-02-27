@@ -115,6 +115,15 @@
       }
     },
     {
+      "type": "json",
+      "action": "add",
+      "args": {
+        "name": "azure",
+        "uri": "https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_Latest.json",
+        "jsonPath": ["values.#(id==\"AzureCloud\").properties.addressPrefixes"]
+      }
+    },
+    {
       "type": "maxmindGeoLite2ASNCSV",
       "action": "add",
       "args": {
@@ -203,6 +212,7 @@
         "outputDir": "./output",
         "outputName": "geoip-asn.dat",
         "wantedList": [
+          "azure",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -240,6 +250,7 @@
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": [
           "cn",
+          "azure",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -262,6 +273,7 @@
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": ["cn", "private"],
         "excludedList": [
+          "azure",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -291,6 +303,7 @@
         "outputDir": "./output",
         "outputName": "Country-asn.mmdb",
         "wantedList": [
+          "azure",
           "cloudflare",
           "cloudfront",
           "facebook",
