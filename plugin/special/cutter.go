@@ -80,13 +80,7 @@ func (c *Cutter) GetDescription() string {
 }
 
 func (c *Cutter) Input(container lib.Container) (lib.Container, error) {
-	var ignoreIPType lib.IgnoreIPOption
-	switch c.OnlyIPType {
-	case lib.IPv4:
-		ignoreIPType = lib.IgnoreIPv6
-	case lib.IPv6:
-		ignoreIPType = lib.IgnoreIPv4
-	}
+	ignoreIPType := lib.GetIgnoreIPType(c.OnlyIPType)
 
 	for entry := range container.Loop() {
 		if len(c.Want) > 0 && !c.Want[entry.GetName()] {

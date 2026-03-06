@@ -126,16 +126,7 @@ func (s *Stdout) filterAndSortList(container lib.Container) []string {
 }
 
 func (s *Stdout) generateCIDRList(entry *lib.Entry) ([]string, error) {
-	var entryList []string
-	var err error
-	switch s.OnlyIPType {
-	case lib.IPv4:
-		entryList, err = entry.MarshalText(lib.IgnoreIPv6)
-	case lib.IPv6:
-		entryList, err = entry.MarshalText(lib.IgnoreIPv4)
-	default:
-		entryList, err = entry.MarshalText()
-	}
+	entryList, err := entry.MarshalText(lib.GetIgnoreIPType(s.OnlyIPType))
 	if err != nil {
 		return nil, err
 	}

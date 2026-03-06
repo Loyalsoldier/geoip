@@ -95,13 +95,7 @@ func (p *Private) Input(container lib.Container) (lib.Container, error) {
 		}
 	}
 
-	var ignoreIPType lib.IgnoreIPOption
-	switch p.OnlyIPType {
-	case lib.IPv4:
-		ignoreIPType = lib.IgnoreIPv6
-	case lib.IPv6:
-		ignoreIPType = lib.IgnoreIPv4
-	}
+	ignoreIPType := lib.GetIgnoreIPType(p.OnlyIPType)
 
 	switch p.Action {
 	case lib.ActionAdd:

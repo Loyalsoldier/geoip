@@ -34,6 +34,17 @@ func GetRemoteURLReader(url string) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
+func GetIgnoreIPType(onlyIPType IPType) IgnoreIPOption {
+	switch onlyIPType {
+	case IPv4:
+		return IgnoreIPv6
+	case IPv6:
+		return IgnoreIPv4
+	}
+
+	return nil
+}
+
 type WantedListExtended struct {
 	TypeSlice []string
 	TypeMap   map[string][]string

@@ -151,16 +151,7 @@ func (s *SRSOut) generate(entry *lib.Entry) error {
 }
 
 func (s *SRSOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) {
-	var entryCidr []string
-	var err error
-	switch s.OnlyIPType {
-	case lib.IPv4:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv6)
-	case lib.IPv6:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv4)
-	default:
-		entryCidr, err = entry.MarshalText()
-	}
+	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(s.OnlyIPType))
 	if err != nil {
 		return nil, err
 	}

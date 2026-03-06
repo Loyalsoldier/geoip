@@ -120,13 +120,7 @@ func (s *SRSIn) Input(container lib.Container) (lib.Container, error) {
 		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", s.Type, s.Action)
 	}
 
-	var ignoreIPType lib.IgnoreIPOption
-	switch s.OnlyIPType {
-	case lib.IPv4:
-		ignoreIPType = lib.IgnoreIPv6
-	case lib.IPv6:
-		ignoreIPType = lib.IgnoreIPv4
-	}
+	ignoreIPType := lib.GetIgnoreIPType(s.OnlyIPType)
 
 	for _, entry := range entries {
 		switch s.Action {

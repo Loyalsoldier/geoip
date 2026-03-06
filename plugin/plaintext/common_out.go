@@ -83,17 +83,7 @@ func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMess
 }
 
 func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
-	var err error
-
-	var entryCidr []string
-	switch t.OnlyIPType {
-	case lib.IPv4:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv6)
-	case lib.IPv6:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv4)
-	default:
-		entryCidr, err = entry.MarshalText()
-	}
+	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(t.OnlyIPType))
 	if err != nil {
 		return nil, err
 	}

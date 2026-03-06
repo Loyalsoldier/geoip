@@ -138,13 +138,7 @@ func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 		return nil, err
 	}
 
-	var ignoreIPType lib.IgnoreIPOption
-	switch t.OnlyIPType {
-	case lib.IPv4:
-		ignoreIPType = lib.IgnoreIPv6
-	case lib.IPv6:
-		ignoreIPType = lib.IgnoreIPv4
-	}
+	ignoreIPType := lib.GetIgnoreIPType(t.OnlyIPType)
 
 	if len(entries) == 0 {
 		return nil, fmt.Errorf("❌ [type %s | action %s] no entry is generated", t.Type, t.Action)

@@ -176,16 +176,7 @@ func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []st
 }
 
 func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]any) error {
-	var entryCidr []string
-	var err error
-	switch g.OnlyIPType {
-	case lib.IPv4:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv6)
-	case lib.IPv6:
-		entryCidr, err = entry.MarshalText(lib.IgnoreIPv4)
-	default:
-		entryCidr, err = entry.MarshalText()
-	}
+	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(g.OnlyIPType))
 	if err != nil {
 		return err
 	}
