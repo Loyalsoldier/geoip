@@ -811,6 +811,33 @@ func TestContainerRemoveCaseRemovePrefixNoBuilderOnExisting(t *testing.T) {
 	if err := c.Remove(removeEntry, CaseRemovePrefix); err != nil {
 		t.Errorf("Remove error = %v", err)
 	}
+
+	// Verify: IPv4 1.0.0.0/24 should remain, no IPv6 prefixes
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+			if p.String() != "1.0.0.0/24" {
+				t.Errorf("expected remaining IPv4 prefix 1.0.0.0/24, got %s", p.String())
+			}
+		} else {
+			gotIPv6++
+		}
+	}
+	if gotIPv4 != 1 {
+		t.Errorf("expected 1 IPv4 prefix, got %d", gotIPv4)
+	}
+	if gotIPv6 != 0 {
+		t.Errorf("expected 0 IPv6 prefixes, got %d", gotIPv6)
+	}
 }
 
 func TestContainerAddMergeExistingWithoutBuilders(t *testing.T) {
@@ -898,6 +925,33 @@ func TestContainerRemoveCaseRemovePrefixNoIPv6BuilderIgnoreIPv4(t *testing.T) {
 	if err := c.Remove(removeEntry, CaseRemovePrefix, IgnoreIPv4); err != nil {
 		t.Errorf("Remove error = %v", err)
 	}
+
+	// Verify: IPv4 1.0.0.0/24 should remain (ignored), no IPv6 prefixes
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+			if p.String() != "1.0.0.0/24" {
+				t.Errorf("expected remaining IPv4 prefix 1.0.0.0/24, got %s", p.String())
+			}
+		} else {
+			gotIPv6++
+		}
+	}
+	if gotIPv4 != 1 {
+		t.Errorf("expected 1 IPv4 prefix, got %d", gotIPv4)
+	}
+	if gotIPv6 != 0 {
+		t.Errorf("expected 0 IPv6 prefixes, got %d", gotIPv6)
+	}
 }
 
 func TestContainerRemoveCaseRemovePrefixNoIPv4BuilderIgnoreIPv6(t *testing.T) {
@@ -919,6 +973,33 @@ func TestContainerRemoveCaseRemovePrefixNoIPv4BuilderIgnoreIPv6(t *testing.T) {
 	}
 	if err := c.Remove(removeEntry, CaseRemovePrefix, IgnoreIPv6); err != nil {
 		t.Errorf("Remove error = %v", err)
+	}
+
+	// Verify: no IPv4 prefixes, IPv6 2001:db8::/32 should remain (ignored)
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+		} else {
+			gotIPv6++
+			if p.String() != "2001:db8::/32" {
+				t.Errorf("expected remaining IPv6 prefix 2001:db8::/32, got %s", p.String())
+			}
+		}
+	}
+	if gotIPv4 != 0 {
+		t.Errorf("expected 0 IPv4 prefixes, got %d", gotIPv4)
+	}
+	if gotIPv6 != 1 {
+		t.Errorf("expected 1 IPv6 prefix, got %d", gotIPv6)
 	}
 }
 
@@ -945,6 +1026,30 @@ func TestContainerRemoveCaseRemovePrefixNoBuilderDefault(t *testing.T) {
 	if err := c.Remove(removeEntry, CaseRemovePrefix); err != nil {
 		t.Errorf("Remove error = %v", err)
 	}
+
+	// Verify: no IPv4 prefixes, IPv6 should have 2001:db8::/48 removed from 2001:db8::/32
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+		} else {
+			gotIPv6++
+		}
+	}
+	if gotIPv4 != 0 {
+		t.Errorf("expected 0 IPv4 prefixes, got %d", gotIPv4)
+	}
+	if gotIPv6 == 0 {
+		t.Error("expected remaining IPv6 prefixes after removing /48 from /32")
+	}
 }
 
 func TestContainerRemoveCaseRemovePrefixOnlyIPv4NoIPv6Builder(t *testing.T) {
@@ -969,6 +1074,33 @@ func TestContainerRemoveCaseRemovePrefixOnlyIPv4NoIPv6Builder(t *testing.T) {
 	}
 	if err := c.Remove(removeEntry, CaseRemovePrefix); err != nil {
 		t.Errorf("Remove error = %v", err)
+	}
+
+	// Verify: IPv4 should have 1.0.0.0/25 removed from 1.0.0.0/24, leaving 1.0.0.128/25; no IPv6 prefixes
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+			if p.String() != "1.0.0.128/25" {
+				t.Errorf("expected remaining IPv4 prefix 1.0.0.128/25, got %s", p.String())
+			}
+		} else {
+			gotIPv6++
+		}
+	}
+	if gotIPv4 != 1 {
+		t.Errorf("expected 1 IPv4 prefix, got %d", gotIPv4)
+	}
+	if gotIPv6 != 0 {
+		t.Errorf("expected 0 IPv6 prefixes, got %d", gotIPv6)
 	}
 }
 
