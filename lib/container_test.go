@@ -997,7 +997,26 @@ func TestContainerLookupIPv6NotFoundInEntry(t *testing.T) {
 	}
 }
 
-func TestContainerLookupErrorEntryMissingIPSet(t *testing.T) {
+func TestContainerLookupIPv4ErrorEntryMissingIPSet(t *testing.T) {
+	c := NewContainer()
+
+	// Add entry with only IPv6 (no IPv4 data)
+	entry := NewEntry("us")
+	if err := entry.AddPrefix("2001:db8::/32"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Add(entry); err != nil {
+		t.Fatal(err)
+	}
+
+	// Lookup IPv4 address - will fail because US entry has no IPv4 set
+	_, _, err := c.Lookup("1.0.0.1")
+	if err == nil {
+		t.Error("expected error when looking up IPv4 in entry with no IPv4 data")
+	}
+}
+
+func TestContainerLookupIPv6ErrorEntryMissingIPSet(t *testing.T) {
 	c := NewContainer()
 
 	// Add entry with only IPv4 (no IPv6 data)
@@ -1019,24 +1038,5 @@ func TestContainerLookupErrorEntryMissingIPSet(t *testing.T) {
 	_, _, err = c.Lookup("2001:db8::/32")
 	if err == nil {
 		t.Error("expected error when looking up IPv6 CIDR in entry with no IPv6 data")
-	}
-}
-
-func TestContainerLookupIPv4ErrorEntryMissingIPSet(t *testing.T) {
-	c := NewContainer()
-
-	// Add entry with only IPv6 (no IPv4 data)
-	entry := NewEntry("us")
-	if err := entry.AddPrefix("2001:db8::/32"); err != nil {
-		t.Fatal(err)
-	}
-	if err := c.Add(entry); err != nil {
-		t.Fatal(err)
-	}
-
-	// Lookup IPv4 address - will fail because US entry has no IPv4 set
-	_, _, err := c.Lookup("1.0.0.1")
-	if err == nil {
-		t.Error("expected error when looking up IPv4 in entry with no IPv4 data")
 	}
 }
