@@ -64,8 +64,9 @@ func TestListInputConverter(t *testing.T) {
 	buf.ReadFrom(r)
 	output := buf.String()
 
-	if len(output) == 0 {
-		t.Error("ListInputConverter should produce output")
+	expected := "All available input formats:\n  - test-ic (Test Input)\n"
+	if output != expected {
+		t.Errorf("ListInputConverter output = %q, want %q", output, expected)
 	}
 }
 
@@ -91,7 +92,8 @@ func TestListOutputConverter(t *testing.T) {
 	buf.ReadFrom(r)
 	output := buf.String()
 
-	if len(output) == 0 {
-		t.Error("ListOutputConverter should produce output")
+	expected := "All available output formats:\n  - test-oc (Test Output)\n"
+	if output != expected {
+		t.Errorf("ListOutputConverter output = %q, want %q", output, expected)
 	}
 }
