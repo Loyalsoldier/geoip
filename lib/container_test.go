@@ -230,6 +230,36 @@ func TestContainerAddMergeIgnoreIPv4(t *testing.T) {
 	if err := c.Add(entry2, IgnoreIPv4); err != nil {
 		t.Fatal(err)
 	}
+
+	// Verify: original IPv4 should remain, IPv6 should be merged
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+			if p.String() != "1.0.0.0/24" {
+				t.Errorf("expected original IPv4 prefix 1.0.0.0/24, got %s", p.String())
+			}
+		} else {
+			gotIPv6++
+			if p.String() != "2001:db8::/32" {
+				t.Errorf("expected merged IPv6 prefix 2001:db8::/32, got %s", p.String())
+			}
+		}
+	}
+	if gotIPv4 != 1 {
+		t.Errorf("expected 1 IPv4 prefix, got %d", gotIPv4)
+	}
+	if gotIPv6 != 1 {
+		t.Errorf("expected 1 IPv6 prefix, got %d", gotIPv6)
+	}
 }
 
 func TestContainerAddMergeIgnoreIPv6(t *testing.T) {
@@ -254,6 +284,36 @@ func TestContainerAddMergeIgnoreIPv6(t *testing.T) {
 	}
 	if err := c.Add(entry2, IgnoreIPv6); err != nil {
 		t.Fatal(err)
+	}
+
+	// Verify: IPv4 should be merged, original IPv6 should remain
+	val, found := c.GetEntry("US")
+	if !found {
+		t.Fatal("entry US not found")
+	}
+	prefixes, err := val.MarshalPrefix()
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotIPv4, gotIPv6 := 0, 0
+	for _, p := range prefixes {
+		if p.Addr().Is4() {
+			gotIPv4++
+			if p.String() != "1.0.0.0/24" {
+				t.Errorf("expected merged IPv4 prefix 1.0.0.0/24, got %s", p.String())
+			}
+		} else {
+			gotIPv6++
+			if p.String() != "2001:db8::/32" {
+				t.Errorf("expected original IPv6 prefix 2001:db8::/32, got %s", p.String())
+			}
+		}
+	}
+	if gotIPv4 != 1 {
+		t.Errorf("expected 1 IPv4 prefix, got %d", gotIPv4)
+	}
+	if gotIPv6 != 1 {
+		t.Errorf("expected 1 IPv6 prefix, got %d", gotIPv6)
 	}
 }
 
