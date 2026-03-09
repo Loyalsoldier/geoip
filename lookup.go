@@ -197,14 +197,11 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(singbox.TypeSRSIn):
-		input = &singbox.SRSIn{
-			Type:        singbox.TypeSRSIn,
-			Action:      lib.ActionAdd,
-			Description: singbox.DescSRSIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = singbox.NewSRSIn(
+			lib.ActionAdd,
+			singbox.WithNameAndURI(name, uri),
+			singbox.WithInputDir(dir),
+		)
 
 	case strings.ToLower(v2ray.TypeGeoIPDatIn):
 		input = &v2ray.GeoIPDatIn{

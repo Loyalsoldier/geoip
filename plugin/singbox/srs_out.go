@@ -26,14 +26,69 @@ var (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeSRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newSRSOut(action, data)
+		return NewSRSOutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeSRSOut, &SRSOut{
+	lib.RegisterOutputConverter(TypeSRSOut, &srs_out{
 		Description: DescSRSOut,
 	})
 }
 
-func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+type srs_out struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	OutputDir   string
+	Want        []string
+	Exclude     []string
+	OnlyIPType  lib.IPType
+}
+
+func NewSRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	s := &srs_out{
+		Type:        TypeSRSOut,
+		Action:      action,
+		Description: DescSRSOut,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+
+	return s
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			dir = defaultOutputDir
+		}
+
+		s.(*srs_out).OutputDir = dir
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*srs_out).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*srs_out).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*srs_out).OnlyIPType = onlyIPType
+	}
+}
+
+func NewSRSOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
@@ -47,44 +102,28 @@ func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		tmp.OutputDir = defaultOutputDir
-	}
-
-	return &SRSOut{
-		Type:        TypeSRSOut,
-		Action:      action,
-		Description: DescSRSOut,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewSRSOut(
+		action,
+		WithOutputDir(tmp.OutputDir),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type SRSOut struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	OutputDir   string
-	Want        []string
-	Exclude     []string
-	OnlyIPType  lib.IPType
-}
-
-func (s *SRSOut) GetType() string {
+func (s *srs_out) GetType() string {
 	return s.Type
 }
 
-func (s *SRSOut) GetAction() lib.Action {
+func (s *srs_out) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *SRSOut) GetDescription() string {
+func (s *srs_out) GetDescription() string {
 	return s.Description
 }
 
-func (s *SRSOut) Output(container lib.Container) error {
+func (s *srs_out) Output(container lib.Container) error {
 	for _, name := range s.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -100,7 +139,7 @@ func (s *SRSOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (s *SRSOut) filterAndSortList(container lib.Container) []string {
+func (s *srs_out) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range s.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -136,7 +175,7 @@ func (s *SRSOut) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (s *SRSOut) generate(entry *lib.Entry) error {
+func (s *srs_out) generate(entry *lib.Entry) error {
 	ruleset, err := s.marshalRuleSet(entry)
 	if err != nil {
 		return err
@@ -150,7 +189,7 @@ func (s *SRSOut) generate(entry *lib.Entry) error {
 	return nil
 }
 
-func (s *SRSOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) {
+func (s *srs_out) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) {
 	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(s.OnlyIPType))
 	if err != nil {
 		return nil, err
@@ -174,7 +213,7 @@ func (s *SRSOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) 
 	return nil, fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", s.Type, s.Action, entry.GetName())
 }
 
-func (s *SRSOut) writeFile(filename string, ruleset *option.PlainRuleSet) error {
+func (s *srs_out) writeFile(filename string, ruleset *option.PlainRuleSet) error {
 	if err := os.MkdirAll(s.OutputDir, 0755); err != nil {
 		return err
 	}
