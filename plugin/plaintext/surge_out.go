@@ -18,9 +18,9 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeSurgeRuleSetOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeSurgeRuleSetOut, DescSurgeRuleSetOut, action, data)
+		return NewTextOutFromBytes(TypeSurgeRuleSetOut, DescSurgeRuleSetOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeSurgeRuleSetOut, &TextOut{
+	lib.RegisterOutputConverter(TypeSurgeRuleSetOut, &text_out{
 		Description: DescSurgeRuleSetOut,
 	})
 }

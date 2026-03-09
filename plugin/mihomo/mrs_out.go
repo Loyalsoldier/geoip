@@ -27,14 +27,69 @@ var (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeMRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newMRSOut(action, data)
+		return NewMRSOutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeMRSOut, &MRSOut{
+	lib.RegisterOutputConverter(TypeMRSOut, &mrs_out{
 		Description: DescMRSOut,
 	})
 }
 
-func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+type mrs_out struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	OutputDir   string
+	Want        []string
+	Exclude     []string
+	OnlyIPType  lib.IPType
+}
+
+func NewMRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	m := &mrs_out{
+		Type:        TypeMRSOut,
+		Action:      action,
+		Description: DescMRSOut,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(m)
+		}
+	}
+
+	return m
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			dir = defaultOutputDir
+		}
+
+		m.(*mrs_out).OutputDir = dir
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*mrs_out).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*mrs_out).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*mrs_out).OnlyIPType = onlyIPType
+	}
+}
+
+func NewMRSOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
@@ -48,44 +103,28 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		tmp.OutputDir = defaultOutputDir
-	}
-
-	return &MRSOut{
-		Type:        TypeMRSOut,
-		Action:      action,
-		Description: DescMRSOut,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewMRSOut(
+		action,
+		WithOutputDir(tmp.OutputDir),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type MRSOut struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	OutputDir   string
-	Want        []string
-	Exclude     []string
-	OnlyIPType  lib.IPType
-}
-
-func (m *MRSOut) GetType() string {
+func (m *mrs_out) GetType() string {
 	return m.Type
 }
 
-func (m *MRSOut) GetAction() lib.Action {
+func (m *mrs_out) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *MRSOut) GetDescription() string {
+func (m *mrs_out) GetDescription() string {
 	return m.Description
 }
 
-func (m *MRSOut) Output(container lib.Container) error {
+func (m *mrs_out) Output(container lib.Container) error {
 	for _, name := range m.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -101,7 +140,7 @@ func (m *MRSOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (m *MRSOut) filterAndSortList(container lib.Container) []string {
+func (m *mrs_out) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range m.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -137,7 +176,7 @@ func (m *MRSOut) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (m *MRSOut) generate(entry *lib.Entry) error {
+func (m *mrs_out) generate(entry *lib.Entry) error {
 	ipRanges, err := entry.MarshalIPRange(lib.GetIgnoreIPType(m.OnlyIPType))
 	if err != nil {
 		return err
@@ -155,7 +194,7 @@ func (m *MRSOut) generate(entry *lib.Entry) error {
 	return nil
 }
 
-func (m *MRSOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
+func (m *mrs_out) writeFile(filename string, ipRanges []netipx.IPRange) error {
 	if err := os.MkdirAll(m.OutputDir, 0755); err != nil {
 		return err
 	}
@@ -176,7 +215,7 @@ func (m *MRSOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
 	return nil
 }
 
-func (m *MRSOut) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error) {
+func (m *mrs_out) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error) {
 	encoder, err := zstd.NewWriter(w)
 	if err != nil {
 		return err
