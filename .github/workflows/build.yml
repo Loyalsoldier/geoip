@@ -86,6 +86,26 @@ jobs:
           for name in $(ls *.mmdb); do
             sha256sum ${name} > ./${name}.sha256sum
           done
+
+      - name: Git push assets to "release" branch
+        run: |
+          cd output || exit 1
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b release
+          git add -A
+          git commit -m "${{ env.RELEASE_NAME }}"
+          git remote add geoip "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u geoip release
+
+      - name: Purge jsdelivr CDN
+        run: |
+          cd output || exit 1
+          for file in $(ls); do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+          done
+
       - name: Remove some files to avoid publishing to GitHub release
         run: |
           cd output || exit 1
@@ -96,29 +116,9 @@ jobs:
           find . -maxdepth 1 -type d ! -path . -exec rm -rf {} +
           find . -maxdepth 1 -type f ! -name 'cn_v4.txt' ! -name 'cn_v6.txt' -delete
 
-      - name: Git push assets to "release" branch
-        run: |
-          cd output || exit 1
-          git init
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b release
-          git add cn_v4.txt cn_v6.txt
-          git commit -m "Auto-update: $(date +'%Y-%m-%d %H:%M')"
-          git push -f "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" release
-
-      - name: Purge jsdelivr CDN
-        run: |
-          cd output || exit 1
-          for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/cn_v4.txt"
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/cn_v6.txt"
-          done
-
       - name: Upload files to GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd output || exit 1
-          gh release delete latest --yes || true
-          gh release create latest --title "Latest CN IP List" --notes "Updated on $(date)" ./*.txt
+          gh release create ${{ env.TAG_NAME }} --title "${{ env.RELEASE_NAME }}" ./*.txt
