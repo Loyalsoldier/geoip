@@ -76,6 +76,22 @@
       }
     },
     {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "anycast",
+        "uri": "https://raw.githubusercontent.com/bgptools/anycast-prefixes/refs/heads/master/anycatch-v4-prefixes.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "anycast",
+        "uri": "https://raw.githubusercontent.com/bgptools/anycast-prefixes/refs/heads/master/anycatch-v6-prefixes.txt"
+      }
+    },
+    {
       "type": "json",
       "action": "add",
       "args": {
@@ -203,6 +219,7 @@
         "outputDir": "./output",
         "outputName": "geoip-asn.dat",
         "wantedList": [
+          "anycast",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -240,6 +257,7 @@
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": [
           "cn",
+          "anycast",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -262,6 +280,7 @@
         "sourceMMDBURI": "./output/GeoLite2-Country.mmdb",
         "overwriteList": ["cn", "private"],
         "excludedList": [
+          "anycast",
           "cloudflare",
           "cloudfront",
           "facebook",
@@ -291,6 +310,7 @@
         "outputDir": "./output",
         "outputName": "Country-asn.mmdb",
         "wantedList": [
+          "anycast",
           "cloudflare",
           "cloudfront",
           "facebook",
