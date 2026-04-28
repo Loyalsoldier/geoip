@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,14 +26,82 @@ var (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryCSVIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2CountryCSVIn(action, data)
+		return NewGeoLite2CountryCSVInFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeGeoLite2CountryCSVIn, &GeoLite2CountryCSVIn{
 		Description: DescGeoLite2CountryCSVIn,
 	})
 }
 
-func newGeoLite2CountryCSVIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &GeoLite2CountryCSVIn{
+		Type:        TypeGeoLite2CountryCSVIn,
+		Action:      action,
+		Description: DescGeoLite2CountryCSVIn,
+		// defaults
+		CountryCodeFile: defaultGeoLite2CountryCodeFile,
+		IPv4File:        defaultGeoLite2CountryIPv4File,
+		IPv6File:        defaultGeoLite2CountryIPv6File,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	// If either IPv4/IPv6 explicitly cleared, keep the other.
+	// If both cleared, caller intended to clear both.
+	if g.IPv4File == defaultGeoLite2CountryIPv4File && g.IPv6File == "" {
+		g.IPv4File = ""
+	}
+	if g.IPv6File == defaultGeoLite2CountryIPv6File && g.IPv4File == "" {
+		g.IPv6File = ""
+	}
+
+	return g
+}
+
+func WithGeoLite2CountryCodeFile(path string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		path = strings.TrimSpace(path)
+		if path != "" {
+			c.(*GeoLite2CountryCSVIn).CountryCodeFile = path
+		}
+	}
+}
+
+func WithGeoLite2CountryIPv4File(path string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*GeoLite2CountryCSVIn).IPv4File = strings.TrimSpace(path)
+	}
+}
+
+func WithGeoLite2CountryIPv6File(path string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*GeoLite2CountryCSVIn).IPv6File = strings.TrimSpace(path)
+	}
+}
+
+func WithGeoLite2CountryWantedList(lists []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+		c.(*GeoLite2CountryCSVIn).Want = wantList
+	}
+}
+
+func WithGeoLite2CountryOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*GeoLite2CountryCSVIn).OnlyIPType = onlyIPType
+	}
+}
+
+func NewGeoLite2CountryCSVInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		CountryCodeFile string     `json:"country"`
 		IPv4File        string     `json:"ipv4"`
@@ -47,35 +116,25 @@ func newGeoLite2CountryCSVIn(action lib.Action, data json.RawMessage) (lib.Input
 		}
 	}
 
-	if tmp.CountryCodeFile == "" {
-		tmp.CountryCodeFile = defaultGeoLite2CountryCodeFile
+	if action != lib.ActionAdd && action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid action", TypeGeoLite2CountryCSVIn, action)
 	}
 
-	// When both of IP files are not specified,
-	// it means user wants to use the default ones
+	// Preserve old semantics: when both IPv4/IPv6 omitted, use defaults.
+	// When either specified, keep provided value (including empty string).
 	if tmp.IPv4File == "" && tmp.IPv6File == "" {
 		tmp.IPv4File = defaultGeoLite2CountryIPv4File
 		tmp.IPv6File = defaultGeoLite2CountryIPv6File
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &GeoLite2CountryCSVIn{
-		Type:            TypeGeoLite2CountryCSVIn,
-		Action:          action,
-		Description:     DescGeoLite2CountryCSVIn,
-		CountryCodeFile: tmp.CountryCodeFile,
-		IPv4File:        tmp.IPv4File,
-		IPv6File:        tmp.IPv6File,
-		Want:            wantList,
-		OnlyIPType:      tmp.OnlyIPType,
-	}, nil
+	return NewGeoLite2CountryCSVIn(
+		action,
+		WithGeoLite2CountryCodeFile(tmp.CountryCodeFile),
+		WithGeoLite2CountryIPv4File(tmp.IPv4File),
+		WithGeoLite2CountryIPv6File(tmp.IPv6File),
+		WithGeoLite2CountryWantedList(tmp.Want),
+		WithGeoLite2CountryOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type GeoLite2CountryCSVIn struct {
