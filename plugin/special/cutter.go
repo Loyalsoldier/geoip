@@ -15,14 +15,38 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeCutter, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newCutter(action, data)
+		return NewCutterFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeCutter, &Cutter{
+	lib.RegisterInputConverter(TypeCutter, &cutter{
 		Description: DescCutter,
 	})
 }
 
-func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+type cutter struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	Want        map[string]bool
+	OnlyIPType  lib.IPType
+}
+
+func NewCutter(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	c := &cutter{
+		Type:        TypeCutter,
+		Action:      action,
+		Description: DescCutter,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+
+	return c
+}
+
+func NewCutterFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
@@ -50,36 +74,38 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", TypeCutter)
 	}
 
-	return &Cutter{
-		Type:        TypeCutter,
-		Action:      action,
-		Description: DescCutter,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewCutter(
+		action,
+		WithCutterWantedList(wantList),
+		WithCutterOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type Cutter struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	Want        map[string]bool
-	OnlyIPType  lib.IPType
+func WithCutterWantedList(wantList map[string]bool) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*cutter).Want = wantList
+	}
 }
 
-func (c *Cutter) GetType() string {
+func WithCutterOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*cutter).OnlyIPType = onlyIPType
+	}
+}
+
+func (c *cutter) GetType() string {
 	return c.Type
 }
 
-func (c *Cutter) GetAction() lib.Action {
+func (c *cutter) GetAction() lib.Action {
 	return c.Action
 }
 
-func (c *Cutter) GetDescription() string {
+func (c *cutter) GetDescription() string {
 	return c.Description
 }
 
-func (c *Cutter) Input(container lib.Container) (lib.Container, error) {
+func (c *cutter) Input(container lib.Container) (lib.Container, error) {
 	ignoreIPType := lib.GetIgnoreIPType(c.OnlyIPType)
 
 	for entry := range container.Loop() {

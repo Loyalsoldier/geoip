@@ -18,14 +18,57 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeStdout, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newStdout(action, data)
+		return NewStdoutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeStdout, &Stdout{
+	lib.RegisterOutputConverter(TypeStdout, &stdout{
 		Description: DescStdout,
 	})
 }
 
-func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+type stdout struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	Want        []string
+	Exclude     []string
+	OnlyIPType  lib.IPType
+}
+
+func NewStdout(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	s := &stdout{
+		Type:        TypeStdout,
+		Action:      action,
+		Description: DescStdout,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+
+	return s
+}
+
+func WithStdoutWantedList(lists []string) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*stdout).Want = lists
+	}
+}
+
+func WithStdoutExcludedList(lists []string) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*stdout).Exclude = lists
+	}
+}
+
+func WithStdoutOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(s lib.OutputConverter) {
+		s.(*stdout).OnlyIPType = onlyIPType
+	}
+}
+
+func NewStdoutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		Want       []string   `json:"wantedList"`
 		Exclude    []string   `json:"excludedList"`
@@ -38,38 +81,27 @@ func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	return &Stdout{
-		Type:        TypeStdout,
-		Action:      action,
-		Description: DescStdout,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewStdout(
+		action,
+		WithStdoutWantedList(tmp.Want),
+		WithStdoutExcludedList(tmp.Exclude),
+		WithStdoutOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type Stdout struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	Want        []string
-	Exclude     []string
-	OnlyIPType  lib.IPType
-}
-
-func (s *Stdout) GetType() string {
+func (s *stdout) GetType() string {
 	return s.Type
 }
 
-func (s *Stdout) GetAction() lib.Action {
+func (s *stdout) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *Stdout) GetDescription() string {
+func (s *stdout) GetDescription() string {
 	return s.Description
 }
 
-func (s *Stdout) Output(container lib.Container) error {
+func (s *stdout) Output(container lib.Container) error {
 	for _, name := range s.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -89,7 +121,7 @@ func (s *Stdout) Output(container lib.Container) error {
 	return nil
 }
 
-func (s *Stdout) filterAndSortList(container lib.Container) []string {
+func (s *stdout) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range s.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
@@ -125,7 +157,7 @@ func (s *Stdout) filterAndSortList(container lib.Container) []string {
 	return list
 }
 
-func (s *Stdout) generateCIDRList(entry *lib.Entry) ([]string, error) {
+func (s *stdout) generateCIDRList(entry *lib.Entry) ([]string, error) {
 	entryList, err := entry.MarshalText(lib.GetIgnoreIPType(s.OnlyIPType))
 	if err != nil {
 		return nil, err

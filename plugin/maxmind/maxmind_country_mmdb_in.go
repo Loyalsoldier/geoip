@@ -18,14 +18,14 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
+		return NewGeoLite2CountryMMDBInFromBytes(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &GeoLite2CountryMMDBIn{
+	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &geoLite2CountryMMDBIn{
 		Description: DescGeoLite2CountryMMDBIn,
 	})
 }
 
-type GeoLite2CountryMMDBIn struct {
+type geoLite2CountryMMDBIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -34,19 +34,60 @@ type GeoLite2CountryMMDBIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (g *GeoLite2CountryMMDBIn) GetType() string {
+func NewGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &geoLite2CountryMMDBIn{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	return g
+}
+
+func WithURI(uri string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*geoLite2CountryMMDBIn).URI = strings.TrimSpace(uri)
+	}
+}
+
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+
+		g.(*geoLite2CountryMMDBIn).Want = wantList
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*geoLite2CountryMMDBIn).OnlyIPType = onlyIPType
+	}
+}
+
+func (g *geoLite2CountryMMDBIn) GetType() string {
 	return g.Type
 }
 
-func (g *GeoLite2CountryMMDBIn) GetAction() lib.Action {
+func (g *geoLite2CountryMMDBIn) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *GeoLite2CountryMMDBIn) GetDescription() string {
+func (g *geoLite2CountryMMDBIn) GetDescription() string {
 	return g.Description
 }
 
-func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
@@ -89,7 +130,7 @@ func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 	return container, nil
 }
 
-func (g *GeoLite2CountryMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (g *geoLite2CountryMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.OpenBytes(content)
 	if err != nil {
 		return err

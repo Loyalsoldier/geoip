@@ -38,14 +38,43 @@ var privateCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(TypePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newPrivate(action, data)
+		return NewPrivateFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypePrivate, &Private{
+	lib.RegisterInputConverter(TypePrivate, &private{
 		Description: DescPrivate,
 	})
 }
 
-func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+type private struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	OnlyIPType  lib.IPType
+}
+
+func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	p := &private{
+		Type:        TypePrivate,
+		Action:      action,
+		Description: DescPrivate,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(p)
+		}
+	}
+
+	return p
+}
+
+func WithPrivateOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(p lib.InputConverter) {
+		p.(*private).OnlyIPType = onlyIPType
+	}
+}
+
+func NewPrivateFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
@@ -56,34 +85,25 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 		}
 	}
 
-	return &Private{
-		Type:        TypePrivate,
-		Action:      action,
-		Description: DescPrivate,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewPrivate(
+		action,
+		WithPrivateOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type Private struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	OnlyIPType  lib.IPType
-}
-
-func (p *Private) GetType() string {
+func (p *private) GetType() string {
 	return p.Type
 }
 
-func (p *Private) GetAction() lib.Action {
+func (p *private) GetAction() lib.Action {
 	return p.Action
 }
 
-func (p *Private) GetDescription() string {
+func (p *private) GetDescription() string {
 	return p.Description
 }
 
-func (p *Private) Input(container lib.Container) (lib.Container, error) {
+func (p *private) Input(container lib.Container) (lib.Container, error) {
 	entry, found := container.GetEntry(entryNamePrivate)
 	if !found {
 		entry = lib.NewEntry(entryNamePrivate)

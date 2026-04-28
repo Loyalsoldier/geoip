@@ -3,7 +3,6 @@ package maxmind
 import (
 	"encoding/json"
 	"path/filepath"
-	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -14,7 +13,7 @@ var (
 	defaultIPInfoCountryMMDBFile   = filepath.Join("./", "ipinfo", "country.mmdb")
 )
 
-func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewGeoLite2CountryMMDBInFromBytes(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -40,20 +39,10 @@ func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, dat
 		}
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &GeoLite2CountryMMDBIn{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewGeoLite2CountryMMDBIn(
+		iType, iDesc, action,
+		WithURI(tmp.URI),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
