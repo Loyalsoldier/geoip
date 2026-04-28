@@ -16,26 +16,26 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeTextOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeTextOut, DescTextOut, action, data)
+		return NewTextOutFromBytes(TypeTextOut, DescTextOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeTextOut, &TextOut{
+	lib.RegisterOutputConverter(TypeTextOut, &textOut{
 		Description: DescTextOut,
 	})
 }
 
-func (t *TextOut) GetType() string {
+func (t *textOut) GetType() string {
 	return t.Type
 }
 
-func (t *TextOut) GetAction() lib.Action {
+func (t *textOut) GetAction() lib.Action {
 	return t.Action
 }
 
-func (t *TextOut) GetDescription() string {
+func (t *textOut) GetDescription() string {
 	return t.Description
 }
 
-func (t *TextOut) Output(container lib.Container) error {
+func (t *textOut) Output(container lib.Container) error {
 	for _, name := range t.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -57,7 +57,7 @@ func (t *TextOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (t *TextOut) filterAndSortList(container lib.Container) []string {
+func (t *textOut) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range t.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {
