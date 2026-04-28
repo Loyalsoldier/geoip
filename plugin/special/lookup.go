@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/netip"
 	"slices"
 	"strings"
@@ -18,14 +19,46 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeLookup, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newLookup(action, data)
+		return NewLookupFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeLookup, &Lookup{
 		Description: DescLookup,
 	})
 }
 
-func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	l := &Lookup{
+		Type:        TypeLookup,
+		Action:      action,
+		Description: DescLookup,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(l)
+		}
+	}
+
+	return l
+}
+
+func WithLookupSearch(search string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		search = strings.TrimSpace(search)
+		if search == "" {
+			log.Fatalf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", TypeLookup, c.(*Lookup).Action)
+		}
+		c.(*Lookup).Search = search
+	}
+}
+
+func WithLookupSearchList(lists []string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*Lookup).SearchList = lists
+	}
+}
+
+func NewLookupFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		Search     string   `json:"search"`
 		SearchList []string `json:"searchList"`
@@ -42,13 +75,7 @@ func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", TypeLookup, action)
 	}
 
-	return &Lookup{
-		Type:        TypeLookup,
-		Action:      action,
-		Description: DescLookup,
-		Search:      tmp.Search,
-		SearchList:  tmp.SearchList,
-	}, nil
+	return NewLookup(action, WithLookupSearch(tmp.Search), WithLookupSearchList(tmp.SearchList)), nil
 }
 
 type Lookup struct {
