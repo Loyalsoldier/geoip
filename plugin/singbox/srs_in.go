@@ -53,6 +53,10 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		}
 	}
 
+	if strings.TrimSpace(s.InputDir) == "" && (strings.TrimSpace(s.Name) == "" || strings.TrimSpace(s.URI) == "") {
+		log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", TypeSRSIn, s.Action)
+	}
+
 	return s
 }
 
@@ -60,10 +64,7 @@ func WithNameAndURI(name, uri string) lib.InputOption {
 	return func(s lib.InputConverter) {
 		name = strings.TrimSpace(name)
 		uri = strings.TrimSpace(uri)
-		if (name == "" || uri == "") && strings.TrimSpace(s.(*srs_in).InputDir) == "" {
-			log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", TypeSRSIn, s.(*srs_in).Action)
-		}
-
+		// Validation is performed after all options are applied in NewSRSIn.
 		s.(*srs_in).Name = name
 		s.(*srs_in).URI = uri
 	}
@@ -72,10 +73,7 @@ func WithNameAndURI(name, uri string) lib.InputOption {
 func WithInputDir(dir string) lib.InputOption {
 	return func(s lib.InputConverter) {
 		dir = strings.TrimSpace(dir)
-		if dir == "" && (strings.TrimSpace(s.(*srs_in).Name) == "" || strings.TrimSpace(s.(*srs_in).URI) == "") {
-			log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", TypeSRSIn, s.(*srs_in).Action)
-		}
-
+		// Validation is performed after all options are applied in NewSRSIn.
 		s.(*srs_in).InputDir = dir
 	}
 }
