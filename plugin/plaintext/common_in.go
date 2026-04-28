@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type TextIn struct {
+type text_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -27,7 +27,7 @@ type TextIn struct {
 	RemoveSuffixesInLine []string
 }
 
-func (t *TextIn) scanFile(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFile(reader io.Reader, entry *lib.Entry) error {
 	var err error
 	switch t.Type {
 	case TypeTextIn:
@@ -47,7 +47,7 @@ func (t *TextIn) scanFile(reader io.Reader, entry *lib.Entry) error {
 	return err
 }
 
-func (t *TextIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -83,7 +83,7 @@ func (t *TextIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 	return nil
 }
 
-func (t *TextIn) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
+func (t *text_in) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
 	var payload struct {
 		Payload []string `yaml:"payload"`
 	}
@@ -100,7 +100,7 @@ func (t *TextIn) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
 	return payload.Payload, nil
 }
 
-func (t *TextIn) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	payload, err := t.readClashRuleSetYAMLFile(reader)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (t *TextIn) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.En
 	return nil
 }
 
-func (t *TextIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	payload, err := t.readClashRuleSetYAMLFile(reader)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (t *TextIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib
 	return nil
 }
 
-func (t *TextIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -193,7 +193,7 @@ func (t *TextIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) e
 	return nil
 }
 
-func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -217,7 +217,7 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	return nil
 }
 
-func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error {
+func (t *text_in) processJSONResult(result gjson.Result, entry *lib.Entry) error {
 	switch {
 	case !result.Exists():
 		return fmt.Errorf("invaild IP address or CIDR (value not exist), please check your specified JSON path or JSON source")

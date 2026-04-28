@@ -1,10 +1,8 @@
 package maxmind
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -12,13 +10,19 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
-var (
-	defaultGeoLite2CountryMMDBOutputName = "Country.mmdb"
+type geoLite2CountryMMDBOut struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	OutputName  string
+	OutputDir   string
+	Want        []string
+	Overwrite   []string
+	Exclude     []string
+	OnlyIPType  lib.IPType
 
-	defaultMaxmindOutputDir = filepath.Join("./", "output", "maxmind")
-	defaultDBIPOutputDir    = filepath.Join("./", "output", "db-ip")
-	defaultIPInfoOutputDir  = filepath.Join("./", "output", "ipinfo")
-)
+	SourceMMDBURI string
+}
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/HEAD/models.go
 var (
@@ -100,57 +104,7 @@ func (d dbipCountry) HasData() bool {
 	return d != zeroDBIPCountry
 }
 
-func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-	var tmp struct {
-		OutputName string     `json:"outputName"`
-		OutputDir  string     `json:"outputDir"`
-		Want       []string   `json:"wantedList"`
-		Overwrite  []string   `json:"overwriteList"`
-		Exclude    []string   `json:"excludedList"`
-		OnlyIPType lib.IPType `json:"onlyIPType"`
-
-		SourceMMDBURI string `json:"sourceMMDBURI"`
-	}
-
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
-		}
-	}
-
-	if tmp.OutputName == "" {
-		tmp.OutputName = defaultGeoLite2CountryMMDBOutputName
-	}
-
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeGeoLite2CountryMMDBOut:
-			tmp.OutputDir = defaultMaxmindOutputDir
-
-		case TypeDBIPCountryMMDBOut:
-			tmp.OutputDir = defaultDBIPOutputDir
-
-		case TypeIPInfoCountryMMDBOut:
-			tmp.OutputDir = defaultIPInfoOutputDir
-		}
-	}
-
-	return &GeoLite2CountryMMDBOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputName:  tmp.OutputName,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Overwrite:   tmp.Overwrite,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		SourceMMDBURI: tmp.SourceMMDBURI,
-	}, nil
-}
-
-func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
+func (g *geoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
 	if strings.TrimSpace(g.SourceMMDBURI) == "" {
 		return nil, nil
 	}

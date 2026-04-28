@@ -2,7 +2,6 @@ package plaintext
 
 import (
 	"bytes"
-	"encoding/json"
 	"log"
 	"net"
 	"os"
@@ -18,7 +17,7 @@ var (
 	defaultOutputDirForSurgeRuleSetOut          = filepath.Join("./", "output", "surge")
 )
 
-type TextOut struct {
+type text_out struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -32,57 +31,7 @@ type TextOut struct {
 	AddSuffixInLine string
 }
 
-func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-	var tmp struct {
-		OutputDir  string     `json:"outputDir"`
-		OutputExt  string     `json:"outputExtension"`
-		Want       []string   `json:"wantedList"`
-		Exclude    []string   `json:"excludedList"`
-		OnlyIPType lib.IPType `json:"onlyIPType"`
-
-		AddPrefixInLine string `json:"addPrefixInLine"`
-		AddSuffixInLine string `json:"addSuffixInLine"`
-	}
-
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
-		}
-	}
-
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeTextOut:
-			tmp.OutputDir = defaultOutputDirForTextOut
-		case TypeClashRuleSetClassicalOut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
-		case TypeClashRuleSetIPCIDROut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
-		case TypeSurgeRuleSetOut:
-			tmp.OutputDir = defaultOutputDirForSurgeRuleSetOut
-		}
-	}
-
-	if tmp.OutputExt == "" {
-		tmp.OutputExt = ".txt"
-	}
-
-	return &TextOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputDir:   tmp.OutputDir,
-		OutputExt:   tmp.OutputExt,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		AddPrefixInLine: tmp.AddPrefixInLine,
-		AddSuffixInLine: tmp.AddSuffixInLine,
-	}, nil
-}
-
-func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
+func (t *text_out) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(t.OnlyIPType))
 	if err != nil {
 		return nil, err
@@ -108,7 +57,7 @@ func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (t *TextOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		if t.AddPrefixInLine != "" {
 			buf.WriteString(t.AddPrefixInLine)
@@ -122,7 +71,7 @@ func (t *TextOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) 
 	return nil
 }
 
-func (t *TextOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
@@ -141,7 +90,7 @@ func (t *TextOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, ent
 	return nil
 }
 
-func (t *TextOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		buf.WriteString("  - '")
@@ -152,7 +101,7 @@ func (t *TextOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryC
 	return nil
 }
 
-func (t *TextOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -173,7 +122,7 @@ func (t *TextOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []
 	return nil
 }
 
-func (t *TextOut) writeFile(filename string, data []byte) error {
+func (t *text_out) writeFile(filename string, data []byte) error {
 	if err := os.MkdirAll(t.OutputDir, 0755); err != nil {
 		return err
 	}

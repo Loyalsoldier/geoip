@@ -22,40 +22,141 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeGeoLite2CountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoLite2CountryMMDBOut(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
+		return NewGeoLite2CountryMMDBOutFromBytes(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeGeoLite2CountryMMDBOut, &GeoLite2CountryMMDBOut{
+	lib.RegisterOutputConverter(TypeGeoLite2CountryMMDBOut, &geoLite2CountryMMDBOut{
 		Description: DescGeoLite2CountryMMDBOut,
 	})
 }
 
-type GeoLite2CountryMMDBOut struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	OutputName  string
-	OutputDir   string
-	Want        []string
-	Overwrite   []string
-	Exclude     []string
-	OnlyIPType  lib.IPType
+func NewGeoLite2CountryMMDBOut(oType string, oDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	g := &geoLite2CountryMMDBOut{
+		Type:        oType,
+		Action:      action,
+		Description: oDesc,
+	}
 
-	SourceMMDBURI string
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	return g
 }
 
-func (g *GeoLite2CountryMMDBOut) GetType() string {
+func WithMaxmindOutputName(name string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			name = "Country.mmdb"
+		}
+		g.(*geoLite2CountryMMDBOut).OutputName = name
+	}
+}
+
+func WithMaxmindOutputDir(dir string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			// Will use default based on type
+			return
+		}
+		g.(*geoLite2CountryMMDBOut).OutputDir = dir
+	}
+}
+
+func WithMaxmindOutputWantedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*geoLite2CountryMMDBOut).Want = lists
+	}
+}
+
+func WithMaxmindOutputOverwriteList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*geoLite2CountryMMDBOut).Overwrite = lists
+	}
+}
+
+func WithMaxmindOutputExcludedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*geoLite2CountryMMDBOut).Exclude = lists
+	}
+}
+
+func WithMaxmindOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*geoLite2CountryMMDBOut).OnlyIPType = onlyIPType
+	}
+}
+
+func WithMaxmindSourceMMDBURI(uri string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*geoLite2CountryMMDBOut).SourceMMDBURI = uri
+	}
+}
+
+func NewGeoLite2CountryMMDBOutFromBytes(oType string, oDesc string, action lib.Action, data []byte) (lib.OutputConverter, error) {
+	var tmp struct {
+		OutputName string     `json:"outputName"`
+		OutputDir  string     `json:"outputDir"`
+		Want       []string   `json:"wantedList"`
+		Overwrite  []string   `json:"overwriteList"`
+		Exclude    []string   `json:"excludedList"`
+		OnlyIPType lib.IPType `json:"onlyIPType"`
+
+		SourceMMDBURI string `json:"sourceMMDBURI"`
+	}
+
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return nil, err
+		}
+	}
+
+	if tmp.OutputName == "" {
+		tmp.OutputName = "Country.mmdb"
+	}
+
+	// Set default output directory based on type
+	if tmp.OutputDir == "" {
+		switch oType {
+		case TypeGeoLite2CountryMMDBOut:
+			tmp.OutputDir = filepath.Join("./", "output", "maxmind")
+		case TypeDBIPCountryMMDBOut:
+			tmp.OutputDir = filepath.Join("./", "output", "db-ip")
+		case TypeIPInfoCountryMMDBOut:
+			tmp.OutputDir = filepath.Join("./", "output", "ipinfo")
+		}
+	}
+
+	return NewGeoLite2CountryMMDBOut(
+		oType,
+		oDesc,
+		action,
+		WithMaxmindOutputName(tmp.OutputName),
+		WithMaxmindOutputDir(tmp.OutputDir),
+		WithMaxmindOutputWantedList(tmp.Want),
+		WithMaxmindOutputOverwriteList(tmp.Overwrite),
+		WithMaxmindOutputExcludedList(tmp.Exclude),
+		WithMaxmindOutputOnlyIPType(tmp.OnlyIPType),
+		WithMaxmindSourceMMDBURI(tmp.SourceMMDBURI),
+	), nil
+}
+
+func (g *geoLite2CountryMMDBOut) GetType() string {
 	return g.Type
 }
 
-func (g *GeoLite2CountryMMDBOut) GetAction() lib.Action {
+func (g *geoLite2CountryMMDBOut) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *GeoLite2CountryMMDBOut) GetDescription() string {
+func (g *geoLite2CountryMMDBOut) GetDescription() string {
 	return g.Description
 }
 
-func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
+func (g *geoLite2CountryMMDBOut) Output(container lib.Container) error {
 	dbName := ""
 	dbDesc := ""
 	dbLanguages := []string{"en"}
@@ -119,7 +220,7 @@ func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []string {
+func (g *geoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []string {
 	/*
 		Note: The IPs and/or CIDRs of the latter list will overwrite those of the former one
 		when duplicated data found due to MaxMind mmdb file format constraint.
@@ -175,7 +276,7 @@ func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []st
 	return list
 }
 
-func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]any) error {
+func (g *geoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]any) error {
 	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(g.OnlyIPType))
 	if err != nil {
 		return err
@@ -371,7 +472,7 @@ func (g *GeoLite2CountryMMDBOut) marshalData(writer *mmdbwriter.Tree, entry *lib
 	return nil
 }
 
-func (g *GeoLite2CountryMMDBOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
+func (g *geoLite2CountryMMDBOut) writeFile(filename string, writer *mmdbwriter.Tree) error {
 	if err := os.MkdirAll(g.OutputDir, 0755); err != nil {
 		return err
 	}

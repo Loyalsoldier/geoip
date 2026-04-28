@@ -17,14 +17,42 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeStdin, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newStdin(action, data)
+		return NewStdinFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeStdin, &Stdin{
+	lib.RegisterInputConverter(TypeStdin, &stdin{
 		Description: DescStdin,
 	})
 }
 
-func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewStdin(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	s := &stdin{
+		Type:        TypeStdin,
+		Action:      action,
+		Description: DescStdin,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+
+	return s
+}
+
+func WithStdinName(name string) lib.InputOption {
+	return func(s lib.InputConverter) {
+		s.(*stdin).Name = name
+	}
+}
+
+func WithStdinOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(s lib.InputConverter) {
+		s.(*stdin).OnlyIPType = onlyIPType
+	}
+}
+
+func NewStdinFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
@@ -40,16 +68,14 @@ func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", TypeStdin, action)
 	}
 
-	return &Stdin{
-		Type:        TypeStdin,
-		Action:      action,
-		Description: DescStdin,
-		Name:        tmp.Name,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewStdin(
+		action,
+		WithStdinName(tmp.Name),
+		WithStdinOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type Stdin struct {
+type stdin struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -57,19 +83,19 @@ type Stdin struct {
 	OnlyIPType  lib.IPType
 }
 
-func (s *Stdin) GetType() string {
+func (s *stdin) GetType() string {
 	return s.Type
 }
 
-func (s *Stdin) GetAction() lib.Action {
+func (s *stdin) GetAction() lib.Action {
 	return s.Action
 }
 
-func (s *Stdin) GetDescription() string {
+func (s *stdin) GetDescription() string {
 	return s.Description
 }
 
-func (s *Stdin) Input(container lib.Container) (lib.Container, error) {
+func (s *stdin) Input(container lib.Container) (lib.Container, error) {
 	entry := lib.NewEntry(s.Name)
 
 	scanner := bufio.NewScanner(os.Stdin)
