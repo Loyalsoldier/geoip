@@ -3,6 +3,7 @@ package plaintext
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,14 +20,108 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeTextIn, DescTextIn, action, data)
+		return NewTextInFromBytes(TypeTextIn, DescTextIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeTextIn, &TextIn{
 		Description: DescTextIn,
 	})
 }
 
-func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	t := &TextIn{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	return t
+}
+
+func WithTextInNameAndURI(name, uri string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		t := c.(*TextIn)
+		name = strings.TrimSpace(name)
+		uri = strings.TrimSpace(uri)
+		if (name == "" || uri == "") && strings.TrimSpace(t.InputDir) == "" {
+			log.Fatalf("❌ [type %s | action %s] missing inputDir or name", t.Type, t.Action)
+		}
+		t.Name = name
+		t.URI = uri
+	}
+}
+
+func WithTextInInputDir(dir string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		t := c.(*TextIn)
+		dir = strings.TrimSpace(dir)
+		if dir == "" && strings.TrimSpace(t.Name) == "" {
+			log.Fatalf("❌ [type %s | action %s] missing inputDir or name", t.Type, t.Action)
+		}
+		if dir != "" && (strings.TrimSpace(t.Name) != "" || strings.TrimSpace(t.URI) != "" || len(t.IPOrCIDR) > 0) {
+			log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
+		}
+		t.InputDir = dir
+	}
+}
+
+func WithTextInIPOrCIDR(ipOrCIDR []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		t := c.(*TextIn)
+		if t.Type != TypeTextIn && len(ipOrCIDR) > 0 {
+			log.Fatalf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
+		}
+		t.IPOrCIDR = ipOrCIDR
+	}
+}
+
+func WithTextInWantedList(lists []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		t := c.(*TextIn)
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+		t.Want = wantList
+	}
+}
+
+func WithTextInOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*TextIn).OnlyIPType = onlyIPType
+	}
+}
+
+func WithTextInJSONPath(paths []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		t := c.(*TextIn)
+		if t.Type == TypeJSONIn && len(paths) == 0 {
+			log.Fatalf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
+		}
+		t.JSONPath = paths
+	}
+}
+
+func WithTextInRemovePrefixesInLine(prefixes []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*TextIn).RemovePrefixesInLine = prefixes
+	}
+}
+
+func WithTextInRemoveSuffixesInLine(suffixes []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*TextIn).RemoveSuffixesInLine = suffixes
+	}
+}
+
+func NewTextInFromBytes(iType string, iDesc string, action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
@@ -50,14 +145,6 @@ func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 		}
 	}
 
-	if iType != TypeTextIn && len(tmp.IPOrCIDR) > 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", iType, action)
-	}
-
-	if iType == TypeJSONIn && len(tmp.JSONPath) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", iType, action)
-	}
-
 	if tmp.InputDir == "" {
 		if tmp.Name == "" {
 			return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name", iType, action)
@@ -68,30 +155,26 @@ func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 	} else if tmp.Name != "" || tmp.URI != "" || len(tmp.IPOrCIDR) > 0 {
 		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", iType, action)
 	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
+	if iType != TypeTextIn && len(tmp.IPOrCIDR) > 0 {
+		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", iType, action)
+	}
+	if iType == TypeJSONIn && len(tmp.JSONPath) == 0 {
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", iType, action)
 	}
 
-	return &TextIn{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		Name:        tmp.Name,
-		URI:         tmp.URI,
-		IPOrCIDR:    tmp.IPOrCIDR,
-		InputDir:    tmp.InputDir,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		JSONPath:             tmp.JSONPath,
-		RemovePrefixesInLine: tmp.RemovePrefixesInLine,
-		RemoveSuffixesInLine: tmp.RemoveSuffixesInLine,
-	}, nil
+	return NewTextIn(
+		iType,
+		iDesc,
+		action,
+		WithTextInNameAndURI(tmp.Name, tmp.URI),
+		WithTextInIPOrCIDR(tmp.IPOrCIDR),
+		WithTextInInputDir(tmp.InputDir),
+		WithTextInWantedList(tmp.Want),
+		WithTextInOnlyIPType(tmp.OnlyIPType),
+		WithTextInJSONPath(tmp.JSONPath),
+		WithTextInRemovePrefixesInLine(tmp.RemovePrefixesInLine),
+		WithTextInRemoveSuffixesInLine(tmp.RemoveSuffixesInLine),
+	), nil
 }
 
 func (t *TextIn) GetType() string {

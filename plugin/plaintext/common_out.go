@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -32,7 +33,83 @@ type TextOut struct {
 	AddSuffixInLine string
 }
 
-func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewTextOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	t := &TextOut{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+		OutputExt:   ".txt",
+	}
+
+	switch iType {
+	case TypeTextOut:
+		t.OutputDir = defaultOutputDirForTextOut
+	case TypeClashRuleSetClassicalOut:
+		t.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
+	case TypeClashRuleSetIPCIDROut:
+		t.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
+	case TypeSurgeRuleSetOut:
+		t.OutputDir = defaultOutputDirForSurgeRuleSetOut
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	return t
+}
+
+func WithTextOutOutputDir(dir string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		dir = strings.TrimSpace(dir)
+		if dir != "" {
+			c.(*TextOut).OutputDir = dir
+		}
+	}
+}
+
+func WithTextOutOutputExt(ext string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		ext = strings.TrimSpace(ext)
+		if ext != "" {
+			c.(*TextOut).OutputExt = ext
+		}
+	}
+}
+
+func WithTextOutWantedList(lists []string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*TextOut).Want = lists
+	}
+}
+
+func WithTextOutExcludedList(lists []string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*TextOut).Exclude = lists
+	}
+}
+
+func WithTextOutOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*TextOut).OnlyIPType = onlyIPType
+	}
+}
+
+func WithTextOutAddPrefixInLine(prefix string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*TextOut).AddPrefixInLine = prefix
+	}
+}
+
+func WithTextOutAddSuffixInLine(suffix string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*TextOut).AddSuffixInLine = suffix
+	}
+}
+
+func NewTextOutFromBytes(iType string, iDesc string, action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		OutputExt  string     `json:"outputExtension"`
@@ -50,36 +127,18 @@ func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMess
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeTextOut:
-			tmp.OutputDir = defaultOutputDirForTextOut
-		case TypeClashRuleSetClassicalOut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
-		case TypeClashRuleSetIPCIDROut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
-		case TypeSurgeRuleSetOut:
-			tmp.OutputDir = defaultOutputDirForSurgeRuleSetOut
-		}
-	}
-
-	if tmp.OutputExt == "" {
-		tmp.OutputExt = ".txt"
-	}
-
-	return &TextOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputDir:   tmp.OutputDir,
-		OutputExt:   tmp.OutputExt,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		AddPrefixInLine: tmp.AddPrefixInLine,
-		AddSuffixInLine: tmp.AddSuffixInLine,
-	}, nil
+	return NewTextOut(
+		iType,
+		iDesc,
+		action,
+		WithTextOutOutputDir(tmp.OutputDir),
+		WithTextOutOutputExt(tmp.OutputExt),
+		WithTextOutWantedList(tmp.Want),
+		WithTextOutExcludedList(tmp.Exclude),
+		WithTextOutOnlyIPType(tmp.OnlyIPType),
+		WithTextOutAddPrefixInLine(tmp.AddPrefixInLine),
+		WithTextOutAddSuffixInLine(tmp.AddSuffixInLine),
+	), nil
 }
 
 func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
