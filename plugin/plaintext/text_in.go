@@ -19,14 +19,91 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeTextIn, DescTextIn, action, data)
+		return NewTextInFromBytes(TypeTextIn, DescTextIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeTextIn, &TextIn{
+	lib.RegisterInputConverter(TypeTextIn, &text_in{
 		Description: DescTextIn,
 	})
 }
 
-func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	t := &text_in{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	return t
+}
+
+func WithPlaintextName(name string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).Name = name
+	}
+}
+
+func WithPlaintextURI(uri string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).URI = uri
+	}
+}
+
+func WithPlaintextIPOrCIDR(ipOrCIDR []string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).IPOrCIDR = ipOrCIDR
+	}
+}
+
+func WithPlaintextInputDir(dir string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).InputDir = dir
+	}
+}
+
+func WithPlaintextInputWantedList(lists []string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+
+		t.(*text_in).Want = wantList
+	}
+}
+
+func WithPlaintextInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).OnlyIPType = onlyIPType
+	}
+}
+
+func WithPlaintextJSONPath(jsonPath []string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).JSONPath = jsonPath
+	}
+}
+
+func WithPlaintextRemovePrefixesInLine(prefixes []string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).RemovePrefixesInLine = prefixes
+	}
+}
+
+func WithPlaintextRemoveSuffixesInLine(suffixes []string) lib.InputOption {
+	return func(t lib.InputConverter) {
+		t.(*text_in).RemoveSuffixesInLine = suffixes
+	}
+}
+
+func NewTextInFromBytes(iType string, iDesc string, action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
@@ -69,44 +146,39 @@ func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", iType, action)
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &TextIn{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		Name:        tmp.Name,
-		URI:         tmp.URI,
-		IPOrCIDR:    tmp.IPOrCIDR,
-		InputDir:    tmp.InputDir,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		JSONPath:             tmp.JSONPath,
-		RemovePrefixesInLine: tmp.RemovePrefixesInLine,
-		RemoveSuffixesInLine: tmp.RemoveSuffixesInLine,
-	}, nil
+	return NewTextIn(
+		iType,
+		iDesc,
+		action,
+		WithPlaintextName(tmp.Name),
+		WithPlaintextURI(tmp.URI),
+		WithPlaintextIPOrCIDR(tmp.IPOrCIDR),
+		WithPlaintextInputDir(tmp.InputDir),
+		WithPlaintextInputWantedList(tmp.Want),
+		WithPlaintextInputOnlyIPType(tmp.OnlyIPType),
+		WithPlaintextJSONPath(tmp.JSONPath),
+		WithPlaintextRemovePrefixesInLine(tmp.RemovePrefixesInLine),
+		WithPlaintextRemoveSuffixesInLine(tmp.RemoveSuffixesInLine),
+	), nil
 }
 
-func (t *TextIn) GetType() string {
+func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+	return NewTextInFromBytes(iType, iDesc, action, data)
+}
+
+func (t *text_in) GetType() string {
 	return t.Type
 }
 
-func (t *TextIn) GetAction() lib.Action {
+func (t *text_in) GetAction() lib.Action {
 	return t.Action
 }
 
-func (t *TextIn) GetDescription() string {
+func (t *text_in) GetDescription() string {
 	return t.Description
 }
 
-func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
+func (t *text_in) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -162,7 +234,7 @@ func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (t *TextIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -181,7 +253,7 @@ func (t *TextIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (t *TextIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -225,7 +297,7 @@ func (t *TextIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *TextIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -252,7 +324,7 @@ func (t *TextIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *TextIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
 
 	entry, found := entries[name]

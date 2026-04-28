@@ -163,28 +163,28 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeGeoLite2CountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescGeoLite2CountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewGeoLite2CountryMMDBIn(
+			maxmind.TypeGeoLite2CountryMMDBIn,
+			maxmind.DescGeoLite2CountryMMDBIn,
+			lib.ActionAdd,
+			maxmind.WithMaxmindURI(uri),
+		)
 
 	case strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeDBIPCountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescDBIPCountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewGeoLite2CountryMMDBIn(
+			maxmind.TypeDBIPCountryMMDBIn,
+			maxmind.DescDBIPCountryMMDBIn,
+			lib.ActionAdd,
+			maxmind.WithMaxmindURI(uri),
+		)
 
 	case strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeIPInfoCountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescIPInfoCountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewGeoLite2CountryMMDBIn(
+			maxmind.TypeIPInfoCountryMMDBIn,
+			maxmind.DescIPInfoCountryMMDBIn,
+			lib.ActionAdd,
+			maxmind.WithMaxmindURI(uri),
+		)
 
 	case strings.ToLower(mihomo.TypeMRSIn):
 		input = mihomo.NewMRSIn(
@@ -207,44 +207,44 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		)
 
 	case strings.ToLower(plaintext.TypeTextIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeTextIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescTextIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			plaintext.TypeTextIn,
+			plaintext.DescTextIn,
+			lib.ActionAdd,
+			plaintext.WithPlaintextName(name),
+			plaintext.WithPlaintextURI(uri),
+			plaintext.WithPlaintextInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetIPCIDRIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetIPCIDRIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetIPCIDRIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			plaintext.TypeClashRuleSetIPCIDRIn,
+			plaintext.DescClashRuleSetIPCIDRIn,
+			lib.ActionAdd,
+			plaintext.WithPlaintextName(name),
+			plaintext.WithPlaintextURI(uri),
+			plaintext.WithPlaintextInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetClassicalIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetClassicalIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetClassicalIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			plaintext.TypeClashRuleSetClassicalIn,
+			plaintext.DescClashRuleSetClassicalIn,
+			lib.ActionAdd,
+			plaintext.WithPlaintextName(name),
+			plaintext.WithPlaintextURI(uri),
+			plaintext.WithPlaintextInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeSurgeRuleSetIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeSurgeRuleSetIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescSurgeRuleSetIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			plaintext.TypeSurgeRuleSetIn,
+			plaintext.DescSurgeRuleSetIn,
+			lib.ActionAdd,
+			plaintext.WithPlaintextName(name),
+			plaintext.WithPlaintextURI(uri),
+			plaintext.WithPlaintextInputDir(dir),
+		)
 
 	default:
 		log.Fatal("unsupported input format")
