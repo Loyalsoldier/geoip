@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -38,14 +39,36 @@ var privateCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(TypePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newPrivate(action, data)
+		return NewPrivateFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypePrivate, &Private{
 		Description: DescPrivate,
 	})
 }
 
-func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	p := &Private{
+		Type:        TypePrivate,
+		Action:      action,
+		Description: DescPrivate,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(p)
+		}
+	}
+
+	return p
+}
+
+func WithPrivateOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*Private).OnlyIPType = onlyIPType
+	}
+}
+
+func NewPrivateFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
@@ -56,12 +79,11 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 		}
 	}
 
-	return &Private{
-		Type:        TypePrivate,
-		Action:      action,
-		Description: DescPrivate,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	if action != lib.ActionAdd && action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid action", TypePrivate, action)
+	}
+
+	return NewPrivate(action, WithPrivateOnlyIPType(tmp.OnlyIPType)), nil
 }
 
 type Private struct {
