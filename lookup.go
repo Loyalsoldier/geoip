@@ -187,14 +187,11 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(mihomo.TypeMRSIn):
-		input = &mihomo.MRSIn{
-			Type:        mihomo.TypeMRSIn,
-			Action:      lib.ActionAdd,
-			Description: mihomo.DescMRSIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = mihomo.NewMRSIn(
+			lib.ActionAdd,
+			mihomo.WithMihomoNameAndURI(name, uri),
+			mihomo.WithMihomoInputDir(dir),
+		)
 
 	case strings.ToLower(singbox.TypeSRSIn):
 		input = singbox.NewSRSIn(
@@ -204,12 +201,10 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		)
 
 	case strings.ToLower(v2ray.TypeGeoIPDatIn):
-		input = &v2ray.GeoIPDatIn{
-			Type:        v2ray.TypeGeoIPDatIn,
-			Action:      lib.ActionAdd,
-			Description: v2ray.DescGeoIPDatIn,
-			URI:         uri,
-		}
+		input = v2ray.NewGeoIPDatIn(
+			lib.ActionAdd,
+			v2ray.WithV2rayURI(uri),
+		)
 
 	case strings.ToLower(plaintext.TypeTextIn):
 		input = &plaintext.TextIn{
