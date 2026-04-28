@@ -22,7 +22,7 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeGeoLite2CountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoLite2CountryMMDBOut(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
+		return NewGeoLite2CountryMMDBOutFromBytes(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
 	})
 	lib.RegisterOutputConverter(TypeGeoLite2CountryMMDBOut, &GeoLite2CountryMMDBOut{
 		Description: DescGeoLite2CountryMMDBOut,

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -20,14 +21,58 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoIPDatIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoIPDatIn(action, data)
+		return NewGeoIPDatInFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeGeoIPDatIn, &GeoIPDatIn{
 		Description: DescGeoIPDatIn,
 	})
 }
 
-func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &GeoIPDatIn{
+		Type:        TypeGeoIPDatIn,
+		Action:      action,
+		Description: DescGeoIPDatIn,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	return g
+}
+
+func WithGeoIPDatURI(uri string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		uri = strings.TrimSpace(uri)
+		if uri == "" {
+			log.Fatalf("❌ [type %s | action %s] uri must be specified in config", TypeGeoIPDatIn, c.(*GeoIPDatIn).Action)
+		}
+		c.(*GeoIPDatIn).URI = uri
+	}
+}
+
+func WithGeoIPDatWantedList(lists []string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+		c.(*GeoIPDatIn).Want = wantList
+	}
+}
+
+func WithGeoIPDatOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*GeoIPDatIn).OnlyIPType = onlyIPType
+	}
+}
+
+func NewGeoIPDatInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -44,22 +89,12 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", TypeGeoIPDatIn, action)
 	}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &GeoIPDatIn{
-		Type:        TypeGeoIPDatIn,
-		Action:      action,
-		Description: DescGeoIPDatIn,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewGeoIPDatIn(
+		action,
+		WithGeoIPDatURI(tmp.URI),
+		WithGeoIPDatWantedList(tmp.Want),
+		WithGeoIPDatOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type GeoIPDatIn struct {

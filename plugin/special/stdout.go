@@ -18,14 +18,48 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeStdout, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newStdout(action, data)
+		return NewStdoutFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeStdout, &Stdout{
 		Description: DescStdout,
 	})
 }
 
-func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewStdout(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	s := &Stdout{
+		Type:        TypeStdout,
+		Action:      action,
+		Description: DescStdout,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+
+	return s
+}
+
+func WithStdoutWantedList(lists []string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*Stdout).Want = lists
+	}
+}
+
+func WithStdoutExcludedList(lists []string) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*Stdout).Exclude = lists
+	}
+}
+
+func WithStdoutOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(c lib.OutputConverter) {
+		c.(*Stdout).OnlyIPType = onlyIPType
+	}
+}
+
+func NewStdoutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		Want       []string   `json:"wantedList"`
 		Exclude    []string   `json:"excludedList"`
@@ -38,14 +72,12 @@ func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	return &Stdout{
-		Type:        TypeStdout,
-		Action:      action,
-		Description: DescStdout,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewStdout(
+		action,
+		WithStdoutWantedList(tmp.Want),
+		WithStdoutExcludedList(tmp.Exclude),
+		WithStdoutOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type Stdout struct {

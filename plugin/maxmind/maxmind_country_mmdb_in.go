@@ -18,11 +18,27 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
+		return NewGeoLite2CountryMMDBInFromBytes(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &GeoLite2CountryMMDBIn{
 		Description: DescGeoLite2CountryMMDBIn,
 	})
+}
+
+func NewGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &GeoLite2CountryMMDBIn{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	return g
 }
 
 type GeoLite2CountryMMDBIn struct {

@@ -18,7 +18,7 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeIPInfoCountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2CountryMMDBIn(TypeIPInfoCountryMMDBIn, DescIPInfoCountryMMDBIn, action, data)
+		return NewGeoLite2CountryMMDBInFromBytes(TypeIPInfoCountryMMDBIn, DescIPInfoCountryMMDBIn, action, data)
 	})
 	lib.RegisterInputConverter(TypeIPInfoCountryMMDBIn, &GeoLite2CountryMMDBIn{
 		Description: DescIPInfoCountryMMDBIn,

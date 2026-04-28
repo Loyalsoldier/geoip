@@ -3,7 +3,7 @@ package special
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -17,14 +17,46 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeStdin, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newStdin(action, data)
+		return NewStdinFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeStdin, &Stdin{
 		Description: DescStdin,
 	})
 }
 
-func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewStdin(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	s := &Stdin{
+		Type:        TypeStdin,
+		Action:      action,
+		Description: DescStdin,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+
+	return s
+}
+
+func WithStdinName(name string) lib.InputOption {
+	return func(c lib.InputConverter) {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			log.Fatalf("❌ [type %s | action %s] missing name", TypeStdin, c.(*Stdin).Action)
+		}
+		c.(*Stdin).Name = name
+	}
+}
+
+func WithStdinOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(c lib.InputConverter) {
+		c.(*Stdin).OnlyIPType = onlyIPType
+	}
+}
+
+func NewStdinFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
@@ -36,17 +68,11 @@ func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		}
 	}
 
-	if tmp.Name == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", TypeStdin, action)
+	if action != lib.ActionAdd && action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid action", TypeStdin, action)
 	}
 
-	return &Stdin{
-		Type:        TypeStdin,
-		Action:      action,
-		Description: DescStdin,
-		Name:        tmp.Name,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewStdin(action, WithStdinName(tmp.Name), WithStdinOnlyIPType(tmp.OnlyIPType)), nil
 }
 
 type Stdin struct {
