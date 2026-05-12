@@ -7,15 +7,9 @@
 </div>
 
 <div align="center">
+<a href="https://deepwiki.com/Loyalsoldier/geoip" target="_blank"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki badge"></a> <a href="https://www.jsdelivr.com/package/gh/Loyalsoldier/geoip" target="_blank"><img src="https://data.jsdelivr.com/v1/package/gh/Loyalsoldier/geoip/badge?style=rounded" alt="jsdelivr stats badge"></a>
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Loyalsoldier/geoip) [![jsdelivr stats](https://data.jsdelivr.com/v1/package/gh/Loyalsoldier/geoip/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Loyalsoldier/geoip)
-
-</div>
-
-<div align="center">
-
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/total?logo=github) ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/latest/total?logo=github)
-
+<a href="https://shields.io" target="_blank"><img src="https://img.shields.io/github/downloads/Loyalsoldier/geoip/total?logo=github" alt="GitHub Downloads badge (all assets, all releases)"></a> <a href="https://shields.io" target="_blank"><img src="https://img.shields.io/github/downloads/Loyalsoldier/geoip/latest/total?logo=github" alt="GitHub Downloads badge (all assets, latest release)"></a>
 </div>
 
 <p align="center">
