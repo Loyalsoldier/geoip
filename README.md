@@ -2,7 +2,19 @@
 
 <div align="center">
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Loyalsoldier/geoip) [![jsdelivr stats](https://data.jsdelivr.com/v1/package/gh/Loyalsoldier/geoip/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Loyalsoldier/geoip) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/total?logo=github) ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/latest/total?logo=github)
+<a href="https://trendshift.io/repositories/5833" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5833" alt="Loyalsoldier%2Fgeoip | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
+</div>
+
+<div align="center">
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Loyalsoldier/geoip) [![jsdelivr stats](https://data.jsdelivr.com/v1/package/gh/Loyalsoldier/geoip/badge?style=rounded)](https://www.jsdelivr.com/package/gh/Loyalsoldier/geoip)
+
+</div>
+
+<div align="center">
+
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/total?logo=github) ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/Loyalsoldier/geoip/latest/total?logo=github)
 
 </div>
 
