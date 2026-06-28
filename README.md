@@ -195,11 +195,7 @@ proxy(geoip:us)
 点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
 </details>
 
-<br/>
-
 ---
-
-<br/>
 
 ### MaxMind mmdb 下载地址
 
@@ -332,8 +328,6 @@ GEOIP,FACEBOOK,policy
 GEOIP,CN,policy,no-resolve
 ```
 </details>
-
-<br/>
 
 ---
 
@@ -490,8 +484,6 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 ## 自行定制 GeoIP 文件
 
 ### 定制方式
-
-可通过以下几种方式自行定制 GeoIP 文件：
 
 - **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本仓库后，根据 [`configuration.md`](https://github.com/Loyalsoldier/geoip/blob/HEAD/configuration.md) 配置说明文档，修改自己仓库内的配置文件 `config.json` 和 GitHub Workflow `.github/workflows/build.yml`
 - **本地生成**：
