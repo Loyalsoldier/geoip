@@ -24,24 +24,24 @@
 
 ## 项目简介
 
-本项目每周四自动生成多种格式 GeoIP 数据文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 数据文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb`（GeoIP2-Country.mmdb、GeoLite2-Country.mmdb）、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 规则文件、Surge ruleset 规则文件、Nginx allow lists（允许访问列表） 和 deny lists（拒绝访问列表）。
+本项目每周四自动生成多种格式 GeoIP 数据文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 数据文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb`（GeoIP2-Country.mmdb、GeoLite2-Country.mmdb）、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 规则文件、Surge ruleset 规则文件、Nginx allow list（允许访问列表）和 Nginx deny list（拒绝访问列表）。
 
-This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb), sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files, Surge ruleset files, Nginx allow lists and deny lists.
+This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb`(GeoIP2-Country.mmdb, GeoLite2-Country.mmdb), sing-box `SRS` format file, mihomo `MRS` format file, Clash ruleset file, Surge ruleset file, Nginx allow list and Nginx deny list.
 
 ## 与 MaxMind 官方 GeoIP 数据的区别
 
 本项目默认使用 [MaxMind GeoLite2 Country CSV 数据](https://github.com/Loyalsoldier/geoip/blob/release/GeoLite2-Country-CSV.zip)生成各个国家和地区的 GeoIP 文件。类别有：
 
-- `geoip:cn`: 中国大陆
-- `geoip:hk`: 香港
-- `geoip:mo`: 澳门
-- `geoip:tw`: 台湾
-- `geoip:us`: 美国
-- `geoip:jp`: 日本
-- `geoip:kr`: 韩国
-- `geoip:sg`: 新加坡
-- `geoip:private`: 内网 IP 地址、保留 IP 地址等特殊 IP 地址集合
-- 其余所有可用的国家和地区两位英文代码，请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
+- `geoip:cn`（`GEOIP,CN`）：中国大陆
+- `geoip:hk`（`GEOIP,HK`）：香港
+- `geoip:mo`（`GEOIP,MO`）：澳门
+- `geoip:tw`（`GEOIP,TW`）：台湾
+- `geoip:us`（`GEOIP,US`）：美国
+- `geoip:jp`（`GEOIP,JP`）：日本
+- `geoip:kr`（`GEOIP,KR`）：韩国
+- `geoip:sg`（`GEOIP,SG`）：新加坡
+- `geoip:private`（`GEOIP,PRIVATE`）：内网 IP 地址、保留 IP 地址等特殊 IP 地址的集合
+- 更多可用的国家和地区两位英文代码，请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
 
 另外，本项目对 MaxMind 官方 GeoIP 数据做了如下修改和新增：
 
