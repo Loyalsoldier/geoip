@@ -70,9 +70,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 <br/>
 
-本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址：
-
-<br/>
+本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址和使用方法：
 
 ### V2Ray dat 下载地址
 
