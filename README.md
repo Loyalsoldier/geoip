@@ -114,6 +114,8 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 ### V2Ray dat 使用方法
 
+<div align="center">
+
 <details>
   <summary>点击查看在 <b>V2Ray</b> 和 <b>Xray-core</b> 中的使用方法</summary>
   <br/>
@@ -196,6 +198,10 @@ proxy(geoip:us)
 
 点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
 </details>
+
+</div>
+
+<br/>
 
 ---
 
