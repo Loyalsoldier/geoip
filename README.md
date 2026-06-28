@@ -72,6 +72,8 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址：
 
+<br/>
+
 ### V2Ray dat 下载地址
 
 > 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)、[dae](https://github.com/daeuniverse/dae)。
@@ -113,8 +115,6 @@ This project releases various formats of GeoIP files automatically every Thursda
 <br/>
 
 ### V2Ray dat 使用方法
-
-<div align="center">
 
 <details>
   <summary>点击查看在 <b>V2Ray</b> 和 <b>Xray-core</b> 中的使用方法</summary>
@@ -199,11 +199,11 @@ proxy(geoip:us)
 点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
 </details>
 
-</div>
-
 <br/>
 
 ---
+
+<br/>
 
 ### MaxMind mmdb 下载地址
 
@@ -336,6 +336,8 @@ GEOIP,FACEBOOK,policy
 GEOIP,CN,policy,no-resolve
 ```
 </details>
+
+<br/>
 
 ---
 
