@@ -337,6 +337,8 @@ GEOIP,CN,policy,no-resolve
 
 ---
 
+<br/>
+
 ### sing-box SRS 下载地址
 
 > 适用于 [sing-box](https://github.com/SagerNet/sing-box)。
@@ -378,7 +380,11 @@ GEOIP,CN,policy,no-resolve
 ```
 </details>
 
+<br/>
+
 ---
+
+<br/>
 
 ### mihomo MRS 下载地址
 
@@ -415,7 +421,11 @@ rules:
 ```
 </details>
 
+<br/>
+
 ---
+
+<br/>
 
 ### Clash ruleset 下载地址
 
@@ -452,7 +462,11 @@ rules:
 ```
 </details>
 
+<br/>
+
 ---
+
+<br/>
 
 ### Surge ruleset 下载地址
 
@@ -473,17 +487,27 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 ```
 </details>
 
+<br/>
+
 ---
+
+<br/>
 
 ### 纯文本 txt 格式文件
 
 请查看本项目 `release` 分支下的 [text 目录](https://github.com/Loyalsoldier/geoip/tree/release/text)。
 
+<br/>
+
 ---
+
+<br/>
 
 ### Nginx `allow` 和 `deny` 文件
 
 请查看本项目 `release` 分支下的 [nginx 目录](https://github.com/Loyalsoldier/geoip/tree/release/nginx)。
+
+<br/>
 
 ---
 
