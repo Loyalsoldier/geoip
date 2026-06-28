@@ -231,8 +231,7 @@ proxy(geoip:us)
 
 > 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。
 
-> [!NOTE]
-> 本项目生成的 mmdb 格式文件中，**国家/地区**类别保留了 `Continent` 和 `Country` 里的所有字段，**新增类别**和 `**GEOIP,PRIVATE**` 类别只保留了 `Country` 里的 `iso_code`（两位英文字母表示的国家/地区代号）字段。关于 Maxmind 官方 `GeoIP2-Country.mmdb` 和 `GeoLite2-Country.mmdb` 数据文件的完整字段，请[查看代码](https://github.com/oschwald/geoip2-golang/blob/a9959b6a43cbc416aeec2e121befd0f621e68a3f/models.go#L496-L515)。
+> 本项目生成的 mmdb 格式文件中，**国家/地区**类别保留了 `Continent` 和 `Country` 里的所有字段，**新增类别**和 **`GEOIP,PRIVATE` 类别**只保留了 `Country` 里的 `iso_code`（两位英文字母表示的国家/地区代号）字段。关于 Maxmind 官方 `GeoIP2-Country.mmdb` 和 `GeoLite2-Country.mmdb` 数据文件的完整字段，请[查看代码](https://github.com/oschwald/geoip2-golang/blob/a9959b6a43cbc416aeec2e121befd0f621e68a3f/models.go#L496-L515)。
 
 - **Country-without-asn.mmdb**（传统版 GeoIP，只包含国家/地区类别和 `GEOIP,PRIVATE` 类别，不包含上述新增类别。建议优先使用）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb)
@@ -240,7 +239,7 @@ proxy(geoip:us)
 - **Country-without-asn.mmdb.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum)
-- **Country.mmdb**（增强版 GeoIP，包含国家/地区类别和 `GEOIP,PRIVATE` 类别，以及上述新增类别。但由于 MaxMind mmdb 格式限制，部分国家/地区类别的 IP 地址数据不如上述 **Country-without-asn.mmdb** 准确）：
+- **Country.mmdb**（增强版 GeoIP，包含国家/地区类别、`GEOIP,PRIVATE` 类别，以及上述新增类别。但由于 MaxMind mmdb 格式限制，部分国家/地区类别的 IP 地址数据不如上述 **Country-without-asn.mmdb** 准确）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb)
 - **Country.mmdb.sha256sum**：
