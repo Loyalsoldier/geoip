@@ -1,5 +1,9 @@
 <h1 align="center">GeoIP 增强版：自由定制多种格式 GeoIP 文件</h1>
 
+<p align="center">
+  <img src="./assets/hero.png" alt="GeoIP project hero image">
+</p>
+
 <div align="center">
 
 <a href="https://trendshift.io/repositories/5833" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5833" alt="Loyalsoldier%2Fgeoip | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
@@ -12,17 +16,17 @@
 <a href="https://shields.io" target="_blank"><img src="https://img.shields.io/github/downloads/Loyalsoldier/geoip/total?logo=github" alt="GitHub Downloads badge (all assets, all releases)"></a> <a href="https://shields.io" target="_blank"><img src="https://img.shields.io/github/downloads/Loyalsoldier/geoip/latest/total?logo=github" alt="GitHub Downloads badge (all assets, latest release)"></a>
 </div>
 
-<p align="center">
-  <img src="./assets/hero.png" alt="GeoIP project hero image">
-</p>
+## 名词解析
 
-**GeoIP**，意为 IP geographic location，即 IP 地址所对应的地理位置信息，例如所属的国家、地区等。GeoIP 数据文件存储着 IP 地址所对应的地理位置信息。
+**GeoIP**，意为 ***IP geographic location***，即 IP 地址所对应的地理位置信息，例如所属的国家、地区等。GeoIP 数据文件则存储着 IP 地址所对应的地理位置信息。
 
-本项目每周四自动生成多种格式 GeoIP 数据文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 数据文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb)、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 和 Surge ruleset。
+**GeoIP**, which stands for ***IP geographic location***, refers to the geographic location information associated with an IP address, such as the country or region. And GeoIP data files store the geographic location information corresponding to IP addresses.
 
-**GeoIP**, which stands for "IP geographic location", refers to the geographic location information associated with an IP address, such as the country or region. And GeoIP data files store the geographic location information corresponding to IP addresses.
+## 项目简介
 
-This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb), sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files and Surge ruleset files.
+本项目每周四自动生成多种格式 GeoIP 数据文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 数据文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb`（GeoIP2-Country.mmdb、GeoLite2-Country.mmdb）、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 规则文件、Surge ruleset 规则文件、Nginx allow lists（允许访问列表） 和 deny lists（拒绝访问列表）。
+
+This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb), sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files, Surge ruleset files, Nginx allow lists and deny lists.
 
 ## 与 MaxMind 官方 GeoIP 数据的区别
 
