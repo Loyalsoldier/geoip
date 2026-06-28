@@ -60,15 +60,13 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 ## 下载地址与使用方法
 
-本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址。
-
 > [!NOTE]
 > 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址 `cdn.jsdelivr.net`。
 > 如果无法访问域名 `cdn.jsdelivr.net`，可以将其替换为 `fastly.jsdelivr.net`。
 >
 > *.sha256sum 为校验文件。
 
-<br/>
+本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址：
 
 ### V2Ray dat 下载地址
 
@@ -107,8 +105,6 @@ This project releases various formats of GeoIP files automatically every Thursda
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
 - **所有国家 / 地区 / 新增类别**的 dat 格式文件，请查看本项目 `release` 分支下的 [dat 目录](https://github.com/Loyalsoldier/geoip/tree/release/dat)。
-
-<br/>
 
 ### V2Ray dat 使用方法
 
@@ -199,9 +195,7 @@ proxy(geoip:us)
 
 ### MaxMind mmdb 下载地址
 
-<br/>
-
-一、本项目生成的**国家/地区**类型 mmdb 文件：
+1️⃣ 本项目生成的**国家/地区**类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
@@ -234,9 +228,7 @@ proxy(geoip:us)
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum)
 
-<br/>
-
-二、MaxMind 官方版**国家/地区**类型 mmdb 文件：
+2️⃣ MaxMind 官方版**国家/地区**类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
@@ -249,9 +241,7 @@ proxy(geoip:us)
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum)
 
-<br/>
-
-三、MaxMind 官方版 **ASN** 类型 mmdb 文件：
+3️⃣ MaxMind 官方版 **ASN** 类型 mmdb 文件：
 
 > 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Surge](https://nssurge.com)。
 
@@ -261,8 +251,6 @@ proxy(geoip:us)
 - **GeoLite2-ASN.mmdb.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum)
-
-<br/>
 
 ### MaxMind mmdb 使用方法
 
