@@ -28,7 +28,7 @@
 
 This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb`(GeoIP2-Country.mmdb, GeoLite2-Country.mmdb), sing-box `SRS` format file, mihomo `MRS` format file, Clash ruleset file, Surge ruleset file, Nginx allow list and Nginx deny list.
 
-## 与 MaxMind 官方 GeoIP 数据的区别
+## GeoIP 类别
 
 本项目默认使用 [MaxMind GeoLite2 Country CSV 数据](https://github.com/Loyalsoldier/geoip/blob/release/GeoLite2-Country-CSV.zip)生成各个国家和地区的 GeoIP 文件。类别有：
 
@@ -43,7 +43,9 @@ This project releases various formats of GeoIP files automatically every Thursda
 - `geoip:private`（`GEOIP,PRIVATE`）：内网 IP 地址、保留 IP 地址等特殊 IP 地址的集合
 - 更多可用的类别（以两位英文字母表示国家或地区），请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
 
-另外，本项目对 MaxMind 官方 GeoIP 数据做了如下修改和新增：
+### 与 MaxMind 官方 GeoIP 数据的区别
+
+本项目对 MaxMind 官方 GeoIP 数据做了如下**修改**和**新增**：
 
 - 中国大陆 IPv4 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china.txt)
 - 中国大陆 IPv6 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china6.txt)
