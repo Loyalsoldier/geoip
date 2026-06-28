@@ -41,7 +41,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 - `geoip:kr`（`GEOIP,KR`）：韩国
 - `geoip:sg`（`GEOIP,SG`）：新加坡
 - `geoip:private`（`GEOIP,PRIVATE`）：内网 IP 地址、保留 IP 地址等特殊 IP 地址的集合
-- 更多可用的国家和地区两位英文代码，请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
+- 更多可用的类别（以两位英文字母表示国家或地区），请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
 
 另外，本项目对 MaxMind 官方 GeoIP 数据做了如下修改和新增：
 
@@ -66,8 +66,6 @@ This project releases various formats of GeoIP files automatically every Thursda
 > 如果无法访问域名 `cdn.jsdelivr.net`，可以将其替换为 `fastly.jsdelivr.net`。
 >
 > *.sha256sum 为校验文件。
-
-<br/>
 
 ### V2Ray dat 格式文件
 
@@ -194,15 +192,11 @@ proxy(geoip:us)
 点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
 </details>
 
-<br/>
-
 ---
-
-<br/>
 
 ### MaxMind mmdb 格式文件
 
-MaxMind 官方版**国家/地区**类型 mmdb 文件：
+一、MaxMind 官方版**国家/地区**类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
@@ -215,7 +209,7 @@ MaxMind 官方版**国家/地区**类型 mmdb 文件：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-Country.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-Country.mmdb.sha256sum)
 
-MaxMind 官方版 **ASN** 类型 mmdb 文件：
+二、MaxMind 官方版 **ASN** 类型 mmdb 文件：
 
 > 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Surge](https://nssurge.com)。
 
@@ -226,7 +220,7 @@ MaxMind 官方版 **ASN** 类型 mmdb 文件：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum)
 
-本项目生成的**国家/地区**类型 mmdb 文件：
+三、本项目生成的**国家/地区**类型 mmdb 文件：
 
 > 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
@@ -325,8 +319,6 @@ GEOIP,FACEBOOK,policy
 GEOIP,CN,policy,no-resolve
 ```
 </details>
-
-<br/>
 
 ---
 
