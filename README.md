@@ -114,7 +114,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 ### V2Ray dat 使用方法
 
-<details>
+<details style="padding-left: 1.6em">
   <summary>点击查看在 <b>V2Ray</b> 和 <b>Xray-core</b> 中的使用方法</summary>
   <br/>
   <p>需要先下载 <code>.dat</code> 格式文件，并放置在程序目录内。</p>
