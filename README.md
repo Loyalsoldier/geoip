@@ -60,7 +60,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 
 ## 下载地址与使用方法
 
-本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址：
+本项目发布的所有 GeoIP 文件，请查看 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)。以下是部分格式 GeoIP 文件的下载地址。
 
 > [!NOTE]
 > 如果无法访问域名 `raw.githubusercontent.com`，可以使用第二个地址 `cdn.jsdelivr.net`。
@@ -68,7 +68,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 >
 > *.sha256sum 为校验文件。
 
-### V2Ray dat 格式文件
+### V2Ray dat 下载地址
 
 > 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)、[dae](https://github.com/daeuniverse/dae)。
 
@@ -106,9 +106,7 @@ This project releases various formats of GeoIP files automatically every Thursda
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
 - **所有国家 / 地区 / 新增类别**的 dat 格式文件，请查看本项目 `release` 分支下的 [dat 目录](https://github.com/Loyalsoldier/geoip/tree/release/dat)。
 
-<br/>
-
-#### dat 格式文件使用方法
+### V2Ray dat 使用方法
 
 <details>
   <summary>点击查看在 <b>V2Ray</b> 和 <b>Xray-core</b> 中的使用方法</summary>
@@ -195,7 +193,7 @@ proxy(geoip:us)
 
 ---
 
-### MaxMind mmdb 格式文件
+### MaxMind mmdb 下载地址
 
 一、MaxMind 官方版**国家/地区**类型 mmdb 文件：
 
@@ -254,9 +252,7 @@ proxy(geoip:us)
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum)
 
-<br/>
-
-#### mmdb 格式文件使用方法
+### MaxMind mmdb 使用方法
 
 <details>
   <summary>点击查看在 <b>Clash</b> 中的使用方法</summary>
@@ -323,13 +319,13 @@ GEOIP,CN,policy,no-resolve
 
 ---
 
-### sing-box SRS 格式文件
+### sing-box SRS 下载地址
 
 > 适用于 [sing-box](https://github.com/SagerNet/sing-box)。
 
 请查看本项目 `release` 分支下的 [srs 目录](https://github.com/Loyalsoldier/geoip/tree/release/srs)。
 
-#### SRS 格式文件使用方法
+### sing-box SRS 使用方法
 
 <details>
   <summary>点击查看在 <b>sing-box</b> 中的使用方法</summary>
@@ -366,13 +362,13 @@ GEOIP,CN,policy,no-resolve
 
 ---
 
-### mihomo MRS 格式文件
+### mihomo MRS 下载地址
 
 > 适用于 [mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)。
 
 请查看本项目 `release` 分支下的 [mrs 目录](https://github.com/Loyalsoldier/geoip/tree/release/mrs)。
 
-#### MRS 格式文件使用方法
+### mihomo MRS 使用方法
 
 <details>
   <summary>点击查看在 <b>mihomo</b> 中的使用方法</summary>
@@ -403,13 +399,13 @@ rules:
 
 ---
 
-### Clash ruleset 文件
+### Clash ruleset 下载地址
 
 > 适用于 [Clash Premium](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)。
 
 请查看本项目 `release` 分支下的 [clash 目录](https://github.com/Loyalsoldier/geoip/tree/release/clash)。
 
-#### Clash ruleset 使用方法
+### Clash ruleset 使用方法
 
 <details>
   <summary>点击查看在 <b>Clash Premium</b> 和 <b>mihomo</b> 中的使用方法</summary>
@@ -440,13 +436,13 @@ rules:
 
 ---
 
-### Surge ruleset 文件
+### Surge ruleset 下载地址
 
 > 适用于 [Surge](https://nssurge.com)。
 
 请查看本项目 `release` 分支下的 [surge 目录](https://github.com/Loyalsoldier/geoip/tree/release/surge)。
 
-#### Surge ruleset 使用方法
+### Surge ruleset 使用方法
 
 <details>
   <summary>点击查看在 <b>Surge</b> 中的使用方法</summary>
