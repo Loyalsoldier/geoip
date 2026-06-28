@@ -469,16 +469,12 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 
 请查看本项目 `release` 分支下的 [nginx 目录](https://github.com/Loyalsoldier/geoip/tree/release/nginx)。
 
----
-
-<br/>
-
 ## 自行定制 GeoIP 文件
-
-### 定制方式
 
 > [!NOTE]
 > 如果需要使用 MaxMind 官方 GeoLite2 数据文件，需要提前从 MaxMind 下载，或者从本项目 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)下载（文件名以 `GeoLite2` 为前缀的文件），并解压缩到名为 `geolite2` 的目录。
+
+### 定制方式
 
 - **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本仓库后，根据 [`configuration.md`](https://github.com/Loyalsoldier/geoip/blob/HEAD/configuration.md) 配置说明文档，修改自己仓库内的配置文件 `config.json` 和 GitHub Workflow `.github/workflows/build.yml`
 - **本地生成**：
@@ -513,8 +509,8 @@ These two concepts in configuration file `config.json` are notable: `input` and 
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
-- **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
-- **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
+- **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://wiki.metacubex.one/config/rule-providers/content/#classical)
+- **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://wiki.metacubex.one/config/rule-providers/content/#ipcidr)
 - **surgeRuleSet**：[Surge RuleSet](https://manual.nssurge.com/rule/ruleset.html)
 
 支持的 `output` 输出格式：
@@ -528,8 +524,8 @@ These two concepts in configuration file `config.json` are notable: `input` and 
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
-- **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#classical)
-- **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://github.com/Dreamacro/clash/wiki/premium-core-features#ipcidr)
+- **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://wiki.metacubex.one/config/rule-providers/content/#classical)
+- **clashRuleSet**：[ipcidr 类型的 Clash RuleSet](https://wiki.metacubex.one/config/rule-providers/content/#ipcidr)
 - **surgeRuleSet**：[Surge RuleSet](https://manual.nssurge.com/rule/ruleset.html)
 
 ### 注意事项
