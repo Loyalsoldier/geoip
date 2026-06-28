@@ -16,15 +16,30 @@
   <img src="./assets/hero.png" alt="GeoIP project hero image">
 </p>
 
-本项目每周四自动生成多种格式 GeoIP 文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb`、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 和 Surge ruleset。
+**GeoIP**，意为 IP geographic location，即 IP 地址所对应的地理位置信息，例如所属的国家、地区等。GeoIP 数据文件存储着 IP 地址所对应的地理位置信息。
 
-This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface(CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb`, sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files and Surge ruleset files.
+本项目每周四自动生成多种格式 GeoIP 数据文件，同时提供命令行界面（CLI）工具供用户自行定制 GeoIP 数据文件，包括但不限于 V2Ray `dat` 格式文件 `geoip.dat`、MaxMind `mmdb` 格式文件 `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb)、sing-box `SRS` 格式文件、mihomo `MRS` 格式文件、Clash ruleset 和 Surge ruleset。
+
+**GeoIP**, which stands for "IP geographic location", refers to the geographic location information associated with an IP address, such as the country or region. And GeoIP data files store the geographic location information corresponding to IP addresses.
+
+This project releases various formats of GeoIP files automatically every Thursday, and provides a command line interface (CLI) tool for users to customize their own GeoIP files, including but not limited to V2Ray `dat` format file `geoip.dat`, MaxMind `mmdb` format file `Country.mmdb` (GeoIP2-Country.mmdb、GeoLite2-Country.mmdb), sing-box `SRS` format files, mihomo `MRS` format files, Clash ruleset files and Surge ruleset files.
 
 ## 与 MaxMind 官方 GeoIP 数据的区别
 
-本项目默认使用 [MaxMind GeoLite2 Country CSV 数据](https://github.com/Loyalsoldier/geoip/blob/release/GeoLite2-Country-CSV.zip)生成各个国家和地区的 GeoIP 文件。所有可供使用的国家和地区 geoip 类别（如 `geoip:cn`，两位英文字母表示国家和地区），请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)。
+本项目默认使用 [MaxMind GeoLite2 Country CSV 数据](https://github.com/Loyalsoldier/geoip/blob/release/GeoLite2-Country-CSV.zip)生成各个国家和地区的 GeoIP 文件。类别有：
 
-另外，本项目对 MaxMind 官方 GeoIP 数据做了修改和新增：
+- `geoip:cn`: 中国大陆
+- `geoip:hk`: 香港
+- `geoip:mo`: 澳门
+- `geoip:tw`: 台湾
+- `geoip:us`: 美国
+- `geoip:jp`: 日本
+- `geoip:kr`: 韩国
+- `geoip:sg`: 新加坡
+- `geoip:private`: 内网 IP 地址、保留 IP 地址等特殊 IP 地址集合
+- 其余所有可用的国家和地区两位英文代码，请查看：[https://www.iban.com/country-codes](https://www.iban.com/country-codes)
+
+另外，本项目对 MaxMind 官方 GeoIP 数据做了如下修改和新增：
 
 - 中国大陆 IPv4 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china.txt)
 - 中国大陆 IPv6 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china6.txt)
@@ -48,9 +63,11 @@ This project releases various formats of GeoIP files automatically every Thursda
 >
 > *.sha256sum 为校验文件。
 
+<br/>
+
 ### V2Ray dat 格式文件
 
-> 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)。
+> 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)、[dae](https://github.com/daeuniverse/dae)。
 
 > 此 dat 格式文件不能用于 Nginx。
 
@@ -85,6 +102,8 @@ This project releases various formats of GeoIP files automatically every Thursda
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
 - **所有国家 / 地区 / 新增类别**的 dat 格式文件，请查看本项目 `release` 分支下的 [dat 目录](https://github.com/Loyalsoldier/geoip/tree/release/dat)。
+
+<br/>
 
 #### dat 格式文件使用方法
 
@@ -164,13 +183,24 @@ proxy(geoip:us)
 ```
 </details>
 
+<details>
+  <summary>点击查看在 <b>dae</b> 中的使用方法</summary>
+  <br/>
+
+点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
+</details>
+
+<br/>
+
 ---
+
+<br/>
 
 ### MaxMind mmdb 格式文件
 
 MaxMind 官方版**国家/地区**类型 mmdb 文件：
 
-> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
+> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
 > 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。
 
@@ -194,19 +224,19 @@ MaxMind 官方版 **ASN** 类型 mmdb 文件：
 
 本项目生成的**国家/地区**类型 mmdb 文件：
 
-> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)、[Leaf](https://github.com/eycorsican/leaf)。
+> 适用于 [Clash](https://github.com/Dreamacro/clash)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[Shadowrocket](https://apps.apple.com/us/app/id932747118)、[Quantumult X](https://apps.apple.com/us/app/id1443988620)、[Surge](https://nssurge.com)。
 
 > 适用于 [Nginx](https://nginx.org)，需要配合 [ngx_http_geoip2_module](https://github.com/leev/ngx_http_geoip2_module) 模块使用。
 
-> **国家/地区**类别保留了 `Continent` 和 `Country` 里的所有字段。**新增类别**和 **geoip:private** 类别只保留了 `Country` 里的 `iso_code`（两位英文字母表示的国家/地区代号）字段。关于 Maxmind 官方 country MMDB 格式文件完整字段，请[查看代码](https://github.com/oschwald/geoip2-golang/blob/576a46d19bb59f32d0215cb43285b8928891b6bc/reader.go#L139-L171)。
+> 本项目生成的 mmdb 格式文件中，**国家/地区**类别保留了 `Continent` 和 `Country` 里的所有字段。**新增类别**和 **GEOIP,PRIVATE** 类别只保留了 `Country` 里的 `iso_code`（两位英文字母表示的国家/地区代号）字段。关于 Maxmind 官方 `GeoIP2-Country.mmdb` 和 `GeoLite2-Country.mmdb` 数据库文件的完整字段，请[查看代码](https://github.com/oschwald/geoip2-golang/blob/a9959b6a43cbc416aeec2e121befd0f621e68a3f/models.go#L496-L515)。
 
-- **Country-without-asn.mmdb**（传统版 GeoIP，只包含国家/地区类别，不包含上述新增类别。建议优先使用）：
+- **Country-without-asn.mmdb**（传统版 GeoIP，只包含国家/地区类别和 `GEOIP,PRIVATE` 类别，不包含上述新增类别。建议优先使用）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb)
 - **Country-without-asn.mmdb.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-without-asn.mmdb.sha256sum)
-- **Country.mmdb**（增强版 GeoIP，包含国家/地区类别，以及上述新增类别。但由于 MaxMind mmdb 格式限制，部分国家/地区类别的 IP 地址数据不如上述 **Country-without-asn.mmdb** 准确）：
+- **Country.mmdb**（增强版 GeoIP，包含国家/地区类别和 `GEOIP,PRIVATE` 类别，以及上述新增类别。但由于 MaxMind mmdb 格式限制，部分国家/地区类别的 IP 地址数据不如上述 **Country-without-asn.mmdb** 准确）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb)
 - **Country.mmdb.sha256sum**：
@@ -224,6 +254,8 @@ MaxMind 官方版 **ASN** 类型 mmdb 文件：
 - **Country-asn.mmdb.sha256sum**：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-asn.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country-asn.mmdb.sha256sum)
+
+<br/>
 
 #### mmdb 格式文件使用方法
 
@@ -289,6 +321,8 @@ GEOIP,FACEBOOK,policy
 GEOIP,CN,policy,no-resolve
 ```
 </details>
+
+<br/>
 
 ---
 
@@ -444,20 +478,19 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 
 ## 自行定制 GeoIP 文件
 
+### 定制方式
+
 可通过以下几种方式自行定制 GeoIP 文件：
 
-- **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本仓库后，修改自己仓库内的配置文件 `config.json` 和 GitHub Workflow `.github/workflows/build.yml`
+- **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本仓库后，根据 [`configuration.md`](https://github.com/Loyalsoldier/geoip/blob/HEAD/configuration.md) 配置说明文档，修改自己仓库内的配置文件 `config.json` 和 GitHub Workflow `.github/workflows/build.yml`
 - **本地生成**：
   - 安装 [Golang](https://go.dev/dl/) 和 [Git](https://git-scm.com)
   - 拉取项目代码: `git clone https://github.com/Loyalsoldier/geoip.git`
   - 进入项目根目录：`cd geoip`
-  - 修改配置文件 `config.json`
+  - 根据 [`configuration.md`](https://github.com/Loyalsoldier/geoip/blob/HEAD/configuration.md) 配置说明文档，修改配置文件 `config.json`
   - 运行代码：`go run ./ convert -c ./config.json`
 
-**特别说明：**
-
-- **在线生成**：[Fork](https://github.com/Loyalsoldier/geoip/fork) 本项目后，如果需要使用 MaxMind GeoLite2 官方数据文件，需要在自己仓库的 **[Settings]** 页面的左侧边栏 **[Secrets and variables]** 下的 **[Actions]** 选项卡页面中添加一个名为 **MAXMIND_GEOLITE2_LICENSE** 的 secret，否则 GitHub Actions 会运行失败。这个 secret 的值为 MaxMind 账号的 LICENSE KEY，需要[**注册 MaxMind 账号**](https://www.maxmind.com/en/geolite2/signup)后，在[**个人账号管理页面**](https://www.maxmind.com/en/account)左侧边栏的 [**Manage License Keys**] 里生成。
-- **本地生成**：如果需要使用 MaxMind 官方 GeoLite2 数据文件，需要提前从 MaxMind 下载，或者从本项目 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)下载（文件名以 `GeoLite2` 为前缀的文件），并解压缩到名为 `geolite2` 的目录。
+> 如果需要使用 MaxMind 官方 GeoLite2 数据文件，需要提前从 MaxMind 下载，或者从本项目 [release 分支](https://github.com/Loyalsoldier/geoip/tree/release)下载（文件名以 `GeoLite2` 为前缀的文件），并解压缩到名为 `geolite2` 的目录。
 
 ### 概念解析
 
