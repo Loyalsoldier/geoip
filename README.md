@@ -68,6 +68,8 @@ This project releases various formats of GeoIP files automatically every Thursda
 >
 > *.sha256sum 为校验文件。
 
+<br/>
+
 ### V2Ray dat 下载地址
 
 > 适用于 [V2Ray](https://github.com/v2fly/v2ray-core)、[Xray-core](https://github.com/XTLS/Xray-core)、[mihomo](https://github.com/MetaCubeX/mihomo/tree/Meta)、[hysteria](https://github.com/apernet/hysteria)、[Trojan-Go](https://github.com/p4gefau1t/trojan-go)、[dae](https://github.com/daeuniverse/dae)。
@@ -105,6 +107,8 @@ This project releases various formats of GeoIP files automatically every Thursda
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/private.dat.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/private.dat.sha256sum)
 - **所有国家 / 地区 / 新增类别**的 dat 格式文件，请查看本项目 `release` 分支下的 [dat 目录](https://github.com/Loyalsoldier/geoip/tree/release/dat)。
+
+<br/>
 
 ### V2Ray dat 使用方法
 
@@ -191,7 +195,11 @@ proxy(geoip:us)
 点击前往查看：[《吃鹅直通手册》](https://github.com/daeuniverse/dae/blob/main/docs/zh/README.md)
 </details>
 
+<br/>
+
 ---
+
+<br/>
 
 ### MaxMind mmdb 下载地址
 
@@ -258,6 +266,8 @@ proxy(geoip:us)
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb.sha256sum)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/GeoLite2-ASN.mmdb.sha256sum)
 
+<br/>
+
 ### MaxMind mmdb 使用方法
 
 <details>
@@ -322,6 +332,8 @@ GEOIP,FACEBOOK,policy
 GEOIP,CN,policy,no-resolve
 ```
 </details>
+
+<br/>
 
 ---
 
