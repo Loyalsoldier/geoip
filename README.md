@@ -210,6 +210,9 @@ proxy(geoip:us)
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/dat/cn.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/dat/cn.dat)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/dat/cn.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/dat/cn.dat)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/dat/hk.dat](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/dat/hk.dat)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/dat/hk.dat](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/dat/hk.dat)
@@ -464,6 +467,9 @@ GEOIP,CN,policy,no-resolve
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/cn.srs](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/cn.srs)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/cn.srs](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/cn.srs)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/hk.srs](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/hk.srs)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/hk.srs](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/srs/hk.srs)
@@ -573,6 +579,9 @@ rules:
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/cn.mrs](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/cn.mrs)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/cn.mrs](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/cn.mrs)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/hk.mrs](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/mrs/hk.mrs)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/hk.mrs](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/mrs/hk.mrs)
@@ -682,6 +691,9 @@ rules:
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/clash/ipcidr/cn.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/clash/ipcidr/cn.txt)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/cn.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/cn.txt)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/clash/ipcidr/hk.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/clash/ipcidr/hk.txt)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/hk.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/clash/ipcidr/hk.txt)
@@ -775,6 +787,9 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/cn.txt)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/cn.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/cn.txt)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/hk.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/surge/hk.txt)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/hk.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/hk.txt)
@@ -856,6 +871,9 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/surge/telegram.t
 
 部分**国家/地区**类别：
 
+- **中国大陆**（Mainland China）：
+  - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/cn.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/cn.txt)
+  - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/text/cn.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/text/cn.txt)
 - **香港**（Hong Kong）：
   - [https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/hk.txt](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/hk.txt)
   - [https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/text/hk.txt](https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/text/hk.txt)
