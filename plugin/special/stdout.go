@@ -82,7 +82,9 @@ func (s *Stdout) Output(container lib.Container) error {
 		}
 
 		for _, cidr := range cidrList {
-			io.WriteString(os.Stdout, cidr+"\n")
+			if _, err := io.WriteString(os.Stdout, cidr+"\n"); err != nil {
+				return err
+			}
 		}
 	}
 
