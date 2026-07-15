@@ -28,6 +28,7 @@ func GetRemoteURLReader(url string) (io.ReadCloser, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		return nil, fmt.Errorf("failed to get remote content -> %s: %s", url, resp.Status)
 	}
 

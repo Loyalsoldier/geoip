@@ -284,10 +284,10 @@ func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 
 func (e *Entry) AddPrefix(cidr any) error {
 	prefix, ipType, err := e.processPrefix(cidr)
+	if err == ErrCommentLine {
+		return nil
+	}
 	if err != nil {
-		if err == ErrCommentLine {
-			return nil
-		}
 		return err
 	}
 	if err := e.add(prefix, ipType); err != nil {
@@ -298,10 +298,10 @@ func (e *Entry) AddPrefix(cidr any) error {
 
 func (e *Entry) RemovePrefix(cidr string) error {
 	prefix, ipType, err := e.processPrefix(cidr)
+	if err == ErrCommentLine {
+		return nil
+	}
 	if err != nil {
-		if err == ErrCommentLine {
-			return nil
-		}
 		return err
 	}
 	if err := e.remove(prefix, ipType); err != nil {

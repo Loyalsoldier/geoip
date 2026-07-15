@@ -177,9 +177,7 @@ func (g *GeoLite2ASNCSVIn) process(file string, entries map[string]*lib.Entry) e
 	defer f.Close()
 
 	reader := csv.NewReader(f)
-	if _, err := reader.Read(); err != nil { // skip header
-		return err
-	}
+	reader.Read() // skip header
 
 	for {
 		record, err := reader.Read()
