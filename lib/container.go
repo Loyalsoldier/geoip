@@ -244,8 +244,14 @@ func (c *container) lookup(addrOrPrefix any, iptype IPType, searchList ...string
 		var err error
 		switch iptype {
 		case IPv4:
+			if !entry.hasIPv4Builder() {
+				continue
+			}
 			ipset, err = entry.GetIPv4Set()
 		case IPv6:
+			if !entry.hasIPv6Builder() {
+				continue
+			}
 			ipset, err = entry.GetIPv6Set()
 		}
 

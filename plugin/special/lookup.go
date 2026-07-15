@@ -84,7 +84,11 @@ func (l *Lookup) Output(container lib.Container) error {
 		}
 	}
 
-	lists, found, _ := container.Lookup(l.Search, l.SearchList...)
+	lists, found, err := container.Lookup(l.Search, l.SearchList...)
+	if err != nil {
+		return err
+	}
+
 	if found {
 		slices.Sort(lists)
 		fmt.Println(strings.ToLower(strings.Join(lists, ",")))
