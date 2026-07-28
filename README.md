@@ -1322,4 +1322,10 @@ This product includes GeoLite2 data created by MaxMind, available from [MaxMind]
 
 ## 项目 Star 数增长趋势
 
-[![Stargazers over time](https://starchart.cc/Loyalsoldier/geoip.svg)](https://starchart.cc/Loyalsoldier/geoip)
+<a href="https://www.star-history.com/?repos=Loyalsoldier%2Fgeoip&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Loyalsoldier/geoip&type=date&theme=dark&legend=top-left&sealed_token=esf8pGs-3KVdrX__Wt8TDQgH-o8msKwSDVxZqJfNGHLlsNEjsUx8QPPOe7eW5m8eL0wQb81hwELIri8RWP2XCXrRnrN4sq4F_gb4Vc244ZdIvo2iA1Fk0w" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Loyalsoldier/geoip&type=date&legend=top-left&sealed_token=esf8pGs-3KVdrX__Wt8TDQgH-o8msKwSDVxZqJfNGHLlsNEjsUx8QPPOe7eW5m8eL0wQb81hwELIri8RWP2XCXrRnrN4sq4F_gb4Vc244ZdIvo2iA1Fk0w" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Loyalsoldier/geoip&type=date&legend=top-left&sealed_token=esf8pGs-3KVdrX__Wt8TDQgH-o8msKwSDVxZqJfNGHLlsNEjsUx8QPPOe7eW5m8eL0wQb81hwELIri8RWP2XCXrRnrN4sq4F_gb4Vc244ZdIvo2iA1Fk0w" />
+ </picture>
+</a>
