@@ -190,6 +190,10 @@ func (s *SRSOut) writeFile(filename string, ruleset *option.PlainRuleSet) error 
 		return err
 	}
 
+	if err := f.Close(); err != nil {
+		return err
+	}
+
 	log.Printf("✅ [%s] %s --> %s", s.Type, filename, s.OutputDir)
 
 	return nil

@@ -43,6 +43,18 @@ func (e *Entry) hasIPv6Set() bool {
 	return e.ipv6Set != nil
 }
 
+// resetIPv4Set discards the cached IPv4 set, so that it will be rebuilt
+// from the builder on the next use.
+func (e *Entry) resetIPv4Set() {
+	e.ipv4Set = nil
+}
+
+// resetIPv6Set discards the cached IPv6 set, so that it will be rebuilt
+// from the builder on the next use.
+func (e *Entry) resetIPv6Set() {
+	e.ipv6Set = nil
+}
+
 func (e *Entry) GetIPv4Set() (*netipx.IPSet, error) {
 	if err := e.buildIPSet(); err != nil {
 		return nil, err
@@ -253,11 +265,13 @@ func (e *Entry) add(prefix *netip.Prefix, ipType IPType) error {
 			e.ipv4Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv4Builder.AddPrefix(*prefix)
+		e.resetIPv4Set()
 	case IPv6:
 		if !e.hasIPv6Builder() {
 			e.ipv6Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv6Builder.AddPrefix(*prefix)
+		e.resetIPv6Set()
 	default:
 		return ErrInvalidIPType
 	}
@@ -270,10 +284,12 @@ func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 	case IPv4:
 		if e.hasIPv4Builder() {
 			e.ipv4Builder.RemovePrefix(*prefix)
+			e.resetIPv4Set()
 		}
 	case IPv6:
 		if e.hasIPv6Builder() {
 			e.ipv6Builder.RemovePrefix(*prefix)
+			e.resetIPv6Set()
 		}
 	default:
 		return ErrInvalidIPType
