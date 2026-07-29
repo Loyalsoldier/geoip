@@ -158,9 +158,9 @@ func isValidIPOrCIDR(search string) bool {
 func getInputForLookup(format, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
-	name := ""
+	entryName := ""
 	if strings.TrimSpace(uri) != "" {
-		name = "true"
+		entryName = "true"
 	}
 
 	switch strings.ToLower(format) {
@@ -191,14 +191,14 @@ func getInputForLookup(format, uri, dir string) lib.InputConverter {
 	case strings.ToLower(mihomo.TypeMRSIn):
 		input = mihomo.NewMRSIn(
 			lib.ActionAdd,
-			mihomo.WithNameAndURI(name, uri),
+			mihomo.WithNameAndURI(entryName, uri),
 			mihomo.WithInputDir(dir),
 		)
 
 	case strings.ToLower(singbox.TypeSRSIn):
 		input = singbox.NewSRSIn(
 			lib.ActionAdd,
-			singbox.WithNameAndURI(name, uri),
+			singbox.WithNameAndURI(entryName, uri),
 			singbox.WithInputDir(dir),
 		)
 
@@ -213,7 +213,7 @@ func getInputForLookup(format, uri, dir string) lib.InputConverter {
 			plaintext.TypeTextIn,
 			plaintext.DescTextIn,
 			lib.ActionAdd,
-			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithNameAndURI(entryName, uri),
 			plaintext.WithInputDir(dir),
 		)
 
@@ -222,7 +222,7 @@ func getInputForLookup(format, uri, dir string) lib.InputConverter {
 			plaintext.TypeClashRuleSetIPCIDRIn,
 			plaintext.DescClashRuleSetIPCIDRIn,
 			lib.ActionAdd,
-			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithNameAndURI(entryName, uri),
 			plaintext.WithInputDir(dir),
 		)
 
@@ -231,7 +231,7 @@ func getInputForLookup(format, uri, dir string) lib.InputConverter {
 			plaintext.TypeClashRuleSetClassicalIn,
 			plaintext.DescClashRuleSetClassicalIn,
 			lib.ActionAdd,
-			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithNameAndURI(entryName, uri),
 			plaintext.WithInputDir(dir),
 		)
 
@@ -240,7 +240,7 @@ func getInputForLookup(format, uri, dir string) lib.InputConverter {
 			plaintext.TypeSurgeRuleSetIn,
 			plaintext.DescSurgeRuleSetIn,
 			lib.ActionAdd,
-			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithNameAndURI(entryName, uri),
 			plaintext.WithInputDir(dir),
 		)
 
