@@ -419,7 +419,7 @@
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
 - **args**：（可选）
-  - **country**：（可续）MaxMind GeoLite2 Country CSV location 文件路径（`GeoLite2-Country-Locations-en.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
+  - **country**：（可选）MaxMind GeoLite2 Country CSV location 文件路径（`GeoLite2-Country-Locations-en.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **ipv4**：（可选）MaxMind GeoLite2 Country IPv4 文件路径（`GeoLite2-Country-Blocks-IPv4.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **ipv6**：（可选）MaxMind GeoLite2 Country IPv6 文件路径（`GeoLite2-Country-Blocks-IPv6.csv`），可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **wantedList**：（可选）指定需要的类别/文件。
