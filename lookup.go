@@ -212,44 +212,32 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(plaintext.TypeTextIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeTextIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescTextIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetIPCIDRIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetIPCIDRIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetIPCIDRIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewClashRuleSetIPCIDRIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetClassicalIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetClassicalIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetClassicalIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewClashRuleSetClassicalIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeSurgeRuleSetIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeSurgeRuleSetIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescSurgeRuleSetIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewSurgeRuleSetIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	default:
 		log.Fatal("unsupported input format")
