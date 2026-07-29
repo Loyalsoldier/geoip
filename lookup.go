@@ -171,7 +171,7 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	// silently ignored and their default input file path would be used.
 	rejectDir := func() {
 		if dir != "" {
-			log.Fatalf("input format %s does not support the \"dir\" flag", format)
+			log.Fatalf("input format %s does not support the \"dir\" flag, please use the \"uri\" flag instead", format)
 		}
 	}
 
