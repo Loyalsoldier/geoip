@@ -58,9 +58,6 @@ var lookupCmd = &cobra.Command{
 			log.Fatal("unsupported input format")
 		}
 
-		// Set name
-		name := "true"
-
 		// Get uri
 		uri, _ := cmd.Flags().GetString("uri")
 
@@ -83,7 +80,7 @@ var lookupCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			instance.AddInput(getInputForLookup(format, name, uri, dir))
+			instance.AddInput(getInputForLookup(format, uri, dir))
 			instance.AddOutput(getOutputForLookup(search, searchList...))
 
 			if err := instance.Run(); err != nil {
@@ -95,7 +92,7 @@ var lookupCmd = &cobra.Command{
 			if err != nil {
 				log.Fatal(err)
 			}
-			instance.AddInput(getInputForLookup(format, name, uri, dir))
+			instance.AddInput(getInputForLookup(format, uri, dir))
 
 			container := lib.NewContainer()
 			if err := instance.RunInput(container); err != nil {
@@ -158,11 +155,12 @@ func isValidIPOrCIDR(search string) bool {
 	return err == nil
 }
 
-func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
+func getInputForLookup(format, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
-	if strings.TrimSpace(dir) != "" {
-		name = ""
+	name := ""
+	if strings.TrimSpace(uri) != "" {
+		name = "true"
 	}
 
 	switch strings.ToLower(format) {

@@ -20,7 +20,7 @@ func TestGetInputForLookupWithDirectory(t *testing.T) {
 
 	for _, format := range formats {
 		t.Run(format, func(t *testing.T) {
-			input := getInputForLookup(format, "true", "", t.TempDir())
+			input := getInputForLookup(format, "", t.TempDir())
 			if got := input.GetType(); got != format {
 				t.Fatalf("GetType() = %q, want %q", got, format)
 			}
