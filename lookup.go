@@ -236,11 +236,9 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 }
 
 func getOutputForLookup(search string, searchList ...string) lib.OutputConverter {
-	return &special.Lookup{
-		Type:        special.TypeLookup,
-		Action:      lib.ActionOutput,
-		Description: special.DescLookup,
-		Search:      search,
-		SearchList:  searchList,
-	}
+	return special.NewLookup(
+		lib.ActionOutput,
+		special.WithSearch(search),
+		special.WithSearchList(searchList),
+	)
 }
