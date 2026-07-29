@@ -36,7 +36,7 @@ func init() {
 }
 
 func NewClashRuleSetClassicalIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
-	return newTextIn(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, opts...)
+	return mustNewTextIn(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, opts...)
 }
 
 func NewClashRuleSetClassicalInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
@@ -44,7 +44,7 @@ func NewClashRuleSetClassicalInFromBytes(action lib.Action, data []byte) (lib.In
 }
 
 func NewClashRuleSetIPCIDRIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
-	return newTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, opts...)
+	return mustNewTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, opts...)
 }
 
 func NewClashRuleSetIPCIDRInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {

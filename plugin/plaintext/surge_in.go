@@ -26,7 +26,7 @@ func init() {
 }
 
 func NewSurgeRuleSetIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
-	return newTextIn(TypeSurgeRuleSetIn, DescSurgeRuleSetIn, action, opts...)
+	return mustNewTextIn(TypeSurgeRuleSetIn, DescSurgeRuleSetIn, action, opts...)
 }
 
 func NewSurgeRuleSetInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {

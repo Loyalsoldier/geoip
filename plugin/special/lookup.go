@@ -35,6 +35,14 @@ type lookup struct {
 }
 
 func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	l, err := newLookup(action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return l
+}
+
+func newLookup(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	l := &lookup{
 		Type:        TypeLookup,
 		Action:      action,
@@ -48,10 +56,10 @@ func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 	}
 
 	if l.Search == "" {
-		log.Fatalf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", l.Type, l.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", l.Type, l.Action)
 	}
 
-	return l
+	return l, nil
 }
 
 func WithSearch(search string) lib.OutputOption {
@@ -78,11 +86,11 @@ func NewLookupFromBytes(action lib.Action, data []byte) (lib.OutputConverter, er
 		}
 	}
 
-	return NewLookup(
+	return newLookup(
 		action,
 		WithSearch(tmp.Search),
 		WithSearchList(tmp.SearchList),
-	), nil
+	)
 }
 
 func (l *lookup) GetType() string {

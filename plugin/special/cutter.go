@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
@@ -31,6 +32,14 @@ type cutter struct {
 }
 
 func NewCutter(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	c, err := newCutter(action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return c
+}
+
+func newCutter(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	c := &cutter{
 		Type:        TypeCutter,
 		Action:      action,
@@ -44,14 +53,14 @@ func NewCutter(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	}
 
 	if c.Action != lib.ActionRemove {
-		log.Fatalf("❌ [type %s] only supports `remove` action", c.Type)
+		return nil, fmt.Errorf("❌ [type %s] only supports `remove` action", c.Type)
 	}
 
 	if len(c.Want) == 0 {
-		log.Fatalf("❌ [type %s] wantedList must be specified", c.Type)
+		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", c.Type)
 	}
 
-	return c
+	return c, nil
 }
 
 func WithInputWantedList(lists []string) lib.InputOption {
@@ -94,11 +103,11 @@ func NewCutterFromBytes(action lib.Action, data []byte) (lib.InputConverter, err
 		}
 	}
 
-	return NewCutter(
+	return newCutter(
 		action,
 		WithInputWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (c *cutter) GetType() string {

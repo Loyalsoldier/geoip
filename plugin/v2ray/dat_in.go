@@ -38,6 +38,14 @@ type geo_ip_dat_in struct {
 }
 
 func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g, err := newGeoIPDatIn(action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return g
+}
+
+func newGeoIPDatIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	g := &geo_ip_dat_in{
 		Type:        TypeGeoIPDatIn,
 		Action:      action,
@@ -51,10 +59,10 @@ func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverte
 	}
 
 	if g.URI == "" {
-		log.Fatalf("❌ [type %s | action %s] uri must be specified in config", g.Type, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", g.Type, g.Action)
 	}
 
-	return g
+	return g, nil
 }
 
 func WithURI(uri string) lib.InputOption {
@@ -95,12 +103,12 @@ func NewGeoIPDatInFromBytes(action lib.Action, data []byte) (lib.InputConverter,
 		}
 	}
 
-	return NewGeoIPDatIn(
+	return newGeoIPDatIn(
 		action,
 		WithURI(tmp.URI),
 		WithInputWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (g *geo_ip_dat_in) GetType() string {

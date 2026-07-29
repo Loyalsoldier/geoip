@@ -41,6 +41,14 @@ type srs_in struct {
 }
 
 func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	s, err := newSRSIn(action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return s
+}
+
+func newSRSIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	s := &srs_in{
 		Type:        TypeSRSIn,
 		Action:      action,
@@ -54,18 +62,18 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	}
 
 	if s.Name == "" && s.URI == "" && s.InputDir == "" {
-		log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", s.Type, s.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name or uri or inputDir", s.Type, s.Action)
 	}
 
 	if s.InputDir != "" && (s.Name != "" || s.URI != "") {
-		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", s.Type, s.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", s.Type, s.Action)
 	}
 
 	if (s.Name != "" && s.URI == "") || (s.Name == "" && s.URI != "") {
-		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", s.Type, s.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name and uri must be specified together", s.Type, s.Action)
 	}
 
-	return s
+	return s, nil
 }
 
 func WithNameAndURI(name, uri string) lib.InputOption {
@@ -115,13 +123,13 @@ func NewSRSInFromBytes(action lib.Action, data []byte) (lib.InputConverter, erro
 		}
 	}
 
-	return NewSRSIn(
+	return newSRSIn(
 		action,
 		WithNameAndURI(tmp.Name, tmp.URI),
 		WithInputDir(tmp.InputDir),
 		WithInputWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (s *srs_in) GetType() string {

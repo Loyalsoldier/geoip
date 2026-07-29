@@ -47,6 +47,14 @@ type mrs_in struct {
 }
 
 func NewMRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	m, err := newMRSIn(action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return m
+}
+
+func newMRSIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	m := &mrs_in{
 		Type:        TypeMRSIn,
 		Action:      action,
@@ -60,18 +68,18 @@ func NewMRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	}
 
 	if m.Name == "" && m.URI == "" && m.InputDir == "" {
-		log.Fatalf("❌ [type %s | action %s] missing name and uri or inputDir", m.Type, m.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name and uri or inputDir", m.Type, m.Action)
 	}
 
 	if m.InputDir != "" && (m.Name != "" || m.URI != "") {
-		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", m.Type, m.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", m.Type, m.Action)
 	}
 
 	if (m.Name != "" && m.URI == "") || (m.Name == "" && m.URI != "") {
-		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", m.Type, m.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name and uri must be specified together", m.Type, m.Action)
 	}
 
-	return m
+	return m, nil
 }
 
 func WithNameAndURI(name, uri string) lib.InputOption {
@@ -121,13 +129,13 @@ func NewMRSInFromBytes(action lib.Action, data []byte) (lib.InputConverter, erro
 		}
 	}
 
-	return NewMRSIn(
+	return newMRSIn(
 		action,
 		WithNameAndURI(tmp.Name, tmp.URI),
 		WithInputDir(tmp.InputDir),
 		WithInputWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (m *mrs_in) GetType() string {

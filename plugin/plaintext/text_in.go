@@ -28,10 +28,18 @@ func init() {
 }
 
 func NewTextIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
-	return newTextIn(TypeTextIn, DescTextIn, action, opts...)
+	return mustNewTextIn(TypeTextIn, DescTextIn, action, opts...)
 }
 
-func newTextIn(iType, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func mustNewTextIn(iType, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	t, err := newTextIn(iType, iDesc, action, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return t
+}
+
+func newTextIn(iType, iDesc string, action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	t := &text_in{
 		Type:        iType,
 		Action:      action,
@@ -45,46 +53,46 @@ func newTextIn(iType, iDesc string, action lib.Action, opts ...lib.InputOption) 
 	}
 
 	if strings.TrimSpace(t.Type) == "" {
-		log.Fatal("type is required")
+		return nil, fmt.Errorf("type is required")
 	}
 
 	if t.Type != TypeTextIn && len(t.IPOrCIDR) > 0 {
-		log.Fatalf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
 	}
 
 	if t.Type == TypeJSONIn && len(t.JSONPath) == 0 {
-		log.Fatalf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
 	}
 
 	if t.InputDir != "" {
 		if t.Name != "" || t.URI != "" || len(t.IPOrCIDR) > 0 {
-			log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
 		}
-		return t
+		return t, nil
 	}
 
 	if t.Type == TypeTextIn {
 		if t.Name == "" && t.URI == "" {
-			log.Fatalf("❌ [type %s | action %s] missing inputDir or name", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name", t.Type, t.Action)
 		}
 		if t.Name == "" {
-			log.Fatalf("❌ [type %s | action %s] name must be specified with uri or ipOrCIDR", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] name must be specified with uri or ipOrCIDR", t.Type, t.Action)
 		}
 		if t.URI == "" && len(t.IPOrCIDR) == 0 {
-			log.Fatalf("❌ [type %s | action %s] missing uri or ipOrCIDR", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing uri or ipOrCIDR", t.Type, t.Action)
 		}
-		return t
+		return t, nil
 	}
 
 	if t.Name == "" && t.URI == "" {
-		log.Fatalf("❌ [type %s | action %s] missing name and uri or inputDir", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name and uri or inputDir", t.Type, t.Action)
 	}
 
 	if (t.Name != "" && t.URI == "") || (t.Name == "" && t.URI != "") {
-		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] name and uri must be specified together", t.Type, t.Action)
 	}
 
-	return t
+	return t, nil
 }
 
 func WithNameAndURI(name, uri string) lib.InputOption {
@@ -192,7 +200,7 @@ func newTextInFromBytes(iType, iDesc string, action lib.Action, data []byte) (li
 		opts = append(opts, WithIPOrCIDR(tmp.IPOrCIDR))
 	}
 
-	return newTextIn(iType, iDesc, action, opts...), nil
+	return newTextIn(iType, iDesc, action, opts...)
 }
 
 func (t *text_in) GetType() string {

@@ -22,7 +22,7 @@ func init() {
 }
 
 func NewJSONIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
-	return newTextIn(TypeJSONIn, DescJSONIn, action, opts...)
+	return mustNewTextIn(TypeJSONIn, DescJSONIn, action, opts...)
 }
 
 func NewJSONInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
