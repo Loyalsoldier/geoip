@@ -265,13 +265,13 @@ func (e *Entry) add(prefix *netip.Prefix, ipType IPType) error {
 			e.ipv4Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv4Builder.AddPrefix(*prefix)
-		e.resetIPv4Set()
+		e.ipv4Set = nil
 	case IPv6:
 		if !e.hasIPv6Builder() {
 			e.ipv6Builder = new(netipx.IPSetBuilder)
 		}
 		e.ipv6Builder.AddPrefix(*prefix)
-		e.resetIPv6Set()
+		e.ipv6Set = nil
 	default:
 		return ErrInvalidIPType
 	}
@@ -284,12 +284,12 @@ func (e *Entry) remove(prefix *netip.Prefix, ipType IPType) error {
 	case IPv4:
 		if e.hasIPv4Builder() {
 			e.ipv4Builder.RemovePrefix(*prefix)
-			e.resetIPv4Set()
+			e.ipv4Set = nil
 		}
 	case IPv6:
 		if e.hasIPv6Builder() {
 			e.ipv6Builder.RemovePrefix(*prefix)
-			e.resetIPv6Set()
+			e.ipv6Set = nil
 		}
 	default:
 		return ErrInvalidIPType
