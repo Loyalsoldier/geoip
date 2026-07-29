@@ -171,6 +171,7 @@ func isValidIPOrCIDR(search string) bool {
 
 func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
+	var err error
 
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
@@ -208,14 +209,11 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		}
 
 	case strings.ToLower(singbox.TypeSRSIn):
-		input = &singbox.SRSIn{
-			Type:        singbox.TypeSRSIn,
-			Action:      lib.ActionAdd,
-			Description: singbox.DescSRSIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input, err = singbox.NewSRSIn(
+			lib.ActionAdd,
+			singbox.WithNameAndURI(name, uri),
+			singbox.WithInputDir(dir),
+		)
 
 	case strings.ToLower(v2ray.TypeGeoIPDatIn):
 		input = &v2ray.GeoIPDatIn{
@@ -267,6 +265,10 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 
 	default:
 		log.Fatal("unsupported input format")
+	}
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return input
