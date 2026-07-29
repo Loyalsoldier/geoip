@@ -48,6 +48,7 @@ func NewSRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		Type:        TypeSRSOut,
 		Action:      action,
 		Description: DescSRSOut,
+		OutputDir:   defaultOutputDir,
 	}
 
 	for _, opt := range opts {

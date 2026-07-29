@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/netip"
 	"os"
@@ -27,14 +28,85 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeMRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newMRSIn(action, data)
+		return NewMRSInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeMRSIn, &MRSIn{
+	lib.RegisterInputConverter(TypeMRSIn, &mrs_in{
 		Description: DescMRSIn,
 	})
 }
 
-func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+type mrs_in struct {
+	Type        string
+	Action      lib.Action
+	Description string
+	Name        string
+	URI         string
+	InputDir    string
+	Want        map[string]bool
+	OnlyIPType  lib.IPType
+}
+
+func NewMRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	m := &mrs_in{
+		Type:        TypeMRSIn,
+		Action:      action,
+		Description: DescMRSIn,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(m)
+		}
+	}
+
+	if m.Name == "" && m.URI == "" && m.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", m.Type, m.Action)
+	}
+
+	if (m.Name != "" && m.URI == "") || (m.Name == "" && m.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", m.Type, m.Action)
+	}
+
+	if m.InputDir != "" && (m.Name != "" || m.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", m.Type, m.Action)
+	}
+
+	return m
+}
+
+func WithNameAndURI(name, uri string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*mrs_in).Name = strings.TrimSpace(name)
+		m.(*mrs_in).URI = strings.TrimSpace(uri)
+	}
+}
+
+func WithInputDir(dir string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*mrs_in).InputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+
+		m.(*mrs_in).Want = wantList
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*mrs_in).OnlyIPType = onlyIPType
+	}
+}
+
+func NewMRSInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
@@ -49,58 +121,28 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		}
 	}
 
-	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name or uri", TypeMRSIn, action)
-	}
-
-	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", TypeMRSIn, action)
-	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &MRSIn{
-		Type:        TypeMRSIn,
-		Action:      action,
-		Description: DescMRSIn,
-		Name:        tmp.Name,
-		URI:         tmp.URI,
-		InputDir:    tmp.InputDir,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewMRSIn(
+		action,
+		WithNameAndURI(tmp.Name, tmp.URI),
+		WithInputDir(tmp.InputDir),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
-type MRSIn struct {
-	Type        string
-	Action      lib.Action
-	Description string
-	Name        string
-	URI         string
-	InputDir    string
-	Want        map[string]bool
-	OnlyIPType  lib.IPType
-}
-
-func (m *MRSIn) GetType() string {
+func (m *mrs_in) GetType() string {
 	return m.Type
 }
 
-func (m *MRSIn) GetAction() lib.Action {
+func (m *mrs_in) GetAction() lib.Action {
 	return m.Action
 }
 
-func (m *MRSIn) GetDescription() string {
+func (m *mrs_in) GetDescription() string {
 	return m.Description
 }
 
-func (m *MRSIn) Input(container lib.Container) (lib.Container, error) {
+func (m *mrs_in) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -146,7 +188,7 @@ func (m *MRSIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (m *MRSIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (m *mrs_in) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -165,7 +207,7 @@ func (m *MRSIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (m *MRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (m *mrs_in) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -203,7 +245,7 @@ func (m *MRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (m *MRSIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (m *mrs_in) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -221,7 +263,7 @@ func (m *MRSIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 	return nil
 }
 
-func (m *MRSIn) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
+func (m *mrs_in) generateEntries(name string, reader io.Reader, entries map[string]*lib.Entry) error {
 	name = strings.ToUpper(name)
 
 	if len(m.Want) > 0 && !m.Want[name] {
@@ -247,7 +289,7 @@ func (m *MRSIn) generateEntries(name string, reader io.Reader, entries map[strin
 	return nil
 }
 
-func (m *MRSIn) parseMRS(data []byte, entry *lib.Entry) error {
+func (m *mrs_in) parseMRS(data []byte, entry *lib.Entry) error {
 	reader, err := zstd.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return err

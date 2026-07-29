@@ -13,10 +13,10 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeJSONIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeJSONIn, DescJSONIn, action, data)
+		return NewTextInFromBytes(TypeJSONIn, DescJSONIn, action, data)
 	})
 
-	lib.RegisterInputConverter(TypeJSONIn, &TextIn{
+	lib.RegisterInputConverter(TypeJSONIn, &text_in{
 		Description: DescJSONIn,
 	})
 }
