@@ -18,14 +18,14 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
+		return NewGeoLite2CountryMMDBInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &GeoLite2CountryMMDBIn{
+	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &country_mmdb_in{
 		Description: DescGeoLite2CountryMMDBIn,
 	})
 }
 
-type GeoLite2CountryMMDBIn struct {
+type country_mmdb_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -34,19 +34,27 @@ type GeoLite2CountryMMDBIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func (g *GeoLite2CountryMMDBIn) GetType() string {
+func NewGeoLite2CountryMMDBIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	return newCountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, opts...)
+}
+
+func NewGeoLite2CountryMMDBInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
+	return newCountryMMDBInFromBytes(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
+}
+
+func (g *country_mmdb_in) GetType() string {
 	return g.Type
 }
 
-func (g *GeoLite2CountryMMDBIn) GetAction() lib.Action {
+func (g *country_mmdb_in) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *GeoLite2CountryMMDBIn) GetDescription() string {
+func (g *country_mmdb_in) GetDescription() string {
 	return g.Description
 }
 
-func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (g *country_mmdb_in) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
@@ -89,7 +97,7 @@ func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 	return container, nil
 }
 
-func (g *GeoLite2CountryMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (g *country_mmdb_in) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.OpenBytes(content)
 	if err != nil {
 		return err

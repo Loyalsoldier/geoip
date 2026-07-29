@@ -14,7 +14,118 @@ var (
 	defaultIPInfoCountryMMDBFile   = filepath.Join("./", "ipinfo", "country.mmdb")
 )
 
-func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func newCountryMMDBIn(iType, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &country_mmdb_in{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	if g.URI == "" {
+		switch iType {
+		case TypeGeoLite2CountryMMDBIn:
+			g.URI = defaultGeoLite2CountryMMDBFile
+		case TypeDBIPCountryMMDBIn:
+			g.URI = defaultDBIPCountryMMDBFile
+		case TypeIPInfoCountryMMDBIn:
+			g.URI = defaultIPInfoCountryMMDBFile
+		}
+	}
+
+	return g
+}
+
+func WithInputURI(uri string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*country_mmdb_in).URI = strings.TrimSpace(uri)
+	}
+}
+
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		switch g := g.(type) {
+		case *country_mmdb_in:
+			g.Want = filterInputWantedList(lists)
+		case *country_csv_in:
+			g.Want = filterInputWantedList(lists)
+		case *asn_csv_in:
+			g.Want = filterASNInputWantedList(lib.WantedListExtended{TypeSlice: lists})
+		default:
+			panic("unsupported input converter")
+		}
+	}
+}
+
+func WithInputWantedListExtended(lists lib.WantedListExtended) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*asn_csv_in).Want = filterASNInputWantedList(lists)
+	}
+}
+
+func WithCountryCodeFile(file string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*country_csv_in).CountryCodeFile = strings.TrimSpace(file)
+	}
+}
+
+func WithIPv4File(file string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		switch g := g.(type) {
+		case *country_csv_in:
+			g.IPv4File = strings.TrimSpace(file)
+		case *asn_csv_in:
+			g.IPv4File = strings.TrimSpace(file)
+		default:
+			panic("unsupported input converter")
+		}
+	}
+}
+
+func WithIPv6File(file string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		switch g := g.(type) {
+		case *country_csv_in:
+			g.IPv6File = strings.TrimSpace(file)
+		case *asn_csv_in:
+			g.IPv6File = strings.TrimSpace(file)
+		default:
+			panic("unsupported input converter")
+		}
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(g lib.InputConverter) {
+		switch g := g.(type) {
+		case *country_mmdb_in:
+			g.OnlyIPType = onlyIPType
+		case *country_csv_in:
+			g.OnlyIPType = onlyIPType
+		case *asn_csv_in:
+			g.OnlyIPType = onlyIPType
+		default:
+			panic("unsupported input converter")
+		}
+	}
+}
+
+func filterInputWantedList(lists []string) map[string]bool {
+	wantList := make(map[string]bool)
+	for _, want := range lists {
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			wantList[want] = true
+		}
+	}
+	return wantList
+}
+
+func newCountryMMDBInFromBytes(iType, iDesc string, action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -27,33 +138,12 @@ func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, dat
 		}
 	}
 
-	if tmp.URI == "" {
-		switch iType {
-		case TypeGeoLite2CountryMMDBIn:
-			tmp.URI = defaultGeoLite2CountryMMDBFile
-
-		case TypeDBIPCountryMMDBIn:
-			tmp.URI = defaultDBIPCountryMMDBFile
-
-		case TypeIPInfoCountryMMDBIn:
-			tmp.URI = defaultIPInfoCountryMMDBFile
-		}
-	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &GeoLite2CountryMMDBIn{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return newCountryMMDBIn(
+		iType,
+		iDesc,
+		action,
+		WithInputURI(tmp.URI),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
