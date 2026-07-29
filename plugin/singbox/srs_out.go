@@ -183,14 +183,13 @@ func (s *SRSOut) writeFile(filename string, ruleset *option.PlainRuleSet) error 
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
 	err = srs.Write(f, *ruleset, constant.RuleSetVersion1)
 	if err != nil {
 		return err
 	}
 
-	if err := f.Close(); err != nil {
+	if err = f.Close(); err != nil {
 		return err
 	}
 

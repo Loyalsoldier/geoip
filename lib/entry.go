@@ -43,18 +43,6 @@ func (e *Entry) hasIPv6Set() bool {
 	return e.ipv6Set != nil
 }
 
-// resetIPv4Set discards the cached IPv4 set, so that it will be rebuilt
-// from the builder on the next use.
-func (e *Entry) resetIPv4Set() {
-	e.ipv4Set = nil
-}
-
-// resetIPv6Set discards the cached IPv6 set, so that it will be rebuilt
-// from the builder on the next use.
-func (e *Entry) resetIPv6Set() {
-	e.ipv6Set = nil
-}
-
 func (e *Entry) GetIPv4Set() (*netipx.IPSet, error) {
 	if err := e.buildIPSet(); err != nil {
 		return nil, err

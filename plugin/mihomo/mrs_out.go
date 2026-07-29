@@ -165,14 +165,12 @@ func (m *MRSOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
 		return err
 	}
 
-	defer f.Close()
-
 	err = m.convertToMrs(ipRanges, f)
 	if err != nil {
 		return err
 	}
 
-	if err := f.Close(); err != nil {
+	if err = f.Close(); err != nil {
 		return err
 	}
 
@@ -186,6 +184,7 @@ func (m *MRSOut) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if closeErr := encoder.Close(); closeErr != nil && err == nil {
 			err = closeErr
