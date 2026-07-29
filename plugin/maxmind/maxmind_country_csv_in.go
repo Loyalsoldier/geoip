@@ -165,12 +165,11 @@ func (g *GeoLite2CountryCSVIn) getCountryCode() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	ccMap := make(map[string]string)
 	if len(lines) == 0 {
 		return nil, fmt.Errorf("❌ [type %s | action %s] empty country code file: %s", g.Type, g.Action, g.CountryCodeFile)
 	}
 
+	ccMap := make(map[string]string)
 	for _, line := range lines[1:] {
 		if len(line) < 5 {
 			return nil, fmt.Errorf("❌ [type %s | action %s] invalid record: %v", g.Type, g.Action, line)
