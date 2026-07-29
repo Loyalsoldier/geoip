@@ -50,6 +50,10 @@ type OutputConverter interface {
 	Output(Container) error
 }
 
+type InputOption func(InputConverter)
+
+type OutputOption func(OutputConverter)
+
 type IgnoreIPOption func() IPType
 
 func IgnoreIPv4() IPType {
