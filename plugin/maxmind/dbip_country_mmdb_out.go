@@ -18,9 +18,17 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeDBIPCountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoLite2CountryMMDBOut(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, data)
+		return NewDBIPCountryMMDBOutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeDBIPCountryMMDBOut, &GeoLite2CountryMMDBOut{
+	lib.RegisterOutputConverter(TypeDBIPCountryMMDBOut, &country_mmdb_out{
 		Description: DescDBIPCountryMMDBOut,
 	})
+}
+
+func NewDBIPCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	return newCountryMMDBOut(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, opts...)
+}
+
+func NewDBIPCountryMMDBOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newCountryMMDBOutFromBytes(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, data)
 }
