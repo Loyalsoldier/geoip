@@ -198,26 +198,26 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 
 		switch strings.Contains(src, "/") {
 		case true: // src is CIDR notation
-			ip, network, err := net.ParseCIDR(src)
+			prefix, err := netip.ParsePrefix(src)
 			if err != nil {
 				return nil, "", ErrInvalidCIDR
 			}
-			addr, ok := netipx.FromStdIP(ip)
-			if !ok {
-				return nil, "", ErrInvalidIP
-			}
-			if addr.Unmap().Is4() && strings.Contains(network.String(), "::") { // src is invalid IPv4-mapped IPv6 address
-				return nil, "", ErrInvalidCIDR
-			}
-			prefix, ok := netipx.FromStdIPNet(network)
-			if !ok {
-				return nil, "", ErrInvalidIPNet
-			}
 
-			addr = prefix.Addr().Unmap()
+			addr := prefix.Addr()
 			switch {
 			case addr.Is4():
 				return &prefix, IPv4, nil
+			case addr.Is4In6():
+				if prefix.Bits() < 96 {
+					return nil, "", ErrInvalidCIDR
+				}
+				ip := addr.Unmap()
+				bits := prefix.Bits() - 96
+				normalized, err := ip.Prefix(bits)
+				if err != nil {
+					return nil, "", ErrInvalidPrefix
+				}
+				return &normalized, IPv4, nil
 			case addr.Is6():
 				return &prefix, IPv6, nil
 			default:
