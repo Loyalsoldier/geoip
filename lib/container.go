@@ -50,13 +50,14 @@ func (c *container) Len() int {
 }
 
 func (c *container) Loop() <-chan *Entry {
-	ch := make(chan *Entry, 300)
-	go func() {
-		for _, val := range c.entries {
-			ch <- val
-		}
-		close(ch)
-	}()
+	// Fill the channel synchronously with a snapshot of the entries
+	// so that consumers can safely add or remove entries while looping,
+	// without triggering concurrent map iteration and map write.
+	ch := make(chan *Entry, len(c.entries))
+	for _, val := range c.entries {
+		ch <- val
+	}
+	close(ch)
 	return ch
 }
 
@@ -227,10 +228,16 @@ func (c *container) Lookup(ipOrCidr string, searchList ...string) ([]string, boo
 		if err != nil {
 			return nil, false, err
 		}
-		addr := prefix.Addr().Unmap()
+		addr := prefix.Addr()
 		switch {
 		case addr.Is4():
 			return c.lookup(prefix, IPv4, searchList...)
+		case addr.Is4In6():
+			if bits := prefix.Bits(); bits >= 96 {
+				prefix = netip.PrefixFrom(addr.Unmap(), bits-96)
+				return c.lookup(prefix, IPv4, searchList...)
+			}
+			return c.lookup(prefix, IPv6, searchList...)
 		case addr.Is6():
 			return c.lookup(prefix, IPv6, searchList...)
 		}
