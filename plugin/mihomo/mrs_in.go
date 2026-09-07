@@ -291,8 +291,7 @@ func (m *MRSIn) parseMRS(data []byte, entry *lib.Entry) error {
 		return fmt.Errorf("invalid MRS extra length")
 	}
 	if length > 0 {
-		extra := make([]byte, length)
-		_, err = io.ReadFull(reader, extra)
+		_, err = io.CopyN(io.Discard, reader, length)
 		if err != nil {
 			return err
 		}
@@ -327,15 +326,22 @@ func (m *MRSIn) parseMRS(data []byte, entry *lib.Entry) error {
 		if err != nil {
 			return err
 		}
-		from := netip.AddrFrom16(a16).Unmap()
+		from := netip.AddrFrom16(a16)
 
 		err = binary.Read(reader, binary.BigEndian, &a16)
 		if err != nil {
 			return err
 		}
-		to := netip.AddrFrom16(a16).Unmap()
+		to := netip.AddrFrom16(a16)
+		if from.Is4In6() && to.Is4In6() {
+			from = from.Unmap()
+			to = to.Unmap()
+		}
 
 		iprange := netipx.IPRangeFrom(from, to)
+		if !iprange.IsValid() {
+			return fmt.Errorf("invalid MRS IP range: %s - %s", from, to)
+		}
 		for _, prefix := range iprange.Prefixes() {
 			if err := entry.AddPrefix(prefix); err != nil {
 				return err
