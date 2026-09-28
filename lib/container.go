@@ -50,13 +50,11 @@ func (c *container) Len() int {
 }
 
 func (c *container) Loop() <-chan *Entry {
-	ch := make(chan *Entry, 300)
-	go func() {
-		for _, val := range c.entries {
-			ch <- val
-		}
-		close(ch)
-	}()
+	ch := make(chan *Entry, len(c.entries))
+	for _, val := range c.entries {
+		ch <- val
+	}
+	close(ch)
 	return ch
 }
 
