@@ -66,13 +66,17 @@ func (t *TextOut) filterAndSortList(container lib.Container) []string {
 	}
 
 	wantList := make([]string, 0, len(t.Want))
+	hasWanted := false
 	for _, want := range t.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" && !excludeMap[want] {
-			wantList = append(wantList, want)
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			hasWanted = true
+			if !excludeMap[want] {
+				wantList = append(wantList, want)
+			}
 		}
 	}
 
-	if len(wantList) > 0 {
+	if hasWanted {
 		// Sort the list
 		slices.Sort(wantList)
 		return wantList
