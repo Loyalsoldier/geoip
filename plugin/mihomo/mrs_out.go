@@ -174,6 +174,9 @@ func (m *MRSOut) writeFile(filename string, ipRanges []netipx.IPRange) error {
 	if err != nil {
 		return err
 	}
+	if err := f.Close(); err != nil {
+		return err
+	}
 
 	log.Printf("✅ [%s] %s --> %s", m.Type, filename, m.OutputDir)
 
@@ -185,7 +188,12 @@ func (m *MRSOut) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err error
 	if err != nil {
 		return err
 	}
-	defer encoder.Close()
+	defer func() {
+		closeErr := encoder.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}()
 
 	// header
 	_, err = encoder.Write(mrsMagicBytes[:])
