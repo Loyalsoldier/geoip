@@ -137,14 +137,18 @@ func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []st
 		}
 	}
 
+	hasWantedList := false
 	wantList := make([]string, 0, len(g.Want))
 	for _, want := range g.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" && !excludeMap[want] {
-			wantList = append(wantList, want)
+		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+			hasWantedList = true
+			if !excludeMap[want] {
+				wantList = append(wantList, want)
+			}
 		}
 	}
 
-	if len(wantList) > 0 {
+	if hasWantedList {
 		return wantList
 	}
 

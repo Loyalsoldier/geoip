@@ -94,6 +94,12 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 		ip := prefix.Addr().Unmap()
 		switch {
 		case ip.Is4():
+			if ones, bits := src.Mask.Size(); bits == 8*net.IPv6len { // src is IPv4-mapped IPv6 network
+				prefix = netip.PrefixFrom(ip, ones-96)
+			}
+			if !prefix.IsValid() {
+				return nil, "", ErrInvalidPrefix
+			}
 			return &prefix, IPv4, nil
 		case ip.Is6():
 			return &prefix, IPv6, nil
@@ -217,6 +223,12 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 			addr = prefix.Addr().Unmap()
 			switch {
 			case addr.Is4():
+				if ones, bits := network.Mask.Size(); bits == 8*net.IPv6len { // src is IPv4-mapped IPv6 CIDR
+					prefix = netip.PrefixFrom(addr, ones-96)
+				}
+				if !prefix.IsValid() {
+					return nil, "", ErrInvalidCIDR
+				}
 				return &prefix, IPv4, nil
 			case addr.Is6():
 				return &prefix, IPv6, nil
