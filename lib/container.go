@@ -228,7 +228,10 @@ func (c *container) Lookup(ipOrCidr string, searchList ...string) ([]string, boo
 			return nil, false, err
 		}
 		addr := prefix.Addr()
-		if addr.Is4In6() && prefix.Bits() >= 96 { // IPv4-mapped IPv6 CIDR
+		if addr.Is4In6() { // IPv4-mapped IPv6 CIDR
+			if prefix.Bits() < 96 {
+				return nil, false, ErrInvalidCIDR
+			}
 			addr = addr.Unmap()
 			prefix = netip.PrefixFrom(addr, prefix.Bits()-96)
 		}
