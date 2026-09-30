@@ -247,14 +247,14 @@ func (i *IPDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 		return entry.AddPrefix(prefix)
 	}
 
-	if db.IsIPv4() {
+	if db.IsIPv4() && i.OnlyIPType != lib.IPv6 {
 		var ip [4]byte
 		if err := tree.walk(tree.v4offset, ip[:], 0, handler); err != nil {
 			return err
 		}
 	}
 
-	if db.IsIPv6() {
+	if db.IsIPv6() && i.OnlyIPType != lib.IPv4 {
 		var ip [16]byte
 		if err := tree.walk(0, ip[:], 0, handler); err != nil {
 			return err
@@ -273,9 +273,10 @@ func (i *IPDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 //   - p == nodeCount: no data
 //   - p > nodeCount: a record at data[p-nodeCount+nodeCount*8]
 type ipdbTree struct {
-	nodeCount uint32
-	v4offset  uint32 // the node of ::ffff:0:0/96, i.e. the root of IPv4 networks
-	data      []byte
+	nodeCount      uint32
+	v4offset       uint32 // the node of ::ffff:0:0/96, i.e. the root of IPv4 networks
+	remainingNodes uint32
+	data           []byte
 }
 
 func newIPDBTree(content []byte) (*ipdbTree, error) {
@@ -304,8 +305,9 @@ func newIPDBTree(content []byte) (*ipdbTree, error) {
 	}
 
 	t := &ipdbTree{
-		nodeCount: uint32(meta.NodeCount),
-		data:      data,
+		nodeCount:      uint32(meta.NodeCount),
+		remainingNodes: uint32(meta.NodeCount),
+		data:           data,
 	}
 
 	// Same as ipdb-go: follow 80 zero bits and 16 one bits to find ::ffff:0:0/96
@@ -381,6 +383,12 @@ func (t *ipdbTree) walk(node uint32, ip []byte, depth int, handler func(netip.Pr
 	if depth >= len(ip)*8 {
 		return fmt.Errorf("invalid ipdb database: tree is deeper than %d bits", len(ip)*8)
 	}
+	// Depth alone does not bound expansion of shared subtrees. Share this budget
+	// across both IP families; an ordinary trie visits each internal node once.
+	if t.remainingNodes == 0 {
+		return fmt.Errorf("ipdb traversal exceeds node expansion limit (%d)", t.nodeCount)
+	}
+	t.remainingNodes--
 
 	mask := byte(0x80) >> (depth % 8)
 	for bit := range 2 {

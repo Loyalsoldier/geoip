@@ -286,6 +286,8 @@
   - **wantedList**：（可选，数组）指定需要的类别/文件。
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`。
 
+为防止共享子树被指数级展开，遍历内部节点的总次数不得超过 ipdb 文件声明的 `node_count`，超限时返回错误。使用 `text` 等按类别名创建文件的输出格式时，字段值应适合作为文件名（例如 `timezone` 的 `Asia/Shanghai` 不适用）。
+
 ```jsonc
 {
   "type": "ipipnetIPDB",
