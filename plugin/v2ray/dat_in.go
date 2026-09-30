@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"os"
 	"strings"
 
@@ -178,8 +178,11 @@ func (g *GeoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 		}
 
 		for _, v2rayCIDR := range geoip.Cidr {
-			ipStr := net.IP(v2rayCIDR.GetIp()).String() + "/" + fmt.Sprint(v2rayCIDR.GetPrefix())
-			if err := entry.AddPrefix(ipStr); err != nil {
+			addr, ok := netip.AddrFromSlice(v2rayCIDR.GetIp())
+			if !ok {
+				return fmt.Errorf("❌ [type %s | action %s] invalid IP in list %s", g.Type, g.Action, name)
+			}
+			if err := entry.AddPrefix(netip.PrefixFrom(addr, int(v2rayCIDR.GetPrefix()))); err != nil {
 				return err
 			}
 		}

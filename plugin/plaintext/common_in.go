@@ -220,7 +220,7 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error {
 	switch {
 	case !result.Exists():
-		return fmt.Errorf("invaild IP address or CIDR (value not exist), please check your specified JSON path or JSON source")
+		return fmt.Errorf("invalid IP address or CIDR (value not exist), please check your specified JSON path or JSON source")
 
 	case result.Type == gjson.String:
 		cidr := strings.TrimSpace(result.String())
@@ -239,7 +239,7 @@ func (t *TextIn) processJSONResult(result gjson.Result, entry *lib.Entry) error 
 		}
 
 	default:
-		return fmt.Errorf("invaild IP address or CIDR, please check your specified JSON path or JSON source")
+		return fmt.Errorf("invalid IP address or CIDR, please check your specified JSON path or JSON source")
 	}
 
 	return nil

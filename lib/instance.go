@@ -53,7 +53,10 @@ func (i *instance) InitConfigFromBytes(content []byte) error {
 	config := new(config)
 
 	// Support JSON with comments and trailing commas
-	content, _ = hujson.Standardize(content)
+	content, err := hujson.Standardize(content)
+	if err != nil {
+		return err
+	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
 		return err

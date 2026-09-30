@@ -58,14 +58,23 @@ var lookupCmd = &cobra.Command{
 			log.Fatal("unsupported input format")
 		}
 
+		// MMDB and V2Ray dat formats are single-file formats and do not support directory input
+		dir, _ := cmd.Flags().GetString("dir")
+		switch format {
+		case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn),
+			strings.ToLower(maxmind.TypeDBIPCountryMMDBIn),
+			strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn),
+			strings.ToLower(v2ray.TypeGeoIPDatIn):
+			if dir != "" {
+				log.Fatalf("format %s does not support \"dir\" flag, please use \"uri\" flag instead", format)
+			}
+		}
+
 		// Set name
 		name := "true"
 
 		// Get uri
 		uri, _ := cmd.Flags().GetString("uri")
-
-		// Get dir
-		dir, _ := cmd.Flags().GetString("dir")
 
 		// Get searchlist
 		searchList, _ := cmd.Flags().GetStringSlice("searchlist")
