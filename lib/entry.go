@@ -215,7 +215,10 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 	case net.IP:
 		return e.getPrefixFromIP(src)
 
-	case *net.IP:
+case *net.IP:
+		if src == nil {
+			return nil, "", ErrInvalidPrefixType
+		}
 		return e.getPrefixFromIP(*src)
 
 	case net.IPNet:
