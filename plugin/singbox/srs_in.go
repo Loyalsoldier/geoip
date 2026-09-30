@@ -53,12 +53,24 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		}
 	}
 
+	if s.Action != lib.ActionAdd && s.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] only supports add or remove action", s.Type, s.Action)
+	}
+
+	if s.OnlyIPType != "" && s.OnlyIPType != lib.IPv4 && s.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType: %s", s.Type, s.Action, s.OnlyIPType)
+	}
+
 	if s.Name == "" && s.URI == "" && s.InputDir == "" {
 		log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", s.Type, s.Action)
 	}
 
 	if (s.Name != "" && s.URI == "") || (s.Name == "" && s.URI != "") {
 		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", s.Type, s.Action)
+	}
+
+	if s.InputDir != "" && (s.Name != "" || s.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", s.Type, s.Action)
 	}
 
 	return s
@@ -92,7 +104,7 @@ func WithInputWantedList(lists []string) lib.InputOption {
 
 func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
 	return func(s lib.InputConverter) {
-		s.(*srs_in).OnlyIPType = onlyIPType
+		s.(*srs_in).OnlyIPType = lib.IPType(strings.ToLower(strings.TrimSpace(string(onlyIPType))))
 	}
 }
 

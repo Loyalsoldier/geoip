@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -18,19 +19,42 @@ var testCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(typeTest, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTest(action, data)
+		return NewTestFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(typeTest, &test{
 		Description: descTest,
 	})
 }
 
-func newTest(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	return &test{
+func NewTest(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	t := &test{
 		Type:        typeTest,
 		Action:      action,
 		Description: descTest,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	if t.Action != lib.ActionAdd && t.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] only supports add or remove action", t.Type, t.Action)
+	}
+
+	return t
+}
+
+func NewTestFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
+	var tmp struct{}
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return nil, err
+		}
+	}
+
+	return NewTest(action), nil
 }
 
 type test struct {

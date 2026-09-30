@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -18,7 +19,7 @@ var (
 	defaultOutputDirForSurgeRuleSetOut          = filepath.Join("./", "output", "surge")
 )
 
-type TextOut struct {
+type textOut struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -32,7 +33,89 @@ type TextOut struct {
 	AddSuffixInLine string
 }
 
-func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newTextOut(iType, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	t := &textOut{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	if t.OutputDir == "" {
+		switch iType {
+		case TypeTextOut:
+			t.OutputDir = defaultOutputDirForTextOut
+		case TypeClashRuleSetClassicalOut:
+			t.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
+		case TypeClashRuleSetIPCIDROut:
+			t.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
+		case TypeSurgeRuleSetOut:
+			t.OutputDir = defaultOutputDirForSurgeRuleSetOut
+		}
+	}
+
+	if t.OutputExt == "" {
+		t.OutputExt = ".txt"
+	}
+
+	if t.Action != lib.ActionOutput {
+		log.Fatalf("❌ [type %s | action %s] only supports output action", t.Type, t.Action)
+	}
+	if t.OnlyIPType != "" && t.OnlyIPType != lib.IPv4 && t.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType: %s", t.Type, t.Action, t.OnlyIPType)
+	}
+
+	return t
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).OutputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithOutputExtension(extension string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).OutputExt = strings.TrimSpace(extension)
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).OnlyIPType = lib.IPType(strings.ToLower(strings.TrimSpace(string(onlyIPType))))
+	}
+}
+
+func WithAddPrefixInLine(prefix string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).AddPrefixInLine = prefix
+	}
+}
+
+func WithAddSuffixInLine(suffix string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*textOut).AddSuffixInLine = suffix
+	}
+}
+
+func newTextOutFromBytes(constructor func(lib.Action, ...lib.OutputOption) lib.OutputConverter, action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		OutputExt  string     `json:"outputExtension"`
@@ -50,39 +133,19 @@ func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMess
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeTextOut:
-			tmp.OutputDir = defaultOutputDirForTextOut
-		case TypeClashRuleSetClassicalOut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
-		case TypeClashRuleSetIPCIDROut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
-		case TypeSurgeRuleSetOut:
-			tmp.OutputDir = defaultOutputDirForSurgeRuleSetOut
-		}
-	}
-
-	if tmp.OutputExt == "" {
-		tmp.OutputExt = ".txt"
-	}
-
-	return &TextOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputDir:   tmp.OutputDir,
-		OutputExt:   tmp.OutputExt,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		AddPrefixInLine: tmp.AddPrefixInLine,
-		AddSuffixInLine: tmp.AddSuffixInLine,
-	}, nil
+	return constructor(
+		action,
+		WithOutputDir(tmp.OutputDir),
+		WithOutputExtension(tmp.OutputExt),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+		WithAddPrefixInLine(tmp.AddPrefixInLine),
+		WithAddSuffixInLine(tmp.AddSuffixInLine),
+	), nil
 }
 
-func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
+func (t *textOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(t.OnlyIPType))
 	if err != nil {
 		return nil, err
@@ -108,7 +171,7 @@ func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (t *TextOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *textOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		if t.AddPrefixInLine != "" {
 			buf.WriteString(t.AddPrefixInLine)
@@ -122,7 +185,7 @@ func (t *TextOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) 
 	return nil
 }
 
-func (t *TextOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *textOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
@@ -141,7 +204,7 @@ func (t *TextOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, ent
 	return nil
 }
 
-func (t *TextOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *textOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		buf.WriteString("  - '")
@@ -152,7 +215,7 @@ func (t *TextOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryC
 	return nil
 }
 
-func (t *TextOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *textOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -173,7 +236,7 @@ func (t *TextOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []
 	return nil
 }
 
-func (t *TextOut) writeFile(filename string, data []byte) error {
+func (t *textOut) writeFile(filename string, data []byte) error {
 	if err := os.MkdirAll(t.OutputDir, 0755); err != nil {
 		return err
 	}
