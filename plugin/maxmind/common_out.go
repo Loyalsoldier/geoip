@@ -3,6 +3,7 @@ package maxmind
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,7 +101,87 @@ func (d dbipCountry) HasData() bool {
 	return d != zeroDBIPCountry
 }
 
-func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	g := &GeoLite2CountryMMDBOut{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	if g.OutputName == "" {
+		g.OutputName = defaultGeoLite2CountryMMDBOutputName
+	}
+
+	if g.OutputDir == "" {
+		switch iType {
+		case TypeGeoLite2CountryMMDBOut:
+			g.OutputDir = defaultMaxmindOutputDir
+
+		case TypeDBIPCountryMMDBOut:
+			g.OutputDir = defaultDBIPOutputDir
+
+		case TypeIPInfoCountryMMDBOut:
+			g.OutputDir = defaultIPInfoOutputDir
+		}
+	}
+
+	if g.Action != lib.ActionOutput {
+		log.Fatalf("❌ [type %s | action %s] invalid action: must be output", g.Type, g.Action)
+	}
+	validateOnlyIPType(g.Type, g.Action, g.OnlyIPType)
+
+	return g
+}
+
+func WithOutputName(name string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).OutputName = strings.TrimSpace(name)
+	}
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).OutputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).Want = lists
+	}
+}
+
+func WithOutputOverwriteList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).Overwrite = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).OnlyIPType = onlyIPType
+	}
+}
+
+func WithSourceMMDBURI(uri string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoLite2CountryMMDBOut).SourceMMDBURI = strings.TrimSpace(uri)
+	}
+}
+
+func newGeoLite2CountryMMDBOutFromBytes(newOut func(lib.Action, ...lib.OutputOption) lib.OutputConverter, action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputName string     `json:"outputName"`
 		OutputDir  string     `json:"outputDir"`
@@ -118,36 +199,16 @@ func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, da
 		}
 	}
 
-	if tmp.OutputName == "" {
-		tmp.OutputName = defaultGeoLite2CountryMMDBOutputName
-	}
-
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeGeoLite2CountryMMDBOut:
-			tmp.OutputDir = defaultMaxmindOutputDir
-
-		case TypeDBIPCountryMMDBOut:
-			tmp.OutputDir = defaultDBIPOutputDir
-
-		case TypeIPInfoCountryMMDBOut:
-			tmp.OutputDir = defaultIPInfoOutputDir
-		}
-	}
-
-	return &GeoLite2CountryMMDBOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputName:  tmp.OutputName,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Overwrite:   tmp.Overwrite,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		SourceMMDBURI: tmp.SourceMMDBURI,
-	}, nil
+	return newOut(
+		action,
+		WithOutputName(tmp.OutputName),
+		WithOutputDir(tmp.OutputDir),
+		WithOutputWantedList(tmp.Want),
+		WithOutputOverwriteList(tmp.Overwrite),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+		WithSourceMMDBURI(tmp.SourceMMDBURI),
+	), nil
 }
 
 func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {

@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -32,7 +33,90 @@ type TextOut struct {
 	AddSuffixInLine string
 }
 
-func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func newTextOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	t := &TextOut{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	t.OutputDir = strings.TrimSpace(t.OutputDir)
+	t.OutputExt = strings.TrimSpace(t.OutputExt)
+	if t.OutputDir == "" {
+		switch t.Type {
+		case TypeTextOut:
+			t.OutputDir = defaultOutputDirForTextOut
+		case TypeClashRuleSetClassicalOut:
+			t.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
+		case TypeClashRuleSetIPCIDROut:
+			t.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
+		case TypeSurgeRuleSetOut:
+			t.OutputDir = defaultOutputDirForSurgeRuleSetOut
+		}
+	}
+	if t.OutputExt == "" {
+		t.OutputExt = ".txt"
+	}
+
+	if t.Action != lib.ActionOutput {
+		log.Fatalf("❌ [type %s | action %s] action must be output", t.Type, t.Action)
+	}
+	if t.OnlyIPType != "" && t.OnlyIPType != lib.IPv4 && t.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] onlyIPType must be ipv4 or ipv6", t.Type, t.Action)
+	}
+
+	return t
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).OutputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithOutputExtension(extension string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).OutputExt = strings.TrimSpace(extension)
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).OnlyIPType = onlyIPType
+	}
+}
+
+func WithAddPrefixInLine(prefix string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).AddPrefixInLine = prefix
+	}
+}
+
+func WithAddSuffixInLine(suffix string) lib.OutputOption {
+	return func(t lib.OutputConverter) {
+		t.(*TextOut).AddSuffixInLine = suffix
+	}
+}
+
+func newTextOutFromBytes(newOutput func(lib.Action, ...lib.OutputOption) lib.OutputConverter, action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		OutputExt  string     `json:"outputExtension"`
@@ -50,36 +134,16 @@ func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMess
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		switch iType {
-		case TypeTextOut:
-			tmp.OutputDir = defaultOutputDirForTextOut
-		case TypeClashRuleSetClassicalOut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetClassicalOut
-		case TypeClashRuleSetIPCIDROut:
-			tmp.OutputDir = defaultOutputDirForClashRuleSetIPCIDROut
-		case TypeSurgeRuleSetOut:
-			tmp.OutputDir = defaultOutputDirForSurgeRuleSetOut
-		}
-	}
-
-	if tmp.OutputExt == "" {
-		tmp.OutputExt = ".txt"
-	}
-
-	return &TextOut{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		OutputDir:   tmp.OutputDir,
-		OutputExt:   tmp.OutputExt,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-
-		AddPrefixInLine: tmp.AddPrefixInLine,
-		AddSuffixInLine: tmp.AddSuffixInLine,
-	}, nil
+	return newOutput(
+		action,
+		WithOutputDir(tmp.OutputDir),
+		WithOutputExtension(tmp.OutputExt),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+		WithAddPrefixInLine(tmp.AddPrefixInLine),
+		WithAddSuffixInLine(tmp.AddSuffixInLine),
+	), nil
 }
 
 func (t *TextOut) marshalBytes(entry *lib.Entry) ([]byte, error) {

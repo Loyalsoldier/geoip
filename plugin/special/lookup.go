@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/netip"
 	"slices"
 	"strings"
@@ -18,14 +19,53 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeLookup, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newLookup(action, data)
+		return NewLookupFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeLookup, &Lookup{
 		Description: DescLookup,
 	})
 }
 
-func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	l := &Lookup{
+		Type:        TypeLookup,
+		Action:      action,
+		Description: DescLookup,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(l)
+		}
+	}
+	if l.Search == "" {
+		log.Fatalf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", l.Type, l.Action)
+	}
+	var err error
+	if strings.Contains(l.Search, "/") {
+		_, err = netip.ParsePrefix(l.Search)
+	} else {
+		_, err = netip.ParseAddr(l.Search)
+	}
+	if err != nil {
+		log.Fatalf("❌ [type %s | action %s] invalid IP or CIDR: %s", l.Type, l.Action, l.Search)
+	}
+	validateOutput(l, "")
+	return l
+}
+
+func WithSearch(search string) lib.OutputOption {
+	return func(l lib.OutputConverter) {
+		l.(*Lookup).Search = strings.TrimSpace(search)
+	}
+}
+
+func WithSearchList(lists []string) lib.OutputOption {
+	return func(l lib.OutputConverter) {
+		l.(*Lookup).SearchList = lists
+	}
+}
+
+func NewLookupFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		Search     string   `json:"search"`
 		SearchList []string `json:"searchList"`
@@ -37,18 +77,10 @@ func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	tmp.Search = strings.TrimSpace(tmp.Search)
-	if tmp.Search == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] please specify an IP or a CIDR as search target", TypeLookup, action)
-	}
-
-	return &Lookup{
-		Type:        TypeLookup,
-		Action:      action,
-		Description: DescLookup,
-		Search:      tmp.Search,
-		SearchList:  tmp.SearchList,
-	}, nil
+	return NewLookup(action,
+		WithSearch(tmp.Search),
+		WithSearchList(tmp.SearchList),
+	), nil
 }
 
 type Lookup struct {

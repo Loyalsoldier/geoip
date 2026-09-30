@@ -27,14 +27,65 @@ var (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeMRSOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newMRSOut(action, data)
+		return NewMRSOutFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeMRSOut, &MRSOut{
 		Description: DescMRSOut,
 	})
 }
 
-func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewMRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	m := &MRSOut{
+		Type:        TypeMRSOut,
+		Action:      action,
+		Description: DescMRSOut,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(m)
+		}
+	}
+
+	if m.OutputDir == "" {
+		m.OutputDir = defaultOutputDir
+	}
+
+	if m.Action != lib.ActionOutput {
+		log.Fatalf("❌ [type %s | action %s] invalid output action", m.Type, m.Action)
+	}
+	if m.OnlyIPType != "" && m.OnlyIPType != lib.IPv4 && m.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType %s", m.Type, m.Action, m.OnlyIPType)
+	}
+
+	return m
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*MRSOut).OutputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*MRSOut).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*MRSOut).Exclude = lists
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(m lib.OutputConverter) {
+		m.(*MRSOut).OnlyIPType = onlyIPType
+	}
+}
+
+func NewMRSOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputDir  string     `json:"outputDir"`
 		Want       []string   `json:"wantedList"`
@@ -48,19 +99,13 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 		}
 	}
 
-	if tmp.OutputDir == "" {
-		tmp.OutputDir = defaultOutputDir
-	}
-
-	return &MRSOut{
-		Type:        TypeMRSOut,
-		Action:      action,
-		Description: DescMRSOut,
-		OutputDir:   tmp.OutputDir,
-		Want:        tmp.Want,
-		Exclude:     tmp.Exclude,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewMRSOut(
+		action,
+		WithOutputDir(tmp.OutputDir),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type MRSOut struct {

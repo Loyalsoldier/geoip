@@ -26,14 +26,80 @@ var (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeGeoIPDatOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoIPDatOut(action, data)
+		return NewGeoIPDatOutFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeGeoIPDatOut, &GeoIPDatOut{
 		Description: DescGeoIPDatOut,
 	})
 }
 
-func newGeoIPDatOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
+func NewGeoIPDatOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	g := &GeoIPDatOut{
+		Type:        TypeGeoIPDatOut,
+		Action:      action,
+		Description: DescGeoIPDatOut,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	if g.OutputName == "" {
+		g.OutputName = defaultOutputName
+	}
+	if g.OutputDir == "" {
+		g.OutputDir = defaultOutputDir
+	}
+
+	if g.Action != lib.ActionOutput {
+		log.Fatalf("❌ [type %s | action %s] invalid output action", g.Type, g.Action)
+	}
+	if g.OnlyIPType != "" && g.OnlyIPType != lib.IPv4 && g.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType %s", g.Type, g.Action, g.OnlyIPType)
+	}
+
+	return g
+}
+
+func WithOutputName(name string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).OutputName = strings.TrimSpace(name)
+	}
+}
+
+func WithOutputDir(dir string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).OutputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithOutputWantedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).Want = lists
+	}
+}
+
+func WithOutputExcludedList(lists []string) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).Exclude = lists
+	}
+}
+
+func WithOneFilePerList(oneFilePerList bool) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).OneFilePerList = oneFilePerList
+	}
+}
+
+func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
+	return func(g lib.OutputConverter) {
+		g.(*GeoIPDatOut).OnlyIPType = onlyIPType
+	}
+}
+
+func NewGeoIPDatOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
 	var tmp struct {
 		OutputName     string     `json:"outputName"`
 		OutputDir      string     `json:"outputDir"`
@@ -49,25 +115,15 @@ func newGeoIPDatOut(action lib.Action, data json.RawMessage) (lib.OutputConverte
 		}
 	}
 
-	if tmp.OutputName == "" {
-		tmp.OutputName = defaultOutputName
-	}
-
-	if tmp.OutputDir == "" {
-		tmp.OutputDir = defaultOutputDir
-	}
-
-	return &GeoIPDatOut{
-		Type:           TypeGeoIPDatOut,
-		Action:         action,
-		Description:    DescGeoIPDatOut,
-		OutputName:     tmp.OutputName,
-		OutputDir:      tmp.OutputDir,
-		Want:           tmp.Want,
-		Exclude:        tmp.Exclude,
-		OneFilePerList: tmp.OneFilePerList,
-		OnlyIPType:     tmp.OnlyIPType,
-	}, nil
+	return NewGeoIPDatOut(
+		action,
+		WithOutputName(tmp.OutputName),
+		WithOutputDir(tmp.OutputDir),
+		WithOutputWantedList(tmp.Want),
+		WithOutputExcludedList(tmp.Exclude),
+		WithOneFilePerList(tmp.OneFilePerList),
+		WithOutputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type GeoIPDatOut struct {
