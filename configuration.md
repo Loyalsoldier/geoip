@@ -20,6 +20,7 @@
 - **cutter**：用于裁剪前置步骤中的数据
 - **dbipCountryMMDB**：DB-IP country mmdb 数据格式（`dbip-country-lite.mmdb`）
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
+- **ipipnetIPDB**：ipip.net ipdb 数据格式（`city.ipv4.ipdb`）
 - **json**：JSON 数据格式
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据格式（`GeoLite2-ASN-CSV.zip`）
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
@@ -270,6 +271,53 @@
     "uri": "https://example.com/my.mmdb",
     "wantedList": ["cn", "us", "jp"],    // 只移除名为 cn、us、jp 这三个类别的 IPv4 地址
     "onlyIPType": "ipv4"                 // 只移除 IPv4 地址
+  }
+}
+```
+
+### **ipipnetIPDB**
+
+- **type**：（必须）输入格式的名称
+- **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
+- **args**：（必须）
+  - **uri**：（必须）ipip.net ipdb 格式文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。
+  - **field**：（可选）使用 [`CityInfo`](https://github.com/ipipdotnet/ipdb-go/blob/master/city.go) 中的哪个字段的值作为类别名称，值为该字段的 JSON 标签名，如 `country_code`、`country_name`、`region_name`、`city_name`、`isp_domain`、`asn` 等，且必须存在于 ipdb 文件的 `fields` 中。默认值为 `country_code`。字段值为空的 IP 地址会被忽略。
+  - **language**：（可选）查询所使用的语言，必须存在于 ipdb 文件的 `languages` 中。默认值为 `CN`。
+  - **wantedList**：（可选，数组）指定需要的类别/文件。
+  - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`。
+
+```jsonc
+{
+  "type": "ipipnetIPDB",
+  "action": "add",                  // 添加 IP 地址
+  "args": {
+    "uri": "./ipipnet/city.ipdb"    // 以 country_code 字段的值作为类别名称
+  }
+}
+```
+
+```jsonc
+{
+  "type": "ipipnetIPDB",
+  "action": "add",                         // 添加 IP 地址
+  "args": {
+    "uri": "https://example.com/my.ipdb",
+    "field": "city_name",                  // 以 city_name 字段的值作为类别名称
+    "language": "EN",                      // 使用英文数据
+    "wantedList": ["beijing", "shanghai"], // 只需要名为 beijing、shanghai 的类别
+    "onlyIPType": "ipv4"                   // 只添加 IPv4 地址
+  }
+}
+```
+
+```jsonc
+{
+  "type": "ipipnetIPDB",
+  "action": "remove",                // 移除 IP 地址
+  "args": {
+    "uri": "./ipipnet/city.ipdb",
+    "wantedList": ["cn"],            // 只移除名为 cn 的类别的 IPv6 地址
+    "onlyIPType": "ipv6"             // 只移除 IPv6 地址
   }
 }
 ```
