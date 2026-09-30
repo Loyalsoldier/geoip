@@ -164,6 +164,17 @@ func isValidIPOrCIDR(search string) bool {
 func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
+	// Single-file input formats cannot read from a directory
+	if strings.TrimSpace(dir) != "" {
+		switch strings.ToLower(format) {
+		case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn),
+			strings.ToLower(maxmind.TypeDBIPCountryMMDBIn),
+			strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn),
+			strings.ToLower(v2ray.TypeGeoIPDatIn):
+			log.Fatalf("input format %s does not support \"dir\" flag, please use \"uri\" flag instead", format)
+		}
+	}
+
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
 		input = maxmind.NewGeoLite2CountryMMDBIn(

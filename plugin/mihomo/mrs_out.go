@@ -49,6 +49,7 @@ func NewMRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		Type:        TypeMRSOut,
 		Action:      action,
 		Description: DescMRSOut,
+		OutputDir:   defaultOutputDir,
 	}
 
 	for _, opt := range opts {
