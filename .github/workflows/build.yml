@@ -43,18 +43,29 @@ jobs:
           echo "RELEASE_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
         shell: bash
 
+      - name: Download GeoLite2 databases for Pull Requests
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p output
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN.tar.gz" -o ./output/GeoLite2-ASN.tar.gz
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN-CSV.zip" -o ./output/GeoLite2-ASN-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country.tar.gz" -o ./output/GeoLite2-Country.tar.gz
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country-CSV.zip" -o ./output/GeoLite2-Country-CSV.zip
+
       - name: Download GeoLite2 databases
+        if: github.event_name != 'pull_request'
         env:
           LICENSE_KEY: ${{ secrets.MAXMIND_GEOLITE2_LICENSE }}
         run: |
           mkdir -p output
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-ASN.tar.gz
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-ASN-CSV.zip
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-Country.tar.gz
-          curl -L "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-Country-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-ASN.tar.gz
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-ASN-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-Country.tar.gz
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-Country-CSV.zip
 
       - name: Prepare GeoLite2 databases
         run: |
+          ls -lah ./output
           cp ./output/{*.gz,*.zip} ./
           unzip GeoLite2-Country-CSV.zip
           unzip GeoLite2-ASN-CSV.zip
@@ -115,7 +126,7 @@ jobs:
         run: |
           cd output || exit 1
           for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+            curl -i --retry 3 "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
           done
 
       - name: Remove some files to avoid publishing to GitHub release
