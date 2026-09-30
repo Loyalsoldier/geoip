@@ -21,16 +21,32 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetClassicalOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, data)
+		return NewClashRuleSetClassicalOutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeClashRuleSetClassicalOut, &TextOut{
+	lib.RegisterOutputConverter(TypeClashRuleSetClassicalOut, &text_out{
 		Description: DescClashRuleSetClassicalOut,
 	})
 
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetIPCIDROut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOut(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, data)
+		return NewClashRuleSetIPCIDROutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeClashRuleSetIPCIDROut, &TextOut{
+	lib.RegisterOutputConverter(TypeClashRuleSetIPCIDROut, &text_out{
 		Description: DescClashRuleSetIPCIDROut,
 	})
+}
+
+func NewClashRuleSetClassicalOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	return newTextOut(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, opts...)
+}
+
+func NewClashRuleSetClassicalOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newTextOutFromBytes(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, data)
+}
+
+func NewClashRuleSetIPCIDROut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	return newTextOut(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, opts...)
+}
+
+func NewClashRuleSetIPCIDROutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newTextOutFromBytes(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, data)
 }
