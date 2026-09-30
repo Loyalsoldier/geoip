@@ -84,7 +84,7 @@ func (e *Entry) getPrefixFromIP(src net.IP) (*netip.Prefix, IPType, error) {
 		return &prefix, IPv6, nil
 
 	default:
-		return nil, "", ErrInvalidIPLength
+		return nil, "", ErrInvalidIP
 	}
 }
 
@@ -137,7 +137,7 @@ func (e *Entry) getPrefixFromAddr(src netip.Addr) (*netip.Prefix, IPType, error)
 		return &prefix, IPv6, nil
 
 	default:
-		return nil, "", ErrInvalidIPLength
+		return nil, "", ErrInvalidIPType
 	}
 }
 
@@ -171,7 +171,7 @@ func (e *Entry) getPrefixFromPrefix(src netip.Prefix) (*netip.Prefix, IPType, er
 		return &prefix, IPv6, nil
 
 	default:
-		return nil, "", ErrInvalidIPLength
+		return nil, "", ErrInvalidIPType
 	}
 }
 
@@ -213,7 +213,7 @@ func (e *Entry) getPrefixFromString(src string) (*netip.Prefix, IPType, error) {
 		return e.getPrefixFromAddr(ip)
 	}
 
-	return nil, "", ErrInvalidIPLength
+	return nil, "", ErrInvalidIPType
 }
 
 func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
