@@ -207,7 +207,7 @@ func TestIPDBInvalidConfigAndData(t *testing.T) {
 	binary.BigEndian.PutUint32(badSize[:4], uint32(len(content)))
 	badPointer := append([]byte(nil), content...)
 	dataStart := 4 + int(binary.BigEndian.Uint32(content[:4]))
-	binary.BigEndian.PutUint32(badPointer[dataStart+4:], 999999)
+	binary.BigEndian.PutUint32(badPointer[dataStart+4:], ^uint32(0))
 	badLength := append([]byte(nil), content...)
 	tree, _, err := parseIPDBTree(badLength)
 	if err != nil {
@@ -217,12 +217,19 @@ func TestIPDBInvalidConfigAndData(t *testing.T) {
 	binary.BigEndian.PutUint16(badLength[recordPos:], 65535)
 	badCycle := append([]byte(nil), content...)
 	binary.BigEndian.PutUint32(badCycle[dataStart+4:], 0)
+	badExpansion := append([]byte(nil), content...)
+	for i := 0; i < 20; i++ {
+		binary.BigEndian.PutUint32(badExpansion[dataStart+i*8:], uint32(i+1))
+		binary.BigEndian.PutUint32(badExpansion[dataStart+i*8+4:], uint32(i+1))
+	}
+	binary.BigEndian.PutUint32(badExpansion[dataStart+20*8:], tree.child(96, 0))
+	binary.BigEndian.PutUint32(badExpansion[dataStart+20*8+4:], tree.child(96, 0))
 	badLanguage := changeIPDBMetadata(t, content, func(meta map[string]any) {
 		meta["languages"] = map[string]int{"CN": int(^uint(0) >> 1)}
 	})
 	for name, value := range map[string][]byte{
 		"short": content[:3], "metadata": badSize, "pointer": badPointer,
-		"record": badLength, "cycle": badCycle, "language": badLanguage,
+		"record": badLength, "cycle": badCycle, "expansion": badExpansion, "language": badLanguage,
 	} {
 		t.Run(name, func(t *testing.T) {
 			input := fixtureInput(t, value, `"field":"country_code"`, lib.ActionAdd)

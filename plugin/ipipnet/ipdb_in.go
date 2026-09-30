@@ -145,6 +145,8 @@ type ipdbTree struct {
 	data      []byte
 	nodeCount int
 	visiting  map[uint32]bool
+	steps     int
+	maxSteps  int
 }
 
 func parseIPDBTree(content []byte) (*ipdbTree, *ipdbMetadata, error) {
@@ -160,10 +162,19 @@ func parseIPDBTree(content []byte) (*ipdbTree, *ipdbMetadata, error) {
 		return nil, nil, err
 	}
 	data := content[4+int(metaSize):]
-	if meta.TotalSize != len(data) || meta.NodeCount <= 0 || meta.NodeCount > len(data)/8 || len(meta.Languages) == 0 || len(meta.Fields) == 0 {
+	if meta.TotalSize != len(data) || meta.NodeCount <= 0 || meta.NodeCount > len(data)/8 || uint64(meta.NodeCount) > uint64(^uint32(0)) || len(meta.Languages) == 0 || len(meta.Fields) == 0 {
 		return nil, nil, fmt.Errorf("invalid ipdb metadata or index size")
 	}
-	return &ipdbTree{data: data, nodeCount: meta.NodeCount, visiting: make(map[uint32]bool)}, &meta, nil
+	for i := 0; i < meta.NodeCount*8; i += 4 {
+		if uint64(binary.BigEndian.Uint32(data[i:i+4])) > uint64(int(^uint(0)>>1)) {
+			return nil, nil, fmt.Errorf("invalid ipdb index pointer at %d", i)
+		}
+	}
+	maxSteps := 10_000_000
+	if len(data) < (maxSteps-256)/16 {
+		maxSteps = len(data)*16 + 256
+	}
+	return &ipdbTree{data: data, nodeCount: meta.NodeCount, visiting: make(map[uint32]bool), maxSteps: maxSteps}, &meta, nil
 }
 
 func (t *ipdbTree) child(node uint32, bit int) uint32 {
@@ -211,6 +222,10 @@ func splitIPDBPrefix(prefix netip.Prefix) (netip.Prefix, netip.Prefix) {
 }
 
 func (t *ipdbTree) walk(node uint32, prefix netip.Prefix, visit func(uint32, netip.Prefix) error) error {
+	t.steps++
+	if t.steps > t.maxSteps {
+		return fmt.Errorf("ipdb index expands to too many CIDRs")
+	}
 	if prefix.Addr().Is6() && prefix.Bits() == 96 && prefix.Addr() == mappedIPv4 {
 		return nil
 	}
