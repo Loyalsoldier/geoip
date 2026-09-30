@@ -89,33 +89,39 @@ func (e *Entry) getPrefixFromIP(src net.IP) (*netip.Prefix, IPType, error) {
 }
 
 func (e *Entry) getPrefixFromIPNet(src net.IPNet) (*netip.Prefix, IPType, error) {
-	prefix, ok := netipx.FromStdIPNet(&src)
+	ip, ok := netip.AddrFromSlice(src.IP)
 	if !ok {
 		return nil, "", ErrInvalidIPNet
 	}
 
-	ip := prefix.Addr()
+	ones, bits := src.Mask.Size()
 	switch {
-	case ip.Is4():
-		return &prefix, IPv4, nil
-
-	case ip.Is4In6():
-		ip = ip.Unmap()
-		bits := prefix.Bits()
-		if bits < 96 {
-			return nil, "", ErrInvalidPrefix
-		}
-		prefix, err := ip.Prefix(bits - 96)
+	case bits == 32 && ip.Unmap().Is4():
+		prefix, err := ip.Unmap().Prefix(ones)
 		if err != nil {
 			return nil, "", ErrInvalidPrefix
 		}
 		return &prefix, IPv4, nil
 
-	case ip.Is6():
+	case bits == 128 && ip.Is4In6():
+		if ones < 96 {
+			return nil, "", ErrInvalidPrefix
+		}
+		prefix, err := ip.Unmap().Prefix(ones - 96)
+		if err != nil {
+			return nil, "", ErrInvalidPrefix
+		}
+		return &prefix, IPv4, nil
+
+	case bits == 128 && ip.Is6():
+		prefix, err := ip.Prefix(ones)
+		if err != nil {
+			return nil, "", ErrInvalidPrefix
+		}
 		return &prefix, IPv6, nil
 
 	default:
-		return nil, "", ErrInvalidIPLength
+		return nil, "", ErrInvalidIPNet
 	}
 }
 
