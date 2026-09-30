@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"math"
 	"net/netip"
 	"os"
 	"reflect"
@@ -287,16 +288,19 @@ func newIPDBTree(content []byte) (*ipdbTree, error) {
 		return nil, fmt.Errorf("invalid ipdb database: metadata out of range")
 	}
 
-	var meta struct {
-		NodeCount int `json:"node_count"`
-	}
+	var meta ipdb.MetaData
 	if err := json.Unmarshal(content[4:4+metaLength], &meta); err != nil {
 		return nil, err
 	}
 
 	data := content[4+metaLength:]
-	if meta.NodeCount <= 0 || uint64(meta.NodeCount) > uint64(len(data))/8 {
+	if meta.NodeCount <= 0 || uint64(meta.NodeCount) > math.MaxUint32 || uint64(meta.NodeCount) > uint64(len(data))/8 {
 		return nil, fmt.Errorf("invalid ipdb database: node count %d out of range", meta.NodeCount)
+	}
+	for language, offset := range meta.Languages {
+		if offset < 0 || offset > math.MaxInt-len(meta.Fields) {
+			return nil, fmt.Errorf("invalid ipdb database: language %q offset out of range", language)
+		}
 	}
 
 	t := &ipdbTree{
@@ -314,6 +318,12 @@ func newIPDBTree(content []byte) (*ipdbTree, error) {
 		}
 	}
 	t.v4offset = node
+	// ipdb-go follows this path during construction using signed int pointers.
+	if node > t.nodeCount {
+		if err := t.validateRecord(node); err != nil {
+			return nil, err
+		}
+	}
 
 	return t, nil
 }
@@ -321,6 +331,18 @@ func newIPDBTree(content []byte) (*ipdbTree, error) {
 func (t *ipdbTree) readNode(node uint32, bit int) uint32 {
 	off := int(node)*8 + bit*4
 	return binary.BigEndian.Uint32(t.data[off : off+4])
+}
+
+func (t *ipdbTree) validateRecord(node uint32) error {
+	offset := uint64(node) - uint64(t.nodeCount) + uint64(t.nodeCount)*8
+	if offset+2 > uint64(len(t.data)) {
+		return fmt.Errorf("invalid ipdb database: record pointer %d out of range", node)
+	}
+	size := uint64(binary.BigEndian.Uint16(t.data[offset : offset+2]))
+	if offset+2+size > uint64(len(t.data)) {
+		return fmt.Errorf("invalid ipdb database: record %d out of range", node)
+	}
+	return nil
 }
 
 // walk calls handler with every network that has a record in the subtree of node,
@@ -338,9 +360,8 @@ func (t *ipdbTree) walk(node uint32, ip []byte, depth int, handler func(netip.Pr
 		return nil
 
 	case node > t.nodeCount: // record
-		offset := uint64(node) - uint64(t.nodeCount) + uint64(t.nodeCount)*8
-		if offset+2 > uint64(len(t.data)) {
-			return fmt.Errorf("invalid ipdb database: record pointer %d out of range", node)
+		if err := t.validateRecord(node); err != nil {
+			return err
 		}
 
 		var addr netip.Addr

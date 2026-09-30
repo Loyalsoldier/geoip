@@ -281,7 +281,7 @@
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
 - **args**：（必须）
   - **uri**：（必须）ipip.net ipdb 格式文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。
-  - **field**：（可选）使用 [`CityInfo`](https://github.com/ipipdotnet/ipdb-go/blob/master/city.go) 中的哪个字段的值作为类别名称，值为该字段的 JSON 标签名，如 `country_code`、`country_name`、`region_name`、`city_name`、`isp_domain`、`asn` 等，且必须存在于 ipdb 文件的 `fields` 中。默认值为 `country_code`。字段值为空的 IP 地址会被忽略。
+  - **field**：（可选）使用 [`CityInfo`](https://github.com/ipipdotnet/ipdb-go/blob/v1.3.3/city.go) 中的哪个字符串字段的值作为类别名称，值为该字段的 JSON 标签名，如 `country_code`、`country_name`、`region_name`、`city_name`、`isp_domain`、`asn` 等，且必须存在于 ipdb 文件的 `fields` 中。默认值为 `country_code`。字段值为空的 IP 地址会被忽略。
   - **language**：（可选）查询所使用的语言，必须存在于 ipdb 文件的 `languages` 中。默认值为 `CN`。
   - **wantedList**：（可选，数组）指定需要的类别/文件。
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`。
