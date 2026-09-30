@@ -259,10 +259,6 @@ func (t *TextIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[stri
 
 	name = strings.ToUpper(name)
 
-	if len(t.Want) > 0 && !t.Want[name] {
-		return nil
-	}
-
 	entry, found := entries[name]
 	if !found {
 		entry = lib.NewEntry(name)

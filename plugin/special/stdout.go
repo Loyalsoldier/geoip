@@ -109,12 +109,16 @@ func (s *Stdout) filterAndSortList(container lib.Container) []string {
 	}
 
 	if hasWantedList {
+		if len(wantList) == 0 {
+			return []string{}
+		}
+
 		// Sort the list
 		slices.Sort(wantList)
 		return wantList
 	}
 
-	list := make([]string, 0, 300)
+	list := make([]string, 0, container.Len())
 	for entry := range container.Loop() {
 		name := entry.GetName()
 		if excludeMap[name] {

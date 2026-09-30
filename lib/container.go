@@ -50,9 +50,7 @@ func (c *container) Len() int {
 }
 
 func (c *container) Loop() <-chan *Entry {
-	// Take a snapshot of the entries synchronously, so that callers can safely
-	// remove entries while looping and can stop looping at any time.
-	ch := make(chan *Entry, len(c.entries))
+	ch := make(chan *Entry, c.Len())
 	for _, val := range c.entries {
 		ch <- val
 	}

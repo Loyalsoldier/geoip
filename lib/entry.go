@@ -91,13 +91,18 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 		if !ok {
 			return nil, "", ErrInvalidIPNet
 		}
-		ip := prefix.Addr().Unmap()
+		ip := prefix.Addr()
 		switch {
 		case ip.Is4():
-			if ones, bits := src.Mask.Size(); bits == 8*net.IPv6len { // src is IPv4-mapped IPv6 network
-				prefix = netip.PrefixFrom(ip, ones-96)
+			return &prefix, IPv4, nil
+		case ip.Is4In6():
+			ip = ip.Unmap()
+			bits := prefix.Bits()
+			if bits < 96 {
+				return nil, "", ErrInvalidPrefix
 			}
-			if !prefix.IsValid() {
+			prefix, err := ip.Prefix(bits - 96)
+			if err != nil {
 				return nil, "", ErrInvalidPrefix
 			}
 			return &prefix, IPv4, nil
@@ -220,14 +225,19 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 				return nil, "", ErrInvalidIPNet
 			}
 
-			addr = prefix.Addr().Unmap()
+			addr = prefix.Addr()
 			switch {
 			case addr.Is4():
-				if ones, bits := network.Mask.Size(); bits == 8*net.IPv6len { // src is IPv4-mapped IPv6 CIDR
-					prefix = netip.PrefixFrom(addr, ones-96)
+				return &prefix, IPv4, nil
+			case addr.Is4In6():
+				addr = addr.Unmap()
+				bits := prefix.Bits()
+				if bits < 96 {
+					return nil, "", ErrInvalidPrefix
 				}
-				if !prefix.IsValid() {
-					return nil, "", ErrInvalidCIDR
+				prefix, err := addr.Prefix(bits - 96)
+				if err != nil {
+					return nil, "", ErrInvalidPrefix
 				}
 				return &prefix, IPv4, nil
 			case addr.Is6():

@@ -149,6 +149,10 @@ func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []st
 	}
 
 	if hasWantedList {
+		if len(wantList) == 0 {
+			return []string{}
+		}
+
 		return wantList
 	}
 
@@ -161,7 +165,7 @@ func (g *GeoLite2CountryMMDBOut) filterAndSortList(container lib.Container) []st
 		}
 	}
 
-	list := make([]string, 0, 300)
+	list := make([]string, 0, container.Len())
 	for entry := range container.Loop() {
 		name := entry.GetName()
 		if excludeMap[name] || overwriteMap[name] {

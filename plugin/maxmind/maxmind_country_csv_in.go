@@ -107,7 +107,7 @@ func (g *GeoLite2CountryCSVIn) Input(container lib.Container) (lib.Container, er
 		return nil, err
 	}
 
-	entries := make(map[string]*lib.Entry, len(ccMap))
+	entries := make(map[string]*lib.Entry)
 
 	if g.IPv4File != "" {
 		if err := g.process(g.IPv4File, ccMap, entries); err != nil {
@@ -196,7 +196,7 @@ func (g *GeoLite2CountryCSVIn) process(file string, ccMap map[string]string, ent
 		return fmt.Errorf("❌ [type %s | action %s] invalid country code data", g.Type, g.Action)
 	}
 	if entries == nil {
-		entries = make(map[string]*lib.Entry, len(ccMap))
+		entries = make(map[string]*lib.Entry)
 	}
 
 	var f io.ReadCloser
