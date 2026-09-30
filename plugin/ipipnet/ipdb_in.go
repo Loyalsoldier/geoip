@@ -47,8 +47,10 @@ func newIPDBIn(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 		Want       []string   `json:"wantedList"`
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, err
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &config); err != nil {
+			return nil, err
+		}
 	}
 	if config.URI == "" {
 		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", TypeIPDBIn, action)
@@ -271,7 +273,7 @@ func (g *IPDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 			language = "CN"
 		}
 	}
-	if offset, ok := meta.Languages[language]; !ok || offset < 0 {
+	if offset, ok := meta.Languages[language]; !ok || offset < 0 || offset > int(^uint(0)>>1)-len(meta.Fields) {
 		return fmt.Errorf("❌ [type %s | action %s] unsupported language %q", g.Type, g.Action, language)
 	}
 
