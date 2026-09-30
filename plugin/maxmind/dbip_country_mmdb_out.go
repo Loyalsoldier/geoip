@@ -7,7 +7,7 @@ import (
 )
 
 /*
-The types in this file extend the type `typeMaxmindMMDBOut`,
+The types in this file extend the type `geolite2_country_mmdb_out`,
 which make it possible to support more formats for the project.
 */
 
@@ -18,9 +18,17 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeDBIPCountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoLite2CountryMMDBOut(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, data)
+		return NewDBIPCountryMMDBOutFromBytes(action, data)
 	})
-	lib.RegisterOutputConverter(TypeDBIPCountryMMDBOut, &GeoLite2CountryMMDBOut{
+	lib.RegisterOutputConverter(TypeDBIPCountryMMDBOut, &geolite2_country_mmdb_out{
 		Description: DescDBIPCountryMMDBOut,
 	})
+}
+
+func NewDBIPCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+	return newGeoLite2CountryMMDBOut(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, opts...)
+}
+
+func NewDBIPCountryMMDBOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newGeoLite2CountryMMDBOutFromBytes(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, data)
 }

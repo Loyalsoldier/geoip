@@ -56,17 +56,16 @@ func NewSRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		}
 	}
 
+	if s.OutputDir == "" {
+		s.OutputDir = defaultOutputDir
+	}
+
 	return s
 }
 
 func WithOutputDir(dir string) lib.OutputOption {
 	return func(s lib.OutputConverter) {
-		dir = strings.TrimSpace(dir)
-		if dir == "" {
-			dir = defaultOutputDir
-		}
-
-		s.(*srs_out).OutputDir = dir
+		s.(*srs_out).OutputDir = strings.TrimSpace(dir)
 	}
 }
 

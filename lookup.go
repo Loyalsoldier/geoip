@@ -58,11 +58,14 @@ var lookupCmd = &cobra.Command{
 			log.Fatal("unsupported input format")
 		}
 
-		// Set name
-		name := "true"
-
 		// Get uri
 		uri, _ := cmd.Flags().GetString("uri")
+
+		// Set name, which must be specified together with uri
+		name := ""
+		if strings.TrimSpace(uri) != "" {
+			name = "true"
+		}
 
 		// Get dir
 		dir, _ := cmd.Flags().GetString("dir")
@@ -163,38 +166,29 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeGeoLite2CountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescGeoLite2CountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewGeoLite2CountryMMDBIn(
+			lib.ActionAdd,
+			maxmind.WithURI(uri),
+		)
 
 	case strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeDBIPCountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescDBIPCountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewDBIPCountryMMDBIn(
+			lib.ActionAdd,
+			maxmind.WithURI(uri),
+		)
 
 	case strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
-		input = &maxmind.GeoLite2CountryMMDBIn{
-			Type:        maxmind.TypeIPInfoCountryMMDBIn,
-			Action:      lib.ActionAdd,
-			Description: maxmind.DescIPInfoCountryMMDBIn,
-			URI:         uri,
-		}
+		input = maxmind.NewIPInfoCountryMMDBIn(
+			lib.ActionAdd,
+			maxmind.WithURI(uri),
+		)
 
 	case strings.ToLower(mihomo.TypeMRSIn):
-		input = &mihomo.MRSIn{
-			Type:        mihomo.TypeMRSIn,
-			Action:      lib.ActionAdd,
-			Description: mihomo.DescMRSIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = mihomo.NewMRSIn(
+			lib.ActionAdd,
+			mihomo.WithNameAndURI(name, uri),
+			mihomo.WithInputDir(dir),
+		)
 
 	case strings.ToLower(singbox.TypeSRSIn):
 		input = singbox.NewSRSIn(
@@ -204,52 +198,38 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		)
 
 	case strings.ToLower(v2ray.TypeGeoIPDatIn):
-		input = &v2ray.GeoIPDatIn{
-			Type:        v2ray.TypeGeoIPDatIn,
-			Action:      lib.ActionAdd,
-			Description: v2ray.DescGeoIPDatIn,
-			URI:         uri,
-		}
+		input = v2ray.NewGeoIPDatIn(
+			lib.ActionAdd,
+			v2ray.WithURI(uri),
+		)
 
 	case strings.ToLower(plaintext.TypeTextIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeTextIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescTextIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewTextIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetIPCIDRIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetIPCIDRIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetIPCIDRIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewClashRuleSetIPCIDRIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetClassicalIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeClashRuleSetClassicalIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescClashRuleSetClassicalIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewClashRuleSetClassicalIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	case strings.ToLower(plaintext.TypeSurgeRuleSetIn):
-		input = &plaintext.TextIn{
-			Type:        plaintext.TypeSurgeRuleSetIn,
-			Action:      lib.ActionAdd,
-			Description: plaintext.DescSurgeRuleSetIn,
-			Name:        name,
-			URI:         uri,
-			InputDir:    dir,
-		}
+		input = plaintext.NewSurgeRuleSetIn(
+			lib.ActionAdd,
+			plaintext.WithNameAndURI(name, uri),
+			plaintext.WithInputDir(dir),
+		)
 
 	default:
 		log.Fatal("unsupported input format")
@@ -259,11 +239,9 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 }
 
 func getOutputForLookup(search string, searchList ...string) lib.OutputConverter {
-	return &special.Lookup{
-		Type:        special.TypeLookup,
-		Action:      lib.ActionOutput,
-		Description: special.DescLookup,
-		Search:      search,
-		SearchList:  searchList,
-	}
+	return special.NewLookup(
+		lib.ActionOutput,
+		special.WithSearch(search),
+		special.WithSearchList(searchList),
+	)
 }
