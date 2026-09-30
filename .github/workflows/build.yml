@@ -47,10 +47,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           mkdir -p output
-          curl -L --retry 3 "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN.tar.gz" -o ./output/GeoLite2-ASN.tar.gz
-          curl -L --retry 3 "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN-CSV.zip" -o ./output/GeoLite2-ASN-CSV.zip
-          curl -L --retry 3 "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country.tar.gz" -o ./output/GeoLite2-Country.tar.gz
-          curl -L --retry 3 "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country-CSV.zip" -o ./output/GeoLite2-Country-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN.tar.gz" -o ./output/GeoLite2-ASN.tar.gz
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-ASN-CSV.zip" -o ./output/GeoLite2-ASN-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country.tar.gz" -o ./output/GeoLite2-Country.tar.gz
+          curl -L --retry 3 --fail-with-body "https://raw.githubusercontent.com/Loyalsoldier/geoip/refs/heads/release/GeoLite2-Country-CSV.zip" -o ./output/GeoLite2-Country-CSV.zip
 
       - name: Download GeoLite2 databases
         if: github.event_name != 'pull_request'
@@ -58,10 +58,10 @@ jobs:
           LICENSE_KEY: ${{ secrets.MAXMIND_GEOLITE2_LICENSE }}
         run: |
           mkdir -p output
-          curl -L --retry 3 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-ASN.tar.gz
-          curl -L --retry 3 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-ASN-CSV.zip
-          curl -L --retry 3 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-Country.tar.gz
-          curl -L --retry 3 "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-Country-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-ASN.tar.gz
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-ASN-CSV.zip
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=${LICENSE_KEY}&suffix=tar.gz" -o ./output/GeoLite2-Country.tar.gz
+          curl -L --retry 3 --fail-with-body "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip" -o ./output/GeoLite2-Country-CSV.zip
 
       - name: Prepare GeoLite2 databases
         run: |
