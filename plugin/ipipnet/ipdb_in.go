@@ -245,7 +245,7 @@ func (t *ipdbTree) walk(node uint32, prefix netip.Prefix, visit func(uint32, net
 		}
 		return visit(node, prefix)
 	case prefix.Bits() == prefix.Addr().BitLen():
-		return nil
+		return fmt.Errorf("invalid ipdb index depth at node %d", node)
 	case t.visiting[node]:
 		return fmt.Errorf("invalid ipdb index cycle at node %d", node)
 	}
