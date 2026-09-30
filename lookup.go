@@ -166,6 +166,16 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		name = ""
 	}
 
+	// MMDB formats only support uri, prevent them from silently falling back to their default uri
+	switch strings.ToLower(format) {
+	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn),
+		strings.ToLower(maxmind.TypeDBIPCountryMMDBIn),
+		strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
+		if strings.TrimSpace(uri) == "" {
+			log.Fatalf("❌ [type %s] missing uri, \"dir\" flag is not supported", format)
+		}
+	}
+
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
 		input = maxmind.NewGeoLite2CountryMMDBIn(
