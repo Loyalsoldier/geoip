@@ -2,6 +2,7 @@ package maxmind
 
 import (
 	"encoding/json"
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -14,7 +15,36 @@ var (
 	defaultIPInfoCountryMMDBFile   = filepath.Join("./", "ipinfo", "country.mmdb")
 )
 
-func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &geolite2_country_mmdb_in{
+		Type:        iType,
+		Action:      action,
+		Description: iDesc,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	if g.URI == "" {
+		switch g.Type {
+		case TypeGeoLite2CountryMMDBIn:
+			g.URI = defaultGeoLite2CountryMMDBFile
+
+		case TypeDBIPCountryMMDBIn:
+			g.URI = defaultDBIPCountryMMDBFile
+
+		case TypeIPInfoCountryMMDBIn:
+			g.URI = defaultIPInfoCountryMMDBFile
+		}
+	}
+
+	return g
+}
+
+func newGeoLite2CountryMMDBInFromBytes(iType string, iDesc string, action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -27,33 +57,88 @@ func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, dat
 		}
 	}
 
-	if tmp.URI == "" {
-		switch iType {
-		case TypeGeoLite2CountryMMDBIn:
-			tmp.URI = defaultGeoLite2CountryMMDBFile
+	return newGeoLite2CountryMMDBIn(
+		iType,
+		iDesc,
+		action,
+		WithURI(tmp.URI),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
+}
 
-		case TypeDBIPCountryMMDBIn:
-			tmp.URI = defaultDBIPCountryMMDBFile
+// WithURI is only for MMDB input formats
+func WithURI(uri string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*geolite2_country_mmdb_in).URI = strings.TrimSpace(uri)
+	}
+}
 
-		case TypeIPInfoCountryMMDBIn:
-			tmp.URI = defaultIPInfoCountryMMDBFile
+// WithIPv4File is only for GeoLite2 CSV input formats
+func WithIPv4File(file string) lib.InputOption {
+	return func(i lib.InputConverter) {
+		switch g := i.(type) {
+		case *geolite2_asn_csv_in:
+			g.IPv4File = strings.TrimSpace(file)
+		case *geolite2_country_csv_in:
+			g.IPv4File = strings.TrimSpace(file)
+		default:
+			log.Fatalf("❌ [type %s | action %s] option WithIPv4File is not supported", i.GetType(), i.GetAction())
 		}
 	}
+}
 
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
+// WithIPv6File is only for GeoLite2 CSV input formats
+func WithIPv6File(file string) lib.InputOption {
+	return func(i lib.InputConverter) {
+		switch g := i.(type) {
+		case *geolite2_asn_csv_in:
+			g.IPv6File = strings.TrimSpace(file)
+		case *geolite2_country_csv_in:
+			g.IPv6File = strings.TrimSpace(file)
+		default:
+			log.Fatalf("❌ [type %s | action %s] option WithIPv6File is not supported", i.GetType(), i.GetAction())
 		}
 	}
+}
 
-	return &GeoLite2CountryMMDBIn{
-		Type:        iType,
-		Action:      action,
-		Description: iDesc,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+// For maxmindGeoLite2ASNCSV input format, the values of lists are ASNs.
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(i lib.InputConverter) {
+		if g, ok := i.(*geolite2_asn_csv_in); ok {
+			g.addWantedASNList(lists)
+			return
+		}
+
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+
+		switch g := i.(type) {
+		case *geolite2_country_mmdb_in:
+			g.Want = wantList
+		case *geolite2_country_csv_in:
+			g.Want = wantList
+		default:
+			log.Fatalf("❌ [type %s | action %s] option WithInputWantedList is not supported", i.GetType(), i.GetAction())
+		}
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(i lib.InputConverter) {
+		switch g := i.(type) {
+		case *geolite2_country_mmdb_in:
+			g.OnlyIPType = onlyIPType
+		case *geolite2_asn_csv_in:
+			g.OnlyIPType = onlyIPType
+		case *geolite2_country_csv_in:
+			g.OnlyIPType = onlyIPType
+		default:
+			log.Fatalf("❌ [type %s | action %s] option WithInputOnlyIPType is not supported", i.GetType(), i.GetAction())
+		}
+	}
 }
