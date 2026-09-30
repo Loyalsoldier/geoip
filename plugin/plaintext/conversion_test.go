@@ -170,6 +170,33 @@ func TestJSONPathSemantics(t *testing.T) {
 	}
 }
 
+func TestJSONSingleSourceWantedList(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cn.json")
+	if err := os.WriteFile(path, []byte(`{"prefixes":["192.0.2.0/24","2001:db8::/32"]}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := NewJSONInFromBytes(lib.ActionAdd, configBytes(t, map[string]any{
+		"name": " cn ", "uri": path, "jsonPath": []string{"prefixes"}, "wantedList": []string{" CN ", "", "cn"},
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	direct := NewJSONIn(lib.ActionAdd,
+		WithNameAndURI(" cn ", path), WithJSONPath([]string{"prefixes"}),
+		WithInputWantedList([]string{" CN ", "", "cn"}),
+	)
+	if !reflect.DeepEqual(direct, parsed) {
+		t.Fatalf("direct %#v differs from JSON %#v", direct, parsed)
+	}
+	for _, input := range []lib.InputConverter{direct, parsed} {
+		container, err := input.Input(lib.NewContainer())
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertPrefixes(t, container, "CN", []string{"192.0.2.0/24", "2001:db8::/32"})
+	}
+}
+
 func TestOutputFormatsWithDefaults(t *testing.T) {
 	expected := map[string]string{
 		TypeTextOut:                  "192.0.2.0/24\n2001:db8::/32\n",

@@ -85,7 +85,7 @@ func TestInputOptionsMatchJSON(t *testing.T) {
 		t.Run(format.name, func(t *testing.T) {
 			opts := []lib.InputOption{
 				nil,
-				WithNameAndURI(" cn ", " ./cn.txt "),
+				WithInputDir(" ./input "),
 				WithInputWantedList([]string{" cn ", "", "US", "cn"}),
 				WithInputOnlyIPType(lib.IPv6),
 				WithJSONPath([]string{" prefixes "}),
@@ -93,15 +93,10 @@ func TestInputOptionsMatchJSON(t *testing.T) {
 				WithRemoveSuffixesInLine([]string{",no-resolve "}),
 			}
 			data := map[string]any{
-				"name": " cn ", "uri": " ./cn.txt ",
+				"inputDir":   " ./input ",
 				"wantedList": []string{" cn ", "", "US", "cn"}, "onlyIPType": "ipv6",
 				"jsonPath": []string{" prefixes "}, "removePrefixesInLine": []string{" IP-CIDR,"},
 				"removeSuffixesInLine": []string{",no-resolve "},
-			}
-			if format.name == TypeTextIn {
-				cidrs := []string{" 192.0.2.0/24 ", "2001:db8::/32"}
-				opts = append(opts, WithNameAndIPOrCIDR(" cn ", cidrs))
-				data["ipOrCIDR"] = cidrs
 			}
 			direct := format.new(lib.ActionRemove, opts...)
 			parsed, err := format.fromBytes(lib.ActionRemove, configBytes(t, data))
@@ -109,7 +104,29 @@ func TestInputOptionsMatchJSON(t *testing.T) {
 				t.Fatalf("direct %#v differs from JSON %#v, error %v", direct, parsed, err)
 			}
 			got := direct.(*textIn)
-			if got.Name != "cn" || got.URI != "./cn.txt" || !reflect.DeepEqual(got.Want, map[string]bool{"CN": true, "US": true}) {
+			if got.InputDir != "./input" || !reflect.DeepEqual(got.Want, map[string]bool{"CN": true, "US": true}) {
+				t.Fatalf("source/list normalization failed: %#v", got)
+			}
+		})
+	}
+}
+
+func TestInputSingleSourceWithBlankWantedList(t *testing.T) {
+	for _, format := range inputFormats {
+		t.Run(format.name, func(t *testing.T) {
+			direct := format.new(lib.ActionAdd,
+				WithNameAndURI(" cn ", " ./cn.txt "),
+				WithInputWantedList([]string{" ", ""}),
+				WithJSONPath([]string{"prefixes"}),
+			)
+			parsed, err := format.fromBytes(lib.ActionAdd, []byte(`{
+				"name":" cn ", "uri":" ./cn.txt ", "wantedList":[" ",""], "jsonPath":["prefixes"]
+			}`))
+			if err != nil || !reflect.DeepEqual(direct, parsed) {
+				t.Fatalf("direct %#v differs from JSON %#v, error %v", direct, parsed, err)
+			}
+			got := direct.(*textIn)
+			if got.Name != "cn" || got.URI != "./cn.txt" || len(got.Want) != 0 {
 				t.Fatalf("source/list normalization failed: %#v", got)
 			}
 		})
@@ -257,6 +274,24 @@ func TestConstructorValidation(t *testing.T) {
 				},
 			)
 		}
+		if format.name != TypeJSONIn {
+			cases = append(cases,
+				fatalCase{
+					format.name + "/wanted-list-without-directory",
+					func() {
+						format.new(lib.ActionAdd, WithNameAndURI("cn", "cn.txt"), WithInputWantedList([]string{" cn "}))
+					},
+					"wantedList requires inputDir",
+				},
+				fatalCase{
+					format.name + "/wanted-list-without-directory-json",
+					func() {
+						_, _ = format.fromBytes(lib.ActionAdd, []byte(`{"name":"cn","uri":"cn.txt","inputDir":" ","wantedList":[" cn "]}`))
+					},
+					"wantedList requires inputDir",
+				},
+			)
+		}
 	}
 	cases = append(cases,
 		fatalCase{"json/missing-path", func() { NewJSONIn(lib.ActionAdd, WithNameAndURI("cn", "cn.json")) }, "missing jsonPath"},
@@ -277,6 +312,12 @@ func TestConstructorValidation(t *testing.T) {
 		fatalCase{"text/inline-with-directory-json", func() {
 			_, _ = NewTextInFromBytes(lib.ActionAdd, []byte(`{"name":"cn","ipOrCIDR":["192.0.2.1"],"inputDir":"./input"}`))
 		}, "inputDir is not allowed"},
+		fatalCase{"text/inline-with-wanted-list", func() {
+			NewTextIn(lib.ActionAdd, WithNameAndIPOrCIDR("cn", []string{"192.0.2.1"}), WithInputWantedList([]string{"cn"}))
+		}, "wantedList requires inputDir"},
+		fatalCase{"text/inline-with-wanted-list-json", func() {
+			_, _ = NewTextInFromBytes(lib.ActionAdd, []byte(`{"name":"cn","ipOrCIDR":["192.0.2.1"],"wantedList":["cn"]}`))
+		}, "wantedList requires inputDir"},
 	)
 	for _, format := range outputFormats {
 		for _, action := range []lib.Action{"", lib.ActionAdd, lib.ActionRemove, "unknown"} {

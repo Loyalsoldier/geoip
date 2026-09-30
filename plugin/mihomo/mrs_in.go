@@ -63,6 +63,9 @@ func NewMRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	if m.InputDir != "" && (m.Name != "" || m.URI != "") {
 		log.Fatalf("❌ [type %s | action %s] inputDir cannot be used with name and uri", m.Type, m.Action)
 	}
+	if len(m.Want) > 0 && m.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] wantedList requires inputDir", m.Type, m.Action)
+	}
 
 	return m
 }

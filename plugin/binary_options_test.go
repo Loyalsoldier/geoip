@@ -23,10 +23,10 @@ func TestBinaryOptionsFromBytes(t *testing.T) {
 	}{
 		{
 			"mrs",
-			mihomo.NewMRSIn(lib.ActionAdd, nil, mihomo.WithNameAndURI(" test ", " test.mrs "),
+			mihomo.NewMRSIn(lib.ActionAdd, nil, mihomo.WithInputDir(" rules "),
 				mihomo.WithInputWantedList([]string{" cn ", "", "us"}), mihomo.WithInputOnlyIPType(lib.IPv4)),
 			mihomo.NewMRSInFromBytes,
-			`{"name":" test ","uri":" test.mrs ","wantedList":[" cn ","","us"],"onlyIPType":"ipv4"}`,
+			`{"inputDir":" rules ","wantedList":[" cn ","","us"],"onlyIPType":"ipv4"}`,
 		},
 		{
 			"srs",
@@ -167,6 +167,12 @@ func TestBinaryInvalidOptions(t *testing.T) {
 		{"srs-mixed", func() {
 			singbox.NewSRSIn(lib.ActionAdd, singbox.WithNameAndURI("test", "test.srs"), singbox.WithInputDir("rules"))
 		}, "inputDir cannot"},
+		{"mrs-wanted-without-directory", func() {
+			mihomo.NewMRSIn(lib.ActionAdd, mihomo.WithNameAndURI("test", "test.mrs"), mihomo.WithInputWantedList([]string{"test"}))
+		}, "wantedList requires inputDir"},
+		{"srs-wanted-without-directory", func() {
+			singbox.NewSRSIn(lib.ActionAdd, singbox.WithNameAndURI("test", "test.srs"), singbox.WithInputWantedList([]string{"test"}))
+		}, "wantedList requires inputDir"},
 		{"dat-blank", func() { v2ray.NewGeoIPDatIn(lib.ActionAdd, v2ray.WithURI(" \t")) }, "uri must"},
 		{"mrs-json", func() {
 			_, _ = mihomo.NewMRSInFromBytes(lib.ActionAdd, []byte(`{"name":"test"}`))

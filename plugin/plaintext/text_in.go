@@ -68,6 +68,9 @@ func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputO
 	} else if t.Name != "" || t.URI != "" || len(t.IPOrCIDR) > 0 {
 		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
 	}
+	if t.Type != TypeJSONIn && len(t.Want) > 0 && t.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] wantedList requires inputDir", t.Type, t.Action)
+	}
 
 	return t
 }

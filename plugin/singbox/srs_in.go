@@ -69,6 +69,9 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	if s.InputDir != "" && (s.Name != "" || s.URI != "") {
 		log.Fatalf("❌ [type %s | action %s] inputDir cannot be used with name and uri", s.Type, s.Action)
 	}
+	if len(s.Want) > 0 && s.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] wantedList requires inputDir", s.Type, s.Action)
+	}
 
 	return s
 }
