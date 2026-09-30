@@ -53,12 +53,24 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		}
 	}
 
+	if s.Action != lib.ActionAdd && s.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid input action", s.Type, s.Action)
+	}
+	if s.OnlyIPType != "" && s.OnlyIPType != lib.IPv4 && s.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType %s", s.Type, s.Action, s.OnlyIPType)
+	}
 	if s.Name == "" && s.URI == "" && s.InputDir == "" {
-		log.Fatalf("❌ [type %s | action %s] missing name or uri or inputDir", s.Type, s.Action)
+		log.Fatalf("❌ [type %s | action %s] missing name and uri or inputDir", s.Type, s.Action)
 	}
 
 	if (s.Name != "" && s.URI == "") || (s.Name == "" && s.URI != "") {
 		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", s.Type, s.Action)
+	}
+	if s.InputDir != "" && (s.Name != "" || s.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] inputDir cannot be used with name and uri", s.Type, s.Action)
+	}
+	if len(s.Want) > 0 && s.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] wantedList requires inputDir", s.Type, s.Action)
 	}
 
 	return s

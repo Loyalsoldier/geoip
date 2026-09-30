@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,38 +25,40 @@ var (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2ASNCSVIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoLite2ASNCSVIn(action, data)
+		return NewGeoLite2ASNCSVInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2ASNCSVIn, &GeoLite2ASNCSVIn{
+	lib.RegisterInputConverter(TypeGeoLite2ASNCSVIn, &geoLite2ASNCSVIn{
 		Description: DescGeoLite2ASNCSVIn,
 	})
 }
 
-func newGeoLite2ASNCSVIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	var tmp struct {
-		IPv4File   string                 `json:"ipv4"`
-		IPv6File   string                 `json:"ipv6"`
-		Want       lib.WantedListExtended `json:"wantedList"`
-		OnlyIPType lib.IPType             `json:"onlyIPType"`
+func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &geoLite2ASNCSVIn{
+		Type:        TypeGeoLite2ASNCSVIn,
+		Action:      action,
+		Description: DescGeoLite2ASNCSVIn,
 	}
-
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
 		}
 	}
 
-	// When both of IP files are not specified,
-	// it means user wants to use the default ones
-	if tmp.IPv4File == "" && tmp.IPv6File == "" {
-		tmp.IPv4File = defaultGeoLite2ASNCSVIPv4File
-		tmp.IPv6File = defaultGeoLite2ASNCSVIPv6File
+	validateInputOptions(g.Type, g.Action, g.OnlyIPType)
+	// Default both IP files only when neither has been specified.
+	if g.IPv4File == "" && g.IPv6File == "" {
+		g.IPv4File = defaultGeoLite2ASNCSVIPv4File
+		g.IPv6File = defaultGeoLite2ASNCSVIPv6File
 	}
 
-	// Filter want list
-	wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
+	wanted, ok := asnWantedList(g.wantedList)
+	if !ok {
+		log.Fatalf("❌ [type %s | action %s] invalid wantedList: must be an array of ASN strings or an object of ASN string arrays", g.Type, g.Action)
+	}
+	g.Want = make(map[string][]string) // map[asn][]listname or map[asn][]asn
+	g.wantedList = nil
 
-	for list, asnList := range tmp.Want.TypeMap {
+	for list, asnList := range wanted.TypeMap {
 		list = strings.ToUpper(strings.TrimSpace(list))
 		if list == "" {
 			continue
@@ -67,36 +70,71 @@ func newGeoLite2ASNCSVIn(action lib.Action, data json.RawMessage) (lib.InputConv
 				continue
 			}
 
-			if listArr, found := wantList[asn]; found {
+			if listArr, found := g.Want[asn]; found {
 				listArr = append(listArr, list)
-				wantList[asn] = listArr
+				g.Want[asn] = listArr
 			} else {
-				wantList[asn] = []string{list}
+				g.Want[asn] = []string{list}
 			}
 		}
 	}
 
-	for _, asn := range tmp.Want.TypeSlice {
+	for _, asn := range wanted.TypeSlice {
 		asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
 		if asn == "" {
 			continue
 		}
 
-		wantList[asn] = []string{"AS" + asn}
+		g.Want[asn] = []string{"AS" + asn}
 	}
 
-	return &GeoLite2ASNCSVIn{
-		Type:        TypeGeoLite2ASNCSVIn,
-		Action:      action,
-		Description: DescGeoLite2ASNCSVIn,
-		IPv4File:    tmp.IPv4File,
-		IPv6File:    tmp.IPv6File,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return g
 }
 
-type GeoLite2ASNCSVIn struct {
+func asnWantedList(value any) (lib.WantedListExtended, bool) {
+	switch value := value.(type) {
+	case lib.WantedListExtended:
+		return value, true
+	case map[string][]string:
+		return lib.WantedListExtended{TypeMap: value}, true
+	case map[string]any:
+		lists := make(map[string][]string, len(value))
+		for name, raw := range value {
+			list, ok := stringList(raw)
+			if !ok {
+				return lib.WantedListExtended{}, false
+			}
+			lists[name] = list
+		}
+		return lib.WantedListExtended{TypeMap: lists}, true
+	default:
+		list, ok := stringList(value)
+		return lib.WantedListExtended{TypeSlice: list}, ok
+	}
+}
+
+func NewGeoLite2ASNCSVInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
+	var tmp struct {
+		IPv4File   string     `json:"ipv4"`
+		IPv6File   string     `json:"ipv6"`
+		Want       any        `json:"wantedList"`
+		OnlyIPType lib.IPType `json:"onlyIPType"`
+	}
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return nil, err
+		}
+	}
+	return NewGeoLite2ASNCSVIn(
+		action,
+		WithIPv4File(tmp.IPv4File),
+		WithIPv6File(tmp.IPv6File),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
+}
+
+type geoLite2ASNCSVIn struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -104,21 +142,22 @@ type GeoLite2ASNCSVIn struct {
 	IPv6File    string
 	Want        map[string][]string
 	OnlyIPType  lib.IPType
+	wantedList  any
 }
 
-func (g *GeoLite2ASNCSVIn) GetType() string {
+func (g *geoLite2ASNCSVIn) GetType() string {
 	return g.Type
 }
 
-func (g *GeoLite2ASNCSVIn) GetAction() lib.Action {
+func (g *geoLite2ASNCSVIn) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *GeoLite2ASNCSVIn) GetDescription() string {
+func (g *geoLite2ASNCSVIn) GetDescription() string {
 	return g.Description
 }
 
-func (g *GeoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 
 	if g.IPv4File != "" {
@@ -157,7 +196,7 @@ func (g *GeoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error)
 	return container, nil
 }
 
-func (g *GeoLite2ASNCSVIn) process(file string, entries map[string]*lib.Entry) error {
+func (g *geoLite2ASNCSVIn) process(file string, entries map[string]*lib.Entry) error {
 	if entries == nil {
 		entries = make(map[string]*lib.Entry)
 	}
