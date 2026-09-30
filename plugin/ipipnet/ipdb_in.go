@@ -191,6 +191,11 @@ func (i *IPDBIn) walkRemoteFile(url string, entries map[string]*lib.Entry) error
 }
 
 func (i *IPDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+	tree, err := newIPDBTree(content)
+	if err != nil {
+		return fmt.Errorf("❌ [type %s | action %s] %w", i.Type, i.Action, err)
+	}
+
 	db, err := ipdb.NewCityFromBytes(content)
 	if err != nil {
 		return err
@@ -207,11 +212,6 @@ func (i *IPDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) 
 		return fmt.Errorf("❌ [type %s | action %s] language %q is not in the database, available languages: %s", i.Type, i.Action, i.Language, strings.Join(languages, ", "))
 	}
 	language := languages[idx]
-
-	tree, err := newIPDBTree(content)
-	if err != nil {
-		return fmt.Errorf("❌ [type %s | action %s] %w", i.Type, i.Action, err)
-	}
 
 	fieldIndex := cityInfoFields[i.Field]
 
