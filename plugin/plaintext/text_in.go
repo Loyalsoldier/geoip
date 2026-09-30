@@ -64,15 +64,8 @@ func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputO
 	if t.Type != TypeTextIn && len(t.IPOrCIDR) > 0 {
 		log.Fatalf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
 	}
-	if t.Type == TypeJSONIn {
-		if len(t.JSONPath) == 0 {
-			log.Fatalf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
-		}
-		for _, path := range t.JSONPath {
-			if strings.TrimSpace(path) == "" {
-				log.Fatalf("❌ [type %s | action %s] jsonPath must not contain blank paths", t.Type, t.Action)
-			}
-		}
+	if t.Type == TypeJSONIn && len(t.JSONPath) == 0 {
+		log.Fatalf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
 	}
 	for _, cidr := range t.IPOrCIDR {
 		if strings.TrimSpace(cidr) == "" {

@@ -276,7 +276,7 @@ func TestInvalidConstructors(t *testing.T) {
 			)
 		}
 	}
-	for _, paths := range [][]string{nil, {}, {" \t "}, {"prefixes", " "}} {
+	for _, paths := range [][]string{nil, {}} {
 		data := marshalConfig(t, map[string]any{"inputDir": "input", "jsonPath": paths})
 		cases = append(cases,
 			fatalCase{"json/paths/" + string(data) + "/options", "jsonPath", func() { NewJSONIn(lib.ActionAdd, WithInputDir("input"), WithJSONPath(paths)) }},
@@ -372,6 +372,41 @@ func TestInputConversionAndRegistration(t *testing.T) {
 				t.Fatalf("registered input wanted one entry, got %d", container.Len())
 			}
 		})
+	}
+}
+
+func TestJSONInputEmptyKey(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "source.json")
+	writeTestFile(t, path, `{"":["192.0.2.0/24"],"prefixes":["2001:db8::/32"]}`)
+	for _, test := range []struct {
+		name  string
+		paths []string
+		want  []string
+	}{
+		{"empty", []string{""}, []string{"192.0.2.0/24"}},
+		{"trimmed", []string{" \t "}, []string{"192.0.2.0/24"}},
+		{"mixed", []string{"prefixes", ""}, []string{"192.0.2.0/24", "2001:db8::/32"}},
+	} {
+		for _, source := range []string{"options", "json"} {
+			t.Run(test.name+"/"+source, func(t *testing.T) {
+				var input lib.InputConverter
+				if source == "json" {
+					data := marshalConfig(t, map[string]any{"name": "test", "uri": path, "jsonPath": test.paths})
+					var err error
+					input, err = NewJSONInFromBytes(lib.ActionAdd, data)
+					if err != nil {
+						t.Fatal(err)
+					}
+				} else {
+					input = NewJSONIn(lib.ActionAdd, WithNameAndURI("test", path), WithJSONPath(test.paths))
+				}
+				container, err := input.Input(lib.NewContainer())
+				if err != nil {
+					t.Fatal(err)
+				}
+				assertPrefixes(t, container, "test", test.want)
+			})
+		}
 	}
 }
 
