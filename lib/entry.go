@@ -91,9 +91,20 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 		if !ok {
 			return nil, "", ErrInvalidIPNet
 		}
-		ip := prefix.Addr().Unmap()
+		ip := prefix.Addr()
 		switch {
 		case ip.Is4():
+			return &prefix, IPv4, nil
+		case ip.Is4In6():
+			ip = ip.Unmap()
+			bits := prefix.Bits()
+			if bits < 96 {
+				return nil, "", ErrInvalidPrefix
+			}
+			prefix, err := ip.Prefix(bits - 96)
+			if err != nil {
+				return nil, "", ErrInvalidPrefix
+			}
 			return &prefix, IPv4, nil
 		case ip.Is6():
 			return &prefix, IPv6, nil
@@ -214,9 +225,20 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 				return nil, "", ErrInvalidIPNet
 			}
 
-			addr = prefix.Addr().Unmap()
+			addr = prefix.Addr()
 			switch {
 			case addr.Is4():
+				return &prefix, IPv4, nil
+			case addr.Is4In6():
+				addr = addr.Unmap()
+				bits := prefix.Bits()
+				if bits < 96 {
+					return nil, "", ErrInvalidPrefix
+				}
+				prefix, err := addr.Prefix(bits - 96)
+				if err != nil {
+					return nil, "", ErrInvalidPrefix
+				}
 				return &prefix, IPv4, nil
 			case addr.Is6():
 				return &prefix, IPv6, nil

@@ -253,6 +253,10 @@ func (t *TextIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 }
 
 func (t *TextIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
+	if len(ipOrCIDR) == 0 {
+		return nil
+	}
+
 	name = strings.ToUpper(name)
 
 	entry, found := entries[name]

@@ -291,8 +291,7 @@ func (m *MRSIn) parseMRS(data []byte, entry *lib.Entry) error {
 		return fmt.Errorf("invalid MRS extra length")
 	}
 	if length > 0 {
-		extra := make([]byte, length)
-		_, err = io.ReadFull(reader, extra)
+		_, err = io.CopyN(io.Discard, reader, length)
 		if err != nil {
 			return err
 		}
