@@ -38,14 +38,29 @@ var privateCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(TypePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newPrivate(action, data)
+		return NewPrivateFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypePrivate, &Private{
 		Description: DescPrivate,
 	})
 }
 
-func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	p := &Private{
+		Type:        TypePrivate,
+		Action:      action,
+		Description: DescPrivate,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(p)
+		}
+	}
+	validateInput(p, p.OnlyIPType)
+	return p
+}
+
+func NewPrivateFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
@@ -56,12 +71,7 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 		}
 	}
 
-	return &Private{
-		Type:        TypePrivate,
-		Action:      action,
-		Description: DescPrivate,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewPrivate(action, WithInputOnlyIPType(tmp.OnlyIPType)), nil
 }
 
 type Private struct {

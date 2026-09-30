@@ -61,6 +61,18 @@ func NewSRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", s.Type, s.Action)
 	}
 
+	if s.InputDir != "" && (s.Name != "" || s.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri", s.Type, s.Action)
+	}
+
+	if s.Action != lib.ActionAdd && s.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid input action", s.Type, s.Action)
+	}
+
+	if s.OnlyIPType != "" && s.OnlyIPType != lib.IPv4 && s.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType: %s", s.Type, s.Action, s.OnlyIPType)
+	}
+
 	return s
 }
 

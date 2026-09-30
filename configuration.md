@@ -11,6 +11,10 @@
 }
 ```
 
+在 Go 代码中，可以通过各插件包的 `New*(action, opts...)` 构造转换器，并通过 `With*` 函数设置选项；`New*FromBytes(action, data)` 用于解析 JSON `args`。构造函数会应用默认值并校验选项，无效选项会通过 `log.Fatalf` 终止程序。
+
+支持文件和目录输入的插件通过 `WithNameAndURI(name, uri)` 同时设置类别名称和文件路径，或者通过 `WithInputDir` 指定输入目录，两种方式不能混用。`text` 还支持通过 `WithNameAndIPOrCIDR` 输入内联 IP 或 CIDR；MMDB、CSV、DAT 和特殊插件的必选项及默认值以各自的配置说明为准。
+
 ## 支持的输入或输出格式
 
 支持的 `input` 输入格式：
@@ -837,7 +841,7 @@
 - **type**：（必须）输入格式的名称
 - **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
 - **args**：（必须）
-  - **uri**：（必须）V2Ray dat 格式 geoip 文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。（不能与 `inputDir` 同时使用；需要与 `name` 同时使用）
+  - **uri**：（必须）V2Ray dat 格式 geoip 文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL。
   - **wantedList**：（可选，数组）指定需要的类别/文件。
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
 

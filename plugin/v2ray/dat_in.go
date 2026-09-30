@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -20,14 +21,68 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeGeoIPDatIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newGeoIPDatIn(action, data)
+		return NewGeoIPDatInFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeGeoIPDatIn, &GeoIPDatIn{
 		Description: DescGeoIPDatIn,
 	})
 }
 
-func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	g := &GeoIPDatIn{
+		Type:        TypeGeoIPDatIn,
+		Action:      action,
+		Description: DescGeoIPDatIn,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(g)
+		}
+	}
+
+	if g.Want == nil {
+		g.Want = make(map[string]bool)
+	}
+
+	if g.Action != lib.ActionAdd && g.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid input action", g.Type, g.Action)
+	}
+	if g.OnlyIPType != "" && g.OnlyIPType != lib.IPv4 && g.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType %s", g.Type, g.Action, g.OnlyIPType)
+	}
+	if g.URI == "" {
+		log.Fatalf("❌ [type %s | action %s] uri must be specified", g.Type, g.Action)
+	}
+
+	return g
+}
+
+func WithURI(uri string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*GeoIPDatIn).URI = strings.TrimSpace(uri)
+	}
+}
+
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(g lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+		g.(*GeoIPDatIn).Want = wantList
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(g lib.InputConverter) {
+		g.(*GeoIPDatIn).OnlyIPType = onlyIPType
+	}
+}
+
+func NewGeoIPDatInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		URI        string     `json:"uri"`
 		Want       []string   `json:"wantedList"`
@@ -40,26 +95,12 @@ func newGeoIPDatIn(action lib.Action, data json.RawMessage) (lib.InputConverter,
 		}
 	}
 
-	if tmp.URI == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] uri must be specified in config", TypeGeoIPDatIn, action)
-	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &GeoIPDatIn{
-		Type:        TypeGeoIPDatIn,
-		Action:      action,
-		Description: DescGeoIPDatIn,
-		URI:         tmp.URI,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewGeoIPDatIn(
+		action,
+		WithURI(tmp.URI),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type GeoIPDatIn struct {

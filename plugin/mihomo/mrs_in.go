@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/netip"
 	"os"
@@ -27,14 +28,81 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeMRSIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newMRSIn(action, data)
+		return NewMRSInFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeMRSIn, &MRSIn{
 		Description: DescMRSIn,
 	})
 }
 
-func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewMRSIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	m := &MRSIn{
+		Type:        TypeMRSIn,
+		Action:      action,
+		Description: DescMRSIn,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(m)
+		}
+	}
+
+	if m.Want == nil {
+		m.Want = make(map[string]bool)
+	}
+
+	if m.Action != lib.ActionAdd && m.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] invalid input action", m.Type, m.Action)
+	}
+	if m.OnlyIPType != "" && m.OnlyIPType != lib.IPv4 && m.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType %s", m.Type, m.Action, m.OnlyIPType)
+	}
+	if m.Name == "" && m.URI == "" && m.InputDir == "" {
+		log.Fatalf("❌ [type %s | action %s] missing inputDir or name and uri", m.Type, m.Action)
+	}
+	if (m.Name != "" && m.URI == "") || (m.Name == "" && m.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] name and uri must be specified together", m.Type, m.Action)
+	}
+	if m.InputDir != "" && (m.Name != "" || m.URI != "") {
+		log.Fatalf("❌ [type %s | action %s] inputDir cannot be used with name and uri", m.Type, m.Action)
+	}
+
+	return m
+}
+
+func WithNameAndURI(name, uri string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*MRSIn).Name = strings.TrimSpace(name)
+		m.(*MRSIn).URI = strings.TrimSpace(uri)
+	}
+}
+
+func WithInputDir(dir string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*MRSIn).InputDir = strings.TrimSpace(dir)
+	}
+}
+
+func WithInputWantedList(lists []string) lib.InputOption {
+	return func(m lib.InputConverter) {
+		wantList := make(map[string]bool)
+		for _, want := range lists {
+			if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
+				wantList[want] = true
+			}
+		}
+		m.(*MRSIn).Want = wantList
+	}
+}
+
+func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
+	return func(m lib.InputConverter) {
+		m.(*MRSIn).OnlyIPType = onlyIPType
+	}
+}
+
+func NewMRSInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		Name       string     `json:"name"`
 		URI        string     `json:"uri"`
@@ -49,32 +117,13 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 		}
 	}
 
-	if tmp.Name == "" && tmp.URI == "" && tmp.InputDir == "" {
-		return nil, fmt.Errorf("❌ [type %s | action %s] missing inputDir or name or uri", TypeMRSIn, action)
-	}
-
-	if (tmp.Name != "" && tmp.URI == "") || (tmp.Name == "" && tmp.URI != "") {
-		return nil, fmt.Errorf("❌ [type %s | action %s] name & uri must be specified together", TypeMRSIn, action)
-	}
-
-	// Filter want list
-	wantList := make(map[string]bool)
-	for _, want := range tmp.Want {
-		if want = strings.ToUpper(strings.TrimSpace(want)); want != "" {
-			wantList[want] = true
-		}
-	}
-
-	return &MRSIn{
-		Type:        TypeMRSIn,
-		Action:      action,
-		Description: DescMRSIn,
-		Name:        tmp.Name,
-		URI:         tmp.URI,
-		InputDir:    tmp.InputDir,
-		Want:        wantList,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewMRSIn(
+		action,
+		WithNameAndURI(tmp.Name, tmp.URI),
+		WithInputDir(tmp.InputDir),
+		WithInputWantedList(tmp.Want),
+		WithInputOnlyIPType(tmp.OnlyIPType),
+	), nil
 }
 
 type MRSIn struct {
