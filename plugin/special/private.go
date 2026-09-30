@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -38,14 +39,37 @@ var privateCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(TypePrivate, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newPrivate(action, data)
+		return NewPrivateFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypePrivate, &Private{
+	lib.RegisterInputConverter(TypePrivate, &private{
 		Description: DescPrivate,
 	})
 }
 
-func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
+func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+	p := &private{
+		Type:        TypePrivate,
+		Action:      action,
+		Description: DescPrivate,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(p)
+		}
+	}
+
+	if p.Action != lib.ActionAdd && p.Action != lib.ActionRemove {
+		log.Fatalf("❌ [type %s | action %s] only supports add or remove action", p.Type, p.Action)
+	}
+	if p.OnlyIPType != "" && p.OnlyIPType != lib.IPv4 && p.OnlyIPType != lib.IPv6 {
+		log.Fatalf("❌ [type %s | action %s] invalid onlyIPType: %s", p.Type, p.Action, p.OnlyIPType)
+	}
+
+	return p
+}
+
+func NewPrivateFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
 		OnlyIPType lib.IPType `json:"onlyIPType"`
 	}
@@ -56,34 +80,29 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 		}
 	}
 
-	return &Private{
-		Type:        TypePrivate,
-		Action:      action,
-		Description: DescPrivate,
-		OnlyIPType:  tmp.OnlyIPType,
-	}, nil
+	return NewPrivate(action, WithInputOnlyIPType(tmp.OnlyIPType)), nil
 }
 
-type Private struct {
+type private struct {
 	Type        string
 	Action      lib.Action
 	Description string
 	OnlyIPType  lib.IPType
 }
 
-func (p *Private) GetType() string {
+func (p *private) GetType() string {
 	return p.Type
 }
 
-func (p *Private) GetAction() lib.Action {
+func (p *private) GetAction() lib.Action {
 	return p.Action
 }
 
-func (p *Private) GetDescription() string {
+func (p *private) GetDescription() string {
 	return p.Description
 }
 
-func (p *Private) Input(container lib.Container) (lib.Container, error) {
+func (p *private) Input(container lib.Container) (lib.Container, error) {
 	entry := lib.NewEntry(entryNamePrivate)
 
 	for _, cidr := range privateCIDRs {
