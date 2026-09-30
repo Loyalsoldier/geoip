@@ -240,6 +240,47 @@ func TestIPDBInvalidConfigAndData(t *testing.T) {
 	}
 }
 
+func TestIPDBLargeIndex(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping large index in short mode")
+	}
+	const internal = 6_000_000
+	nodes := 96 + internal
+	meta, err := json.Marshal(map[string]any{
+		"ip_version": 1, "node_count": nodes, "total_size": nodes * 8,
+		"languages": map[string]int{"CN": 0}, "fields": []string{"country_code"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := make([]byte, 4+len(meta)+nodes*8)
+	binary.BigEndian.PutUint32(content, uint32(len(meta)))
+	copy(content[4:], meta)
+	data := content[4+len(meta):]
+	for i := 0; i < nodes; i++ {
+		for bit := 0; bit < 2; bit++ {
+			child := nodes
+			switch {
+			case i < 96 && (i >= 80) == (bit == 1):
+				child = i + 1
+			case i >= 96 && 2*(i-96)+1+bit < internal:
+				child = 96 + 2*(i-96) + 1 + bit
+			}
+			binary.BigEndian.PutUint32(data[i*8+bit*4:], uint32(child))
+		}
+	}
+
+	tree, _, err := parseIPDBTree(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := tree.walk(tree.v4Root(), netip.PrefixFrom(netip.IPv4Unspecified(), 0), func(uint32, netip.Prefix) error {
+		return nil
+	}); err != nil {
+		t.Fatalf("rejected index without shared subtrees after %d steps: %v", tree.steps, err)
+	}
+}
+
 func TestIPDBMissingURI(t *testing.T) {
 	_, err := newIPDBIn(lib.ActionAdd, nil)
 	if err == nil || !strings.Contains(err.Error(), "uri") {

@@ -145,8 +145,8 @@ type ipdbTree struct {
 	data      []byte
 	nodeCount int
 	visiting  map[uint32]bool
-	steps     int
-	maxSteps  int
+	steps     uint64
+	maxSteps  uint64
 }
 
 func parseIPDBTree(content []byte) (*ipdbTree, *ipdbMetadata, error) {
@@ -170,10 +170,8 @@ func parseIPDBTree(content []byte) (*ipdbTree, *ipdbMetadata, error) {
 			return nil, nil, fmt.Errorf("invalid ipdb index pointer at %d", i)
 		}
 	}
-	maxSteps := 10_000_000
-	if len(data) < (maxSteps-256)/16 {
-		maxSteps = len(data)*16 + 256
-	}
+	// An index without shared subtrees is walked in at most 2*node_count+194 steps.
+	maxSteps := 8*uint64(meta.NodeCount) + 256
 	return &ipdbTree{data: data, nodeCount: meta.NodeCount, visiting: make(map[uint32]bool), maxSteps: maxSteps}, &meta, nil
 }
 
