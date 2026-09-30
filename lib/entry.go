@@ -215,7 +215,7 @@ func (e *Entry) processPrefix(src any) (*netip.Prefix, IPType, error) {
 	case net.IP:
 		return e.getPrefixFromIP(src)
 
-case *net.IP:
+	case *net.IP:
 		if src == nil {
 			return nil, "", ErrInvalidPrefixType
 		}
@@ -225,24 +225,36 @@ case *net.IP:
 		return e.getPrefixFromIPNet(src)
 
 	case *net.IPNet:
+		if src == nil {
+			return nil, "", ErrInvalidPrefixType
+		}
 		return e.getPrefixFromIPNet(*src)
 
 	case netip.Addr:
 		return e.getPrefixFromAddr(src)
 
 	case *netip.Addr:
+		if src == nil {
+			return nil, "", ErrInvalidPrefixType
+		}
 		return e.getPrefixFromAddr(*src)
 
 	case netip.Prefix:
 		return e.getPrefixFromPrefix(src)
 
 	case *netip.Prefix:
+		if src == nil {
+			return nil, "", ErrInvalidPrefixType
+		}
 		return e.getPrefixFromPrefix(*src)
 
 	case string:
 		return e.getPrefixFromString(src)
 
 	case *string:
+		if src == nil {
+			return nil, "", ErrInvalidPrefixType
+		}
 		return e.getPrefixFromString(*src)
 
 	default:
