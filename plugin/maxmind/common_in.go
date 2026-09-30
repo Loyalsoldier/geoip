@@ -68,6 +68,8 @@ func WithInputWantedList(lists []string) lib.InputOption {
 			g.Want = wantList
 		case *GeoLite2ASNCSVIn:
 			WithInputWantedListExtended(lib.WantedListExtended{TypeSlice: lists})(g)
+		default:
+			log.Fatalf("❌ [type %s] wantedList is not supported", g.GetType())
 		}
 	}
 }
@@ -81,6 +83,8 @@ func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
 			g.OnlyIPType = onlyIPType
 		case *GeoLite2ASNCSVIn:
 			g.OnlyIPType = onlyIPType
+		default:
+			log.Fatalf("❌ [type %s] onlyIPType is not supported", g.GetType())
 		}
 	}
 }
@@ -92,6 +96,8 @@ func WithIPv4File(file string) lib.InputOption {
 			g.IPv4File = strings.TrimSpace(file)
 		case *GeoLite2ASNCSVIn:
 			g.IPv4File = strings.TrimSpace(file)
+		default:
+			log.Fatalf("❌ [type %s] ipv4 is not supported", g.GetType())
 		}
 	}
 }
@@ -103,6 +109,8 @@ func WithIPv6File(file string) lib.InputOption {
 			g.IPv6File = strings.TrimSpace(file)
 		case *GeoLite2ASNCSVIn:
 			g.IPv6File = strings.TrimSpace(file)
+		default:
+			log.Fatalf("❌ [type %s] ipv6 is not supported", g.GetType())
 		}
 	}
 }

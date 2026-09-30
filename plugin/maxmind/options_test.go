@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
+	"github.com/Loyalsoldier/geoip/plugin/special"
 )
 
 var mmdbVariants = []struct {
@@ -257,7 +258,20 @@ func TestConstructorsRejectInvalidOptions(t *testing.T) {
 		want string
 		run  func()
 	}
-	var cases []fatalCase
+	cases := []fatalCase{
+		{"unsupported/wanted-list", "wantedList is not supported", func() {
+			special.NewPrivate(lib.ActionAdd, WithInputWantedList([]string{"CN"}))
+		}},
+		{"unsupported/ip-type", "onlyIPType is not supported", func() {
+			special.NewCutter(lib.ActionRemove, special.WithInputWantedList([]string{"CN"}), WithInputOnlyIPType(lib.IPv6))
+		}},
+		{"unsupported/ipv4-file", "ipv4 is not supported", func() {
+			NewGeoLite2CountryMMDBIn(lib.ActionAdd, WithIPv4File("v4.csv"))
+		}},
+		{"unsupported/ipv6-file", "ipv6 is not supported", func() {
+			NewGeoLite2CountryMMDBIn(lib.ActionAdd, WithIPv6File("v6.csv"))
+		}},
+	}
 	addInputCases := func(name string, newInput func(lib.Action, ...lib.InputOption) lib.InputConverter, inputJSON func(lib.Action, []byte) (lib.InputConverter, error)) {
 		for _, action := range []lib.Action{"", lib.ActionOutput, "invalid"} {
 			cases = append(cases,
