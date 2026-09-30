@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -74,6 +76,38 @@ func TestLookupDirectoryInputs(t *testing.T) {
 				t.Fatalf("directory lookup failed: found=%v, err=%v", found, err)
 			}
 		})
+	}
+}
+
+func TestLookupRequiresExplicitDatabaseURI(t *testing.T) {
+	if format := os.Getenv("GEOIP_LOOKUP_DATABASE_FORMAT"); format != "" {
+		getInputForLookup(format, "true", os.Getenv("GEOIP_LOOKUP_URI"), os.Getenv("GEOIP_LOOKUP_DIR"))
+		return
+	}
+	for _, format := range []string{"maxmindMMDB", "dbipCountryMMDB", "ipinfoCountryMMDB", "v2rayGeoIPDat"} {
+		for _, source := range []struct {
+			name string
+			uri  string
+			dir  string
+		}{
+			{"missing", "", ""},
+			{"blank", " \t ", ""},
+			{"directory", "", "other-databases"},
+		} {
+			t.Run(format+"/"+source.name, func(t *testing.T) {
+				cmd := exec.Command(os.Args[0], "-test.run=^TestLookupRequiresExplicitDatabaseURI$")
+				cmd.Env = append(os.Environ(),
+					"GEOIP_LOOKUP_DATABASE_FORMAT="+format,
+					"GEOIP_LOOKUP_URI="+source.uri,
+					"GEOIP_LOOKUP_DIR="+source.dir,
+				)
+				output, err := cmd.CombinedOutput()
+				exit, ok := err.(*exec.ExitError)
+				if !ok || exit.ExitCode() != 1 || !strings.Contains(string(output), "requires a non-empty uri") {
+					t.Fatalf("expected explicit URI validation, got %v: %s", err, output)
+				}
+			})
+		}
 	}
 }
 

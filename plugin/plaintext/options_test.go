@@ -287,7 +287,7 @@ func TestConstructorFatalValidation(t *testing.T) {
 			_, _ = format.fromBytes(lib.ActionAdd, nil)
 		}})
 	}
-	for _, paths := range [][]string{nil, {}, {""}, {" \t "}, {"addresses", " "}} {
+	for _, paths := range [][]string{nil, {}} {
 		cases = append(cases,
 			fatalCase{"input/json/path-" + string(marshalArgs(t, map[string]any{"paths": paths})), "jsonPath", func() {
 				NewJSONIn(lib.ActionAdd, WithInputDir("source"), WithJSONPath(paths))
@@ -541,4 +541,38 @@ func TestLocalDirectoryAndFormatConversions(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertEntryCIDRs(t, jsonContainer, "JSON", []string{"192.0.2.0/24", "2001:db8::/32"})
+}
+
+func TestJSONEmptyKeyPath(t *testing.T) {
+	source := filepath.Join(t.TempDir(), "source.json")
+	data := `{"":["192.0.2.0/24"],"addresses":["2001:db8::/32"]}`
+	if err := os.WriteFile(source, []byte(data), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		paths []string
+		want  []string
+	}{
+		{"empty-key", []string{""}, []string{"192.0.2.0/24"}},
+		{"trimmed-empty-key", []string{" \t "}, []string{"192.0.2.0/24"}},
+		{"mixed-keys", []string{"addresses", ""}, []string{"192.0.2.0/24", "2001:db8::/32"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			direct := NewJSONIn(lib.ActionAdd, WithNameAndURI("json", source), WithJSONPath(tc.paths))
+			adapted, err := NewJSONInFromBytes(lib.ActionAdd, marshalArgs(t, map[string]any{
+				"name": "json", "uri": source, "jsonPath": tc.paths,
+			}))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, input := range []lib.InputConverter{direct, adapted} {
+				container, err := input.Input(lib.NewContainer())
+				if err != nil {
+					t.Fatal(err)
+				}
+				assertEntryCIDRs(t, container, "JSON", tc.want)
+			}
+		})
+	}
 }

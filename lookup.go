@@ -162,6 +162,13 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	var input lib.InputConverter
 
 	if strings.TrimSpace(uri) == "" {
+		switch strings.ToLower(format) {
+		case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn),
+			strings.ToLower(maxmind.TypeDBIPCountryMMDBIn),
+			strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn),
+			strings.ToLower(v2ray.TypeGeoIPDatIn):
+			log.Fatalf("lookup format %s requires a non-empty uri; inputDir is not supported", format)
+		}
 		name = ""
 	}
 
