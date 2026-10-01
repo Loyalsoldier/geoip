@@ -20,6 +20,7 @@
 - **cutter**：用于裁剪前置步骤中的数据
 - **dbipCountryMMDB**：DB-IP country mmdb 数据格式（`dbip-country-lite.mmdb`）
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
+- **ipipnetIPDB**：IPIP.net ipdb 城市 IP 数据库格式（`city.ipdb`）
 - **json**：JSON 数据格式
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据格式（`GeoLite2-ASN-CSV.zip`）
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
@@ -517,6 +518,33 @@
     "uri": "https://example.com/my.mmdb",
     "wantedList": ["cn", "us", "jp"],    // 只移除名为 cn、us、jp 这三个类别的 IPv4 地址
     "onlyIPType": "ipv4"                 // 只移除 IPv4 地址
+  }
+}
+```
+
+### **ipipnetIPDB**
+
+- **type**：（必须）`ipipnetIPDB`
+- **action**：（必须）`add`（添加 IP 地址）或 `remove`（移除 IP 地址）
+- **args**：（必须）
+  - **uri**：（必须）IPIP.net ipdb 城市数据库的本地路径或 `http`、`https` URL。
+  - **field**：（必须）用于生成类别名称的 `CityInfo` 字符串字段，可使用 JSON 字段名（如 `country_code`、`country_name`、`isp_domain`、`asn`）或 Go 字段名（如 `CountryCode`）。数据库的 `fields` 中必须包含此字段；空值不生成类别，类别名称会去除首尾空格并转为大写。`district_info`、`asn_info` 等非字符串字段不支持。
+  - **language**：（可选）数据库 `languages` 中的语言代码，区分大小写；默认使用 `CN`（若无 `CN`，使用按字典序排列的第一个可用语言）。
+  - **wantedList**：（可选，数组）只处理指定名称的类别，不区分大小写。
+  - **onlyIPType**：（可选）只处理 `ipv4` 或 `ipv6`。
+
+插件遍历数据库的 IP 索引，将每个有记录的网段作为 CIDR 加入对应类别，不会逐个枚举 IP 地址。数据库必须支持所选 IP 类型；IPv4 映射的 IPv6 地址归入 IPv4 类别。
+
+```jsonc
+{
+  "type": "ipipnetIPDB",
+  "action": "add",
+  "args": {
+    "uri": "./city.ipdb",
+    "field": "country_code",
+    "language": "EN",
+    "wantedList": ["CN", "US"],
+    "onlyIPType": "ipv4"
   }
 }
 ```

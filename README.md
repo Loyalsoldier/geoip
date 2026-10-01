@@ -979,6 +979,7 @@ These two concepts in configuration file `config.json` are notable: `input` and 
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
 - **dbipCountryMMDB**：DB-IP country mmdb 数据格式（`dbip-country-lite.mmdb`）
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
+- **ipipnetIPDB**：IPIP.net ipdb 城市 IP 数据库格式（`city.ipdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
 - **singboxSRS**：sing-box SRS 数据格式（`geoip-cn.srs`）
 - **clashRuleSetClassical**：[classical 类型的 Clash RuleSet](https://wiki.metacubex.one/config/rule-providers/content/#classical)
@@ -1049,6 +1050,7 @@ All available input formats:
   - cutter (Remove data from previous steps)
   - dbipCountryMMDB (Convert DB-IP country mmdb database to other formats)
   - ipinfoCountryMMDB (Convert IPInfo country mmdb database to other formats)
+  - ipipnetIPDB (Convert IPIP.net ipdb city database to other formats)
   - json (Convert JSON data to other formats)
   - maxmindGeoLite2ASNCSV (Convert MaxMind GeoLite2 ASN CSV data to other formats)
   - maxmindGeoLite2CountryCSV (Convert MaxMind GeoLite2 country CSV data to other formats)
