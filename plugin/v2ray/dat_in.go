@@ -180,7 +180,7 @@ func (g *GeoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 		for _, v2rayCIDR := range geoip.Cidr {
 			addr, ok := netip.AddrFromSlice(v2rayCIDR.GetIp())
 			if !ok {
-				return err
+				return fmt.Errorf("invalid IP in list %s: %s", name, v2rayCIDR.GetIp())
 			}
 			if err := entry.AddPrefix(netip.PrefixFrom(addr, int(v2rayCIDR.GetPrefix()))); err != nil {
 				return err
