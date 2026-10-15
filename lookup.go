@@ -19,16 +19,23 @@ import (
 )
 
 var supportedInputFormats = map[string]bool{
-	strings.ToLower("clashRuleSet"):          true,
-	strings.ToLower("clashRuleSetClassical"): true,
-	strings.ToLower("dbipCountryMMDB"):       true,
-	strings.ToLower("ipinfoCountryMMDB"):     true,
-	strings.ToLower("maxmindMMDB"):           true,
-	strings.ToLower("mihomoMRS"):             true,
-	strings.ToLower("singboxSRS"):            true,
-	strings.ToLower("surgeRuleSet"):          true,
-	strings.ToLower("text"):                  true,
-	strings.ToLower("v2rayGeoIPDat"):         true,
+	strings.ToLower(v2ray.TypeGeoIPDatIn):                  true,
+	strings.ToLower(mihomo.TypeMRSIn):                      true,
+	strings.ToLower(singbox.TypeSRSIn):                     true,
+	strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):     true,
+	strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):       true,
+	strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):         true,
+	strings.ToLower(plaintext.TypeClashRuleSetIPCIDRIn):    true,
+	strings.ToLower(plaintext.TypeClashRuleSetClassicalIn): true,
+	strings.ToLower(plaintext.TypeSurgeRuleSetIn):          true,
+	strings.ToLower(plaintext.TypeTextIn):                  true,
+}
+
+var supportedInputFormatsDisallowedDirFlag = map[string]bool{
+	strings.ToLower(v2ray.TypeGeoIPDatIn):              true,
+	strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn): true,
+	strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):   true,
+	strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):     true,
 }
 
 func init() {
@@ -58,14 +65,18 @@ var lookupCmd = &cobra.Command{
 			log.Fatal("unsupported input format")
 		}
 
+		// Get dir
+		// Some formats are single-file formats and do not support directory input
+		dir, _ := cmd.Flags().GetString("dir")
+		if _, disallowed := supportedInputFormatsDisallowedDirFlag[format]; disallowed && dir != "" {
+			log.Fatalf("format %s does not support \"dir\" flag, please use \"uri\" flag instead", format)
+		}
+
 		// Set name
 		name := "true"
 
 		// Get uri
 		uri, _ := cmd.Flags().GetString("uri")
-
-		// Get dir
-		dir, _ := cmd.Flags().GetString("dir")
 
 		// Get searchlist
 		searchList, _ := cmd.Flags().GetStringSlice("searchlist")
