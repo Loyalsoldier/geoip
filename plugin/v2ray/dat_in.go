@@ -182,6 +182,9 @@ func (g *GeoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.E
 			if !ok {
 				return fmt.Errorf("invalid IP in list %s: %s", name, v2rayCIDR.GetIp())
 			}
+			if addr.Is4In6() && v2rayCIDR.GetPrefix() <= 32 {
+				addr = addr.Unmap()
+			}
 			if err := entry.AddPrefix(netip.PrefixFrom(addr, int(v2rayCIDR.GetPrefix()))); err != nil {
 				return err
 			}
