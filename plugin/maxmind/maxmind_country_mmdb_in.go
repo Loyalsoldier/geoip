@@ -96,6 +96,11 @@ func (g *GeoLite2CountryMMDBIn) generateEntries(content []byte, entries map[stri
 	}
 	defer db.Close()
 
+	err = db.Verify()
+	if err != nil {
+		return err
+	}
+
 	for network := range db.Networks() {
 		var name string
 		var err error
