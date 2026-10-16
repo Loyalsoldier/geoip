@@ -114,7 +114,9 @@ func (g *GeoLite2CountryMMDBOut) Output(container lib.Container) error {
 	}
 
 	if updated {
-		return g.writeFile(g.OutputName, writer)
+		if err := g.writeFile(g.OutputName, writer); err != nil {
+			return fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
+		}
 	}
 
 	return nil

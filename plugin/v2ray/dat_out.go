@@ -96,7 +96,7 @@ func (g *GeoIPDatOut) GetDescription() string {
 
 func (g *GeoIPDatOut) Output(container lib.Container) error {
 	geoIPList := new(GeoIPList)
-	geoIPList.Entry = make([]*GeoIP, 0, 300)
+	geoIPList.Entry = make([]*GeoIP, 0, container.Len())
 	updated := false
 
 	for _, name := range g.filterAndSortList(container) {

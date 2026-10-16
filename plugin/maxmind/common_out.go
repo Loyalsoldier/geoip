@@ -173,6 +173,11 @@ func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
 	}
 	defer db.Close()
 
+	err = db.Verify()
+	if err != nil {
+		return nil, err
+	}
+
 	infoList := make(map[string]any)
 	for network := range db.Networks() {
 		switch g.Type {

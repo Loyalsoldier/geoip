@@ -59,7 +59,7 @@ func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 		return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 	}
 
-	entries := make(map[string]*lib.Entry, 300)
+	entries := make(map[string]*lib.Entry)
 	err = g.generateEntries(content, entries)
 	if err != nil {
 		return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
