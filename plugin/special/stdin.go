@@ -32,7 +32,7 @@ func newStdin(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeStdin, action, err)
 		}
 	}
 
@@ -92,7 +92,7 @@ func (s *Stdin) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", s.Type, s.Action, err)
 	}
 
 	ignoreIPType := lib.GetIgnoreIPType(s.OnlyIPType)
@@ -100,14 +100,14 @@ func (s *Stdin) Input(container lib.Container) (lib.Container, error) {
 	switch s.Action {
 	case lib.ActionAdd:
 		if err := container.Add(entry, ignoreIPType); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", s.Type, s.Action, err)
 		}
 	case lib.ActionRemove:
 		if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", s.Type, s.Action, err)
 		}
 	default:
-		return nil, lib.ErrUnknownAction
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", s.Type, s.Action, lib.ErrUnknownAction)
 	}
 
 	return container, nil

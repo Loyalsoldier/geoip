@@ -2,6 +2,7 @@ package plaintext
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -45,12 +46,12 @@ func (t *TextOut) Output(container lib.Container) error {
 
 		data, err := t.marshalBytes(entry)
 		if err != nil {
-			return err
+			return fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 
 		filename := strings.ToLower(entry.GetName()) + t.OutputExt
 		if err := t.writeFile(filename, data); err != nil {
-			return err
+			return fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 	}
 

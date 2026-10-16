@@ -44,7 +44,7 @@ func newMRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeMRSOut, action, err)
 		}
 	}
 
@@ -94,7 +94,7 @@ func (m *MRSOut) Output(container lib.Container) error {
 		}
 
 		if err := m.generate(entry); err != nil {
-			return err
+			return fmt.Errorf("❌ [type %s | action %s] %w", m.Type, m.Action, err)
 		}
 	}
 
@@ -152,7 +152,7 @@ func (m *MRSOut) generate(entry *lib.Entry) error {
 	}
 
 	if len(ipRanges) == 0 {
-		return fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", m.Type, m.Action, entry.GetName())
+		return fmt.Errorf("entry %s has no CIDR", entry.GetName())
 	}
 
 	filename := strings.ToLower(entry.GetName()) + ".mrs"

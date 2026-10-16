@@ -200,7 +200,7 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	}
 
 	if !gjson.ValidBytes(data) {
-		return fmt.Errorf("❌ [type %s | action %s] invalid JSON data", t.Type, t.Action)
+		return fmt.Errorf("invalid JSON data")
 	}
 
 	// JSON Path syntax:
@@ -210,7 +210,7 @@ func (t *TextIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 
 		result := gjson.GetBytes(data, path)
 		if err := t.processJSONResult(result, entry); err != nil {
-			return fmt.Errorf("❌ [type %s | action %s] failed to process JSON: %v", t.Type, t.Action, err)
+			return fmt.Errorf("failed to process JSON: %v", err)
 		}
 	}
 

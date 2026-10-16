@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -52,7 +53,7 @@ func newPrivate(action lib.Action, data json.RawMessage) (lib.InputConverter, er
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypePrivate, action, err)
 		}
 	}
 
@@ -88,7 +89,7 @@ func (p *Private) Input(container lib.Container) (lib.Container, error) {
 
 	for _, cidr := range privateCIDRs {
 		if err := entry.AddPrefix(cidr); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", p.Type, p.Action, err)
 		}
 	}
 
@@ -97,14 +98,14 @@ func (p *Private) Input(container lib.Container) (lib.Container, error) {
 	switch p.Action {
 	case lib.ActionAdd:
 		if err := container.Add(entry, ignoreIPType); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", p.Type, p.Action, err)
 		}
 	case lib.ActionRemove:
 		if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", p.Type, p.Action, err)
 		}
 	default:
-		return nil, lib.ErrUnknownAction
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", p.Type, p.Action, lib.ErrUnknownAction)
 	}
 
 	return container, nil

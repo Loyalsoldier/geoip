@@ -2,7 +2,6 @@ package special
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/netip"
 	"slices"
@@ -33,7 +32,7 @@ func newLookup(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeLookup, action, err)
 		}
 	}
 
@@ -75,18 +74,18 @@ func (l *Lookup) Output(container lib.Container) error {
 	switch strings.Contains(l.Search, "/") {
 	case true: // CIDR
 		if _, err := netip.ParsePrefix(l.Search); err != nil {
-			return errors.New("invalid IP or CIDR")
+			return fmt.Errorf("❌ [type %s | action %s] invalid IP or CIDR", l.Type, l.Action)
 		}
 
 	case false: // IP
 		if _, err := netip.ParseAddr(l.Search); err != nil {
-			return errors.New("invalid IP or CIDR")
+			return fmt.Errorf("❌ [type %s | action %s] invalid IP or CIDR", l.Type, l.Action)
 		}
 	}
 
 	lists, found, err := container.Lookup(l.Search, l.SearchList...)
 	if err != nil {
-		return err
+		return fmt.Errorf("❌ [type %s | action %s] %w", l.Type, l.Action, err)
 	}
 
 	if found {

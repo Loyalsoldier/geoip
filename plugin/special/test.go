@@ -2,6 +2,7 @@ package special
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
@@ -55,21 +56,21 @@ func (t *test) Input(container lib.Container) (lib.Container, error) {
 	entry := lib.NewEntry(entryNameTest)
 	for _, cidr := range testCIDRs {
 		if err := entry.AddPrefix(cidr); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 	}
 
 	switch t.Action {
 	case lib.ActionAdd:
 		if err := container.Add(entry); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 	case lib.ActionRemove:
 		if err := container.Remove(entry, lib.CaseRemovePrefix); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 	default:
-		return nil, lib.ErrUnknownAction
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, lib.ErrUnknownAction)
 	}
 
 	return container, nil

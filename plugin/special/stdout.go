@@ -3,6 +3,7 @@ package special
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"slices"
@@ -34,7 +35,7 @@ func newStdout(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeStdout, action, err)
 		}
 	}
 

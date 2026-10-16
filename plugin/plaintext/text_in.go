@@ -41,12 +41,12 @@ func newTextIn(iType string, iDesc string, action lib.Action, data json.RawMessa
 	}
 
 	if strings.TrimSpace(iType) == "" {
-		return nil, fmt.Errorf("type is required")
+		return nil, fmt.Errorf("❌ [type %s | action %s] type is required", iType, action)
 	}
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", iType, action, err)
 		}
 	}
 
@@ -122,7 +122,7 @@ func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 			err = t.walkLocalFile(t.URI, t.Name, entries)
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 		}
 
 		fallthrough
@@ -135,7 +135,7 @@ func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 	}
 
 	ignoreIPType := lib.GetIgnoreIPType(t.OnlyIPType)
@@ -148,14 +148,14 @@ func (t *TextIn) Input(container lib.Container) (lib.Container, error) {
 		switch t.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 			}
 		case lib.ActionRemove:
 			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, err)
 			}
 		default:
-			return nil, lib.ErrUnknownAction
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", t.Type, t.Action, lib.ErrUnknownAction)
 		}
 	}
 
@@ -191,7 +191,7 @@ func (t *TextIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 
 		// check filename
 		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
-			return fmt.Errorf("❌ [type %s | action %s] filename %s cannot be entry name, please remove special characters in it", t.Type, t.Action, entryName)
+			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
 		}
 
 		// remove file extension but not hidden files of which filename starts with "."
@@ -207,7 +207,7 @@ func (t *TextIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 		return nil
 	}
 	if _, found := entries[entryName]; found {
-		return fmt.Errorf("❌ [type %s | action %s] found duplicated list %s", t.Type, t.Action, entryName)
+		return fmt.Errorf("found duplicated list %s", entryName)
 	}
 
 	entry := lib.NewEntry(entryName)
@@ -233,7 +233,7 @@ func (t *TextIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("❌ [type %s | action %s] failed to get remote file %s, http status code %d", t.Type, t.Action, url, resp.StatusCode)
+		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
 	}
 
 	name = strings.ToUpper(name)

@@ -43,7 +43,7 @@ func newSRSOut(action lib.Action, data json.RawMessage) (lib.OutputConverter, er
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeSRSOut, action, err)
 		}
 	}
 
@@ -93,7 +93,7 @@ func (s *SRSOut) Output(container lib.Container) error {
 		}
 
 		if err := s.generate(entry); err != nil {
-			return err
+			return fmt.Errorf("❌ [type %s | action %s] %w", s.Type, s.Action, err)
 		}
 	}
 
@@ -179,7 +179,7 @@ func (s *SRSOut) marshalRuleSet(entry *lib.Entry) (*option.PlainRuleSet, error) 
 		return &plainRuleSet, nil
 	}
 
-	return nil, fmt.Errorf("❌ [type %s | action %s] entry %s has no CIDR", s.Type, s.Action, entry.GetName())
+	return nil, fmt.Errorf("entry %s has no CIDR", entry.GetName())
 }
 
 func (s *SRSOut) writeFile(filename string, ruleset *option.PlainRuleSet) error {

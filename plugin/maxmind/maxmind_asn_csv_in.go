@@ -41,7 +41,7 @@ func newGeoLite2ASNCSVIn(action lib.Action, data json.RawMessage) (lib.InputConv
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeGeoLite2ASNCSVIn, action, err)
 		}
 	}
 
@@ -123,13 +123,13 @@ func (g *GeoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error)
 
 	if g.IPv4File != "" {
 		if err := g.process(g.IPv4File, entries); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 		}
 	}
 
 	if g.IPv6File != "" {
 		if err := g.process(g.IPv6File, entries); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 		}
 	}
 
@@ -143,14 +143,14 @@ func (g *GeoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error)
 		switch g.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 			}
 		case lib.ActionRemove:
 			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 			}
 		default:
-			return nil, lib.ErrUnknownAction
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, lib.ErrUnknownAction)
 		}
 	}
 
@@ -189,7 +189,7 @@ func (g *GeoLite2ASNCSVIn) process(file string, entries map[string]*lib.Entry) e
 		}
 
 		if len(record) < 2 {
-			return fmt.Errorf("❌ [type %s | action %s] invalid record: %v", g.Type, g.Action, record)
+			return fmt.Errorf("invalid record: %v", record)
 		}
 
 		// Maxmind ASN CSV reference:

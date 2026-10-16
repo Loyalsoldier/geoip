@@ -45,7 +45,7 @@ func newMRSIn(action lib.Action, data json.RawMessage) (lib.InputConverter, erro
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeMRSIn, action, err)
 		}
 	}
 
@@ -119,7 +119,7 @@ func (m *MRSIn) Input(container lib.Container) (lib.Container, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", m.Type, m.Action, err)
 	}
 
 	if len(entries) == 0 {
@@ -132,14 +132,14 @@ func (m *MRSIn) Input(container lib.Container) (lib.Container, error) {
 		switch m.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", m.Type, m.Action, err)
 			}
 		case lib.ActionRemove:
 			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", m.Type, m.Action, err)
 			}
 		default:
-			return nil, lib.ErrUnknownAction
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", m.Type, m.Action, lib.ErrUnknownAction)
 		}
 	}
 
@@ -175,7 +175,7 @@ func (m *MRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 
 		// check filename
 		if !regexp.MustCompile(`^[a-zA-Z0-9_.\-]+$`).MatchString(entryName) {
-			return fmt.Errorf("❌ [type %s | action %s] filename %s cannot be entry name, please remove special characters in it", m.Type, m.Action, entryName)
+			return fmt.Errorf("filename %s cannot be entry name, please remove special characters in it", entryName)
 		}
 
 		// remove file extension but not hidden files of which filename starts with "."
@@ -187,7 +187,7 @@ func (m *MRSIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) 
 
 	entryName = strings.ToUpper(entryName)
 	if _, found := entries[entryName]; found {
-		return fmt.Errorf("❌ [type %s | action %s] found duplicated list %s", m.Type, m.Action, entryName)
+		return fmt.Errorf("found duplicated list %s", entryName)
 	}
 
 	file, err := os.Open(path)
@@ -211,7 +211,7 @@ func (m *MRSIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("❌ [type %s | action %s] failed to get remote file %s, http status code %d", m.Type, m.Action, url, resp.StatusCode)
+		return fmt.Errorf("failed to get remote file %s, http status code %d", url, resp.StatusCode)
 	}
 
 	if err := m.generateEntries(name, resp.Body, entries); err != nil {
