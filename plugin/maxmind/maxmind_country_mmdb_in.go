@@ -56,13 +56,13 @@ func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 		content, err = os.ReadFile(g.URI)
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 	}
 
-	entries := make(map[string]*lib.Entry, 300)
+	entries := make(map[string]*lib.Entry)
 	err = g.generateEntries(content, entries)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 	}
 
 	if len(entries) == 0 {
@@ -75,14 +75,14 @@ func (g *GeoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 		switch g.Action {
 		case lib.ActionAdd:
 			if err := container.Add(entry, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 			}
 		case lib.ActionRemove:
 			if err := container.Remove(entry, lib.CaseRemovePrefix, ignoreIPType); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
 			}
 		default:
-			return nil, lib.ErrUnknownAction
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, lib.ErrUnknownAction)
 		}
 	}
 

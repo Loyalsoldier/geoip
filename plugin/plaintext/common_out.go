@@ -3,6 +3,7 @@ package plaintext
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -46,7 +47,7 @@ func newTextOut(iType string, iDesc string, action lib.Action, data json.RawMess
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", iType, action, err)
 		}
 	}
 

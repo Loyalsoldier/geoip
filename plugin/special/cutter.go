@@ -30,12 +30,12 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", TypeCutter, action, err)
 		}
 	}
 
 	if action != lib.ActionRemove {
-		return nil, fmt.Errorf("❌ [type %s] only supports `remove` action", TypeCutter)
+		return nil, fmt.Errorf("❌ [type %s | action %s] only supports `remove` action", TypeCutter, action)
 	}
 
 	// Filter want list
@@ -47,7 +47,7 @@ func newCutter(action lib.Action, data json.RawMessage) (lib.InputConverter, err
 	}
 
 	if len(wantList) == 0 {
-		return nil, fmt.Errorf("❌ [type %s] wantedList must be specified", TypeCutter)
+		return nil, fmt.Errorf("❌ [type %s | action %s] wantedList must be specified", TypeCutter, action)
 	}
 
 	return &Cutter{
@@ -88,7 +88,7 @@ func (c *Cutter) Input(container lib.Container) (lib.Container, error) {
 		}
 
 		if err := container.Remove(entry, lib.CaseRemoveEntry, ignoreIPType); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", c.Type, c.Action, err)
 		}
 	}
 

@@ -114,7 +114,7 @@ func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, da
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", iType, action, err)
 		}
 	}
 
@@ -172,6 +172,11 @@ func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
 		return nil, err
 	}
 	defer db.Close()
+
+	err = db.Verify()
+	if err != nil {
+		return nil, err
+	}
 
 	infoList := make(map[string]any)
 	for network := range db.Networks() {
@@ -281,7 +286,7 @@ func (g *GeoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
 	}
 
 	if len(infoList) == 0 {
-		return nil, fmt.Errorf("❌ [type %s | action %s] no extra info found in the source MMDB file: %s", g.Type, g.Action, g.SourceMMDBURI)
+		return nil, fmt.Errorf("no extra info found in the source MMDB file: %s", g.SourceMMDBURI)
 	}
 
 	return infoList, nil

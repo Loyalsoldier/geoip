@@ -2,6 +2,7 @@ package maxmind
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -23,7 +24,7 @@ func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, dat
 
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &tmp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("❌ [type %s | action %s] %w", iType, action, err)
 		}
 	}
 
