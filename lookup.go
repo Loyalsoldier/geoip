@@ -173,6 +173,10 @@ func isValidIPOrCIDR(search string) bool {
 }
 
 func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
+	if supportedInputFormatsDisallowedDirFlag[strings.ToLower(format)] && strings.TrimSpace(uri) == "" {
+		log.Fatalf("❌ [type %s | action %s] missing uri", format, lib.ActionAdd)
+	}
+
 	var input lib.InputConverter
 
 	switch strings.ToLower(format) {

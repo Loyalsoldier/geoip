@@ -158,7 +158,7 @@ func WithMMDBOutputName(name string) lib.OutputOption {
 
 func WithMMDBOutputDir(dir string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		dir = strings.TrimSpace(dir)
+		dir := strings.TrimSpace(dir)
 		if dir == "" {
 			dir = defaultMMDBOutputDirForType(g.(*geoLite2CountryMMDBOut).Type)
 		}

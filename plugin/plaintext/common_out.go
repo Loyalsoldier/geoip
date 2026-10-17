@@ -90,7 +90,7 @@ func NewSurgeRuleSetOut(action lib.Action, opts ...lib.OutputOption) lib.OutputC
 
 func WithOutputDir(dir string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		dir = strings.TrimSpace(dir)
+		dir := strings.TrimSpace(dir)
 		if dir == "" {
 			dir = defaultOutputDirForType(t.(*text_out).Type)
 		}
