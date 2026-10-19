@@ -23,7 +23,7 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeGeoLite2CountryMMDBOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newGeoLite2CountryMMDBOutFromBytes(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
+		return NewGeoLite2CountryMMDBOutFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeGeoLite2CountryMMDBOut, &geolite2_country_mmdb_out{
 		Description: DescGeoLite2CountryMMDBOut,
@@ -46,6 +46,10 @@ type geolite2_country_mmdb_out struct {
 
 func NewGeoLite2CountryMMDBOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newGeoLite2CountryMMDBOut(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, opts...)
+}
+
+func NewGeoLite2CountryMMDBOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newGeoLite2CountryMMDBOutFromBytes(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, data)
 }
 
 func (g *geolite2_country_mmdb_out) GetType() string {
