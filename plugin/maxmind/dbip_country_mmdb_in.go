@@ -1,3 +1,7 @@
+// Download the DB-IP IP to Country Lite database from here for free: https://db-ip.com/db/download/ip-to-country-lite
+// The database is in MaxMind DB (MMDB) format.
+// Check the database schema here: https://db-ip.com/db/format/ip-to-country-lite/mmdb.html
+// Or use `mmdbinspect` CLI to inspect the database: https://github.com/maxmind/mmdbinspect
 package maxmind
 
 import (
