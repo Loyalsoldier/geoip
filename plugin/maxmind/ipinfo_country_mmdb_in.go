@@ -1,3 +1,7 @@
+// Download the IPInfo Lite country database from here for free: https://ipinfo.io/lite
+// The database is in MaxMind DB (MMDB) format.
+// Check the database schema here: https://ipinfo.io/lite
+// Or use `mmdbinspect` CLI to inspect the database: https://github.com/maxmind/mmdbinspect
 package maxmind
 
 import (
