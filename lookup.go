@@ -173,10 +173,15 @@ func isValidIPOrCIDR(search string) bool {
 }
 
 func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
+	format = strings.ToLower(format)
+	if supportedInputFormatsDisallowedDirFlag[format] && strings.TrimSpace(uri) == "" {
+		log.Fatalf("format %s requires a non-empty \"uri\" flag", format)
+	}
+
 	var input lib.InputConverter
 	var err error
 
-	switch strings.ToLower(format) {
+	switch format {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
 		input, err = maxmind.NewGeoLite2CountryMMDBIn(
 			lib.ActionAdd,

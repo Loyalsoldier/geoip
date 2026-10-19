@@ -102,13 +102,14 @@ func getDefaultOutputDir(iType string) string {
 // WithOutputDir sets the output directory. An empty dir means the default
 // output directory of the corresponding output format.
 func WithOutputDir(dir string) lib.OutputOption {
+	dir = strings.TrimSpace(dir)
 	return func(t lib.OutputConverter) {
-		dir = strings.TrimSpace(dir)
-		if dir == "" {
-			dir = getDefaultOutputDir(t.(*text_out).Type)
+		outputDir := dir
+		if outputDir == "" {
+			outputDir = getDefaultOutputDir(t.(*text_out).Type)
 		}
 
-		t.(*text_out).OutputDir = dir
+		t.(*text_out).OutputDir = outputDir
 	}
 }
 

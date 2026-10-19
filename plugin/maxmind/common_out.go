@@ -175,13 +175,14 @@ func WithOutputName(name string) lib.OutputOption {
 // WithOutputDir sets the output directory. An empty dir means the default
 // output directory of the corresponding output format.
 func WithOutputDir(dir string) lib.OutputOption {
+	dir = strings.TrimSpace(dir)
 	return func(g lib.OutputConverter) {
-		dir = strings.TrimSpace(dir)
-		if dir == "" {
-			dir = getDefaultMMDBOutputDir(g.(*geolite2_country_mmdb_out).Type)
+		outputDir := dir
+		if outputDir == "" {
+			outputDir = getDefaultMMDBOutputDir(g.(*geolite2_country_mmdb_out).Type)
 		}
 
-		g.(*geolite2_country_mmdb_out).OutputDir = dir
+		g.(*geolite2_country_mmdb_out).OutputDir = outputDir
 	}
 }
 

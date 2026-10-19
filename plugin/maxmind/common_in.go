@@ -75,13 +75,14 @@ func getDefaultMMDBInputURI(iType string) string {
 // WithURI sets the URI of MMDB input. An empty uri means the default file
 // of the corresponding input format.
 func WithURI(uri string) lib.InputOption {
+	uri = strings.TrimSpace(uri)
 	return func(g lib.InputConverter) {
-		uri = strings.TrimSpace(uri)
-		if uri == "" {
-			uri = getDefaultMMDBInputURI(g.(*geolite2_country_mmdb_in).Type)
+		inputURI := uri
+		if inputURI == "" {
+			inputURI = getDefaultMMDBInputURI(g.(*geolite2_country_mmdb_in).Type)
 		}
 
-		g.(*geolite2_country_mmdb_in).URI = uri
+		g.(*geolite2_country_mmdb_in).URI = inputURI
 	}
 }
 
