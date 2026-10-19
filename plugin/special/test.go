@@ -32,7 +32,7 @@ type test struct {
 	Description string
 }
 
-func newTest(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func newTest(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	t := &test{
 		Type:        typeTest,
 		Action:      action,
@@ -45,11 +45,11 @@ func newTest(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		}
 	}
 
-	return t
+	return t, nil
 }
 
 func newTestFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
-	return newTest(action), nil
+	return newTest(action)
 }
 
 func (t *test) GetType() string {

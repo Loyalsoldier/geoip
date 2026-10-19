@@ -44,7 +44,7 @@ type mrs_out struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewMRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewMRSOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	m := &mrs_out{
 		Type:        TypeMRSOut,
 		Action:      action,
@@ -58,7 +58,7 @@ func NewMRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		}
 	}
 
-	return m
+	return m, nil
 }
 
 func WithOutputDir(dir string) lib.OutputOption {
@@ -110,7 +110,7 @@ func NewMRSOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, er
 		WithOutputWantedList(tmp.Want),
 		WithOutputExcludedList(tmp.Exclude),
 		WithOutputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (m *mrs_out) GetType() string {

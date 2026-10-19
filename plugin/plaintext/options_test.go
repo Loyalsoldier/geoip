@@ -9,7 +9,7 @@ import (
 
 func TestOutputDirOptionReuse(t *testing.T) {
 	formats := []struct {
-		newConverter func(lib.Action, ...lib.OutputOption) lib.OutputConverter
+		newConverter func(lib.Action, ...lib.OutputOption) (lib.OutputConverter, error)
 		defaultDir   string
 	}{
 		{NewTextOut, defaultOutputDirForTextOut},
@@ -20,7 +20,11 @@ func TestOutputDirOptionReuse(t *testing.T) {
 	for _, dir := range []string{"", " \t ", " custom-output "} {
 		opt := WithOutputDir(dir)
 		for _, format := range formats {
-			converter := format.newConverter(lib.ActionOutput, opt).(*text_out)
+			out, err := format.newConverter(lib.ActionOutput, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+			converter := out.(*text_out)
 			want := strings.TrimSpace(dir)
 			if want == "" {
 				want = format.defaultDir

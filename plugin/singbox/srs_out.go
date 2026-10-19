@@ -43,7 +43,7 @@ type srs_out struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewSRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewSRSOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	s := &srs_out{
 		Type:        TypeSRSOut,
 		Action:      action,
@@ -56,7 +56,7 @@ func NewSRSOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		}
 	}
 
-	return s
+	return s, nil
 }
 
 func WithOutputDir(dir string) lib.OutputOption {
@@ -108,7 +108,7 @@ func NewSRSOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, er
 		WithOutputWantedList(tmp.Want),
 		WithOutputExcludedList(tmp.Exclude),
 		WithOutputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (s *srs_out) GetType() string {

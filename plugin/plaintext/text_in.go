@@ -3,7 +3,6 @@ package plaintext
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +26,7 @@ func init() {
 	})
 }
 
-func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	t := &text_in{
 		Type:        iType,
 		Action:      action,
@@ -41,49 +40,49 @@ func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputO
 	}
 
 	if t.Type != TypeTextIn && len(t.IPOrCIDR) > 0 {
-		log.Fatalf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] ipOrCIDR is invalid for this input format", t.Type, t.Action)
 	}
 
 	if t.Type == TypeJSONIn && len(t.JSONPath) == 0 {
-		log.Fatalf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing jsonPath", t.Type, t.Action)
 	}
 
 	if t.InputDir == "" {
 		if t.Name == "" {
-			log.Fatalf("❌ [type %s | action %s] missing name or inputDir", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing name or inputDir", t.Type, t.Action)
 		}
 		if t.URI == "" && len(t.IPOrCIDR) == 0 {
-			log.Fatalf("❌ [type %s | action %s] missing uri or ipOrCIDR", t.Type, t.Action)
+			return nil, fmt.Errorf("❌ [type %s | action %s] missing uri or ipOrCIDR", t.Type, t.Action)
 		}
 	} else if t.Name != "" || t.URI != "" || len(t.IPOrCIDR) > 0 {
-		log.Fatalf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] inputDir is not allowed to be used with name or uri or ipOrCIDR", t.Type, t.Action)
 	}
 
-	return t
+	return t, nil
 }
 
 // NewTextIn creates an input converter of type text
-func NewTextIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewTextIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeTextIn, DescTextIn, action, opts...)
 }
 
 // NewJSONIn creates an input converter of type json
-func NewJSONIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewJSONIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeJSONIn, DescJSONIn, action, opts...)
 }
 
 // NewClashRuleSetIPCIDRIn creates an input converter of type clashRuleSet
-func NewClashRuleSetIPCIDRIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewClashRuleSetIPCIDRIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, opts...)
 }
 
 // NewClashRuleSetClassicalIn creates an input converter of type clashRuleSetClassical
-func NewClashRuleSetClassicalIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewClashRuleSetClassicalIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, opts...)
 }
 
 // NewSurgeRuleSetIn creates an input converter of type surgeRuleSet
-func NewSurgeRuleSetIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewSurgeRuleSetIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeSurgeRuleSetIn, DescSurgeRuleSetIn, action, opts...)
 }
 
@@ -180,7 +179,7 @@ func newTextInFromBytes(iType string, iDesc string, action lib.Action, data []by
 		WithJSONPath(tmp.JSONPath),
 		WithRemovePrefixesInLine(tmp.RemovePrefixesInLine),
 		WithRemoveSuffixesInLine(tmp.RemoveSuffixesInLine),
-	), nil
+	)
 }
 
 func (t *text_in) GetType() string {

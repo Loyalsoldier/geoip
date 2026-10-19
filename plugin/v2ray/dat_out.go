@@ -45,7 +45,7 @@ type geoip_dat_out struct {
 	OnlyIPType     lib.IPType
 }
 
-func NewGeoIPDatOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewGeoIPDatOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	g := &geoip_dat_out{
 		Type:        TypeGeoIPDatOut,
 		Action:      action,
@@ -60,7 +60,7 @@ func NewGeoIPDatOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConve
 		}
 	}
 
-	return g
+	return g, nil
 }
 
 func WithOutputName(name string) lib.OutputOption {
@@ -133,7 +133,7 @@ func NewGeoIPDatOutFromBytes(action lib.Action, data []byte) (lib.OutputConverte
 		WithOutputExcludedList(tmp.Exclude),
 		WithOneFilePerList(tmp.OneFilePerList),
 		WithOutputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (g *geoip_dat_out) GetType() string {

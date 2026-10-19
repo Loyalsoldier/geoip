@@ -3,7 +3,6 @@ package special
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -31,7 +30,7 @@ type cutter struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewCutter(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewCutter(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	c := &cutter{
 		Type:        TypeCutter,
 		Action:      action,
@@ -45,14 +44,14 @@ func NewCutter(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	}
 
 	if c.Action != lib.ActionRemove {
-		log.Fatalf("❌ [type %s | action %s] only supports `remove` action", c.Type, c.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] only supports `remove` action", c.Type, c.Action)
 	}
 
 	if len(c.Want) == 0 {
-		log.Fatalf("❌ [type %s | action %s] missing wantedList", c.Type, c.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing wantedList", c.Type, c.Action)
 	}
 
-	return c
+	return c, nil
 }
 
 func WithCutterWantedList(lists []string) lib.InputOption {
@@ -90,7 +89,7 @@ func NewCutterFromBytes(action lib.Action, data []byte) (lib.InputConverter, err
 		action,
 		WithCutterWantedList(tmp.Want),
 		WithCutterOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (c *cutter) GetType() string {

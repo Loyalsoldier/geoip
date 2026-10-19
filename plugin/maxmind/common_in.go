@@ -27,7 +27,7 @@ func defaultMMDBFileForType(iType string) string {
 	return ""
 }
 
-func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	g := &geoLite2CountryMMDBIn{
 		Type:        iType,
 		Action:      action,
@@ -44,21 +44,21 @@ func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opt
 		g.URI = defaultMMDBFileForType(g.Type)
 	}
 
-	return g
+	return g, nil
 }
 
 // NewGeoLite2CountryMMDBIn creates an input converter of type maxmindMMDB
-func NewGeoLite2CountryMMDBIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewGeoLite2CountryMMDBIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, opts...)
 }
 
 // NewDBIPCountryMMDBIn creates an input converter of type dbipCountryMMDB
-func NewDBIPCountryMMDBIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewDBIPCountryMMDBIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newGeoLite2CountryMMDBIn(TypeDBIPCountryMMDBIn, DescDBIPCountryMMDBIn, action, opts...)
 }
 
 // NewIPInfoCountryMMDBIn creates an input converter of type ipinfoCountryMMDB
-func NewIPInfoCountryMMDBIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewIPInfoCountryMMDBIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newGeoLite2CountryMMDBIn(TypeIPInfoCountryMMDBIn, DescIPInfoCountryMMDBIn, action, opts...)
 }
 
@@ -107,5 +107,5 @@ func newGeoLite2CountryMMDBInFromBytes(iType string, iDesc string, action lib.Ac
 		WithMMDBInURI(tmp.URI),
 		WithMMDBInWantedList(tmp.Want),
 		WithMMDBInOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }

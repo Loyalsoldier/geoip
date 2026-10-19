@@ -3,7 +3,6 @@ package special
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/netip"
 	"slices"
 	"strings"
@@ -33,7 +32,7 @@ type lookup struct {
 	SearchList  []string
 }
 
-func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewLookup(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	l := &lookup{
 		Type:        TypeLookup,
 		Action:      action,
@@ -47,10 +46,10 @@ func NewLookup(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 	}
 
 	if l.Search == "" {
-		log.Fatalf("❌ [type %s | action %s] missing search", l.Type, l.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing search", l.Type, l.Action)
 	}
 
-	return l
+	return l, nil
 }
 
 func WithSearch(search string) lib.OutputOption {
@@ -81,7 +80,7 @@ func NewLookupFromBytes(action lib.Action, data []byte) (lib.OutputConverter, er
 		action,
 		WithSearch(tmp.Search),
 		WithSearchList(tmp.SearchList),
-	), nil
+	)
 }
 
 func (l *lookup) GetType() string {

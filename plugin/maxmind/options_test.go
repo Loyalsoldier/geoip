@@ -9,7 +9,7 @@ import (
 
 func TestMMDBOutputDirOptionReuse(t *testing.T) {
 	formats := []struct {
-		newConverter func(lib.Action, ...lib.OutputOption) lib.OutputConverter
+		newConverter func(lib.Action, ...lib.OutputOption) (lib.OutputConverter, error)
 		defaultDir   string
 	}{
 		{NewGeoLite2CountryMMDBOut, defaultMaxmindOutputDir},
@@ -19,7 +19,11 @@ func TestMMDBOutputDirOptionReuse(t *testing.T) {
 	for _, dir := range []string{"", " \t ", " custom-output "} {
 		opt := WithMMDBOutputDir(dir)
 		for _, format := range formats {
-			converter := format.newConverter(lib.ActionOutput, opt).(*geoLite2CountryMMDBOut)
+			out, err := format.newConverter(lib.ActionOutput, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+			converter := out.(*geoLite2CountryMMDBOut)
 			want := strings.TrimSpace(dir)
 			if want == "" {
 				want = format.defaultDir

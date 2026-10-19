@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/netip"
 	"os"
@@ -37,7 +36,7 @@ type geoip_dat_in struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	g := &geoip_dat_in{
 		Type:        TypeGeoIPDatIn,
 		Action:      action,
@@ -51,10 +50,10 @@ func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) lib.InputConverte
 	}
 
 	if g.URI == "" {
-		log.Fatalf("❌ [type %s | action %s] missing uri", g.Type, g.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing uri", g.Type, g.Action)
 	}
 
-	return g
+	return g, nil
 }
 
 func WithURI(uri string) lib.InputOption {
@@ -100,7 +99,7 @@ func NewGeoIPDatInFromBytes(action lib.Action, data []byte) (lib.InputConverter,
 		WithURI(tmp.URI),
 		WithInputWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (g *geoip_dat_in) GetType() string {

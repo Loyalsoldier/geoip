@@ -53,7 +53,7 @@ type private struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewPrivate(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	p := &private{
 		Type:        TypePrivate,
 		Action:      action,
@@ -66,7 +66,7 @@ func NewPrivate(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 		}
 	}
 
-	return p
+	return p, nil
 }
 
 func WithPrivateOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
@@ -89,7 +89,7 @@ func NewPrivateFromBytes(action lib.Action, data []byte) (lib.InputConverter, er
 	return NewPrivate(
 		action,
 		WithPrivateOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (p *private) GetType() string {

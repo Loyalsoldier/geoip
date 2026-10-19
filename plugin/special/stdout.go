@@ -35,7 +35,7 @@ type stdout struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewStdout(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewStdout(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	s := &stdout{
 		Type:        TypeStdout,
 		Action:      action,
@@ -48,7 +48,7 @@ func NewStdout(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter 
 		}
 	}
 
-	return s
+	return s, nil
 }
 
 func WithStdoutWantedList(lists []string) lib.OutputOption {
@@ -87,7 +87,7 @@ func NewStdoutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, er
 		WithStdoutWantedList(tmp.Want),
 		WithStdoutExcludedList(tmp.Exclude),
 		WithStdoutOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (s *stdout) GetType() string {

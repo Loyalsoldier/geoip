@@ -178,69 +178,70 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 	}
 
 	var input lib.InputConverter
+	var err error
 
 	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
-		input = maxmind.NewGeoLite2CountryMMDBIn(
+		input, err = maxmind.NewGeoLite2CountryMMDBIn(
 			lib.ActionAdd,
 			maxmind.WithMMDBInURI(uri),
 		)
 
 	case strings.ToLower(maxmind.TypeDBIPCountryMMDBIn):
-		input = maxmind.NewDBIPCountryMMDBIn(
+		input, err = maxmind.NewDBIPCountryMMDBIn(
 			lib.ActionAdd,
 			maxmind.WithMMDBInURI(uri),
 		)
 
 	case strings.ToLower(maxmind.TypeIPInfoCountryMMDBIn):
-		input = maxmind.NewIPInfoCountryMMDBIn(
+		input, err = maxmind.NewIPInfoCountryMMDBIn(
 			lib.ActionAdd,
 			maxmind.WithMMDBInURI(uri),
 		)
 
 	case strings.ToLower(mihomo.TypeMRSIn):
-		input = mihomo.NewMRSIn(
+		input, err = mihomo.NewMRSIn(
 			lib.ActionAdd,
 			mihomo.WithNameAndURI(name, uri),
 			mihomo.WithInputDir(dir),
 		)
 
 	case strings.ToLower(singbox.TypeSRSIn):
-		input = singbox.NewSRSIn(
+		input, err = singbox.NewSRSIn(
 			lib.ActionAdd,
 			singbox.WithNameAndURI(name, uri),
 			singbox.WithInputDir(dir),
 		)
 
 	case strings.ToLower(v2ray.TypeGeoIPDatIn):
-		input = v2ray.NewGeoIPDatIn(
+		input, err = v2ray.NewGeoIPDatIn(
 			lib.ActionAdd,
 			v2ray.WithURI(uri),
 		)
 
 	case strings.ToLower(plaintext.TypeTextIn):
-		input = plaintext.NewTextIn(
+		input, err = plaintext.NewTextIn(
 			lib.ActionAdd,
 			plaintext.WithNameAndURI(name, uri),
 			plaintext.WithInputDir(dir),
 		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetIPCIDRIn):
-		input = plaintext.NewClashRuleSetIPCIDRIn(
+		input, err = plaintext.NewClashRuleSetIPCIDRIn(
 			lib.ActionAdd,
 			plaintext.WithNameAndURI(name, uri),
 			plaintext.WithInputDir(dir),
 		)
 
 	case strings.ToLower(plaintext.TypeClashRuleSetClassicalIn):
-		input = plaintext.NewClashRuleSetClassicalIn(
+		input, err = plaintext.NewClashRuleSetClassicalIn(
 			lib.ActionAdd,
 			plaintext.WithNameAndURI(name, uri),
 			plaintext.WithInputDir(dir),
 		)
 
 	case strings.ToLower(plaintext.TypeSurgeRuleSetIn):
-		input = plaintext.NewSurgeRuleSetIn(
+		input, err = plaintext.NewSurgeRuleSetIn(
 			lib.ActionAdd,
 			plaintext.WithNameAndURI(name, uri),
 			plaintext.WithInputDir(dir),
@@ -250,13 +251,22 @@ func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
 		log.Fatal("unsupported input format")
 	}
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return input
 }
 
 func getOutputForLookup(search string, searchList ...string) lib.OutputConverter {
-	return special.NewLookup(
+	output, err := special.NewLookup(
 		lib.ActionOutput,
 		special.WithSearch(search),
 		special.WithSearchList(searchList),
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return output
 }

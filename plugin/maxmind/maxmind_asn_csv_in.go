@@ -41,7 +41,7 @@ type geoLite2ASNCSVIn struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	g := &geoLite2ASNCSVIn{
 		Type:        TypeGeoLite2ASNCSVIn,
 		Action:      action,
@@ -61,7 +61,7 @@ func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) lib.InputCo
 		g.IPv6File = defaultGeoLite2ASNCSVIPv6File
 	}
 
-	return g
+	return g, nil
 }
 
 func WithASNCSVIPv4File(file string) lib.InputOption {
@@ -135,7 +135,7 @@ func NewGeoLite2ASNCSVInFromBytes(action lib.Action, data []byte) (lib.InputConv
 		WithASNCSVIPv6File(tmp.IPv6File),
 		WithASNCSVWantedList(tmp.Want),
 		WithASNCSVOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (g *geoLite2ASNCSVIn) GetType() string {

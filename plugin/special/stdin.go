@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -33,7 +32,7 @@ type stdin struct {
 	OnlyIPType  lib.IPType
 }
 
-func NewStdin(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewStdin(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	s := &stdin{
 		Type:        TypeStdin,
 		Action:      action,
@@ -47,10 +46,10 @@ func NewStdin(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
 	}
 
 	if s.Name == "" {
-		log.Fatalf("❌ [type %s | action %s] missing name", s.Type, s.Action)
+		return nil, fmt.Errorf("❌ [type %s | action %s] missing name", s.Type, s.Action)
 	}
 
-	return s
+	return s, nil
 }
 
 func WithStdinName(name string) lib.InputOption {
@@ -81,7 +80,7 @@ func NewStdinFromBytes(action lib.Action, data []byte) (lib.InputConverter, erro
 		action,
 		WithStdinName(tmp.Name),
 		WithStdinOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (s *stdin) GetType() string {

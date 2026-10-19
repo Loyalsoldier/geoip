@@ -50,7 +50,7 @@ func defaultOutputDirForType(iType string) string {
 	return ""
 }
 
-func newTextOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func newTextOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	t := &text_out{
 		Type:        iType,
 		Action:      action,
@@ -65,26 +65,26 @@ func newTextOut(iType string, iDesc string, action lib.Action, opts ...lib.Outpu
 		}
 	}
 
-	return t
+	return t, nil
 }
 
 // NewTextOut creates an output converter of type text
-func NewTextOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewTextOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newTextOut(TypeTextOut, DescTextOut, action, opts...)
 }
 
 // NewClashRuleSetIPCIDROut creates an output converter of type clashRuleSet
-func NewClashRuleSetIPCIDROut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewClashRuleSetIPCIDROut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newTextOut(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, opts...)
 }
 
 // NewClashRuleSetClassicalOut creates an output converter of type clashRuleSetClassical
-func NewClashRuleSetClassicalOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewClashRuleSetClassicalOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newTextOut(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, opts...)
 }
 
 // NewSurgeRuleSetOut creates an output converter of type surgeRuleSet
-func NewSurgeRuleSetOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewSurgeRuleSetOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newTextOut(TypeSurgeRuleSetOut, DescSurgeRuleSetOut, action, opts...)
 }
 
@@ -169,7 +169,7 @@ func newTextOutFromBytes(iType string, iDesc string, action lib.Action, data []b
 		WithOutputOnlyIPType(tmp.OnlyIPType),
 		WithAddPrefixInLine(tmp.AddPrefixInLine),
 		WithAddSuffixInLine(tmp.AddSuffixInLine),
-	), nil
+	)
 }
 
 func (t *text_out) marshalBytes(entry *lib.Entry) ([]byte, error) {

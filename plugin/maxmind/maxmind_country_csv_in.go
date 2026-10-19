@@ -43,7 +43,7 @@ type geoLite2CountryCSVIn struct {
 	OnlyIPType      lib.IPType
 }
 
-func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) lib.InputConverter {
+func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	g := &geoLite2CountryCSVIn{
 		Type:        TypeGeoLite2CountryCSVIn,
 		Action:      action,
@@ -67,7 +67,7 @@ func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) lib.Inp
 		g.IPv6File = defaultGeoLite2CountryIPv6File
 	}
 
-	return g
+	return g, nil
 }
 
 func WithCountryCSVCountryCodeFile(file string) lib.InputOption {
@@ -129,7 +129,7 @@ func NewGeoLite2CountryCSVInFromBytes(action lib.Action, data []byte) (lib.Input
 		WithCountryCSVIPv6File(tmp.IPv6File),
 		WithCountryCSVWantedList(tmp.Want),
 		WithCountryCSVOnlyIPType(tmp.OnlyIPType),
-	), nil
+	)
 }
 
 func (g *geoLite2CountryCSVIn) GetType() string {

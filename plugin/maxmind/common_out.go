@@ -112,7 +112,7 @@ func defaultMMDBOutputDirForType(iType string) string {
 	return ""
 }
 
-func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	g := &geoLite2CountryMMDBOut{
 		Type:        iType,
 		Action:      action,
@@ -127,21 +127,21 @@ func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, op
 		}
 	}
 
-	return g
+	return g, nil
 }
 
 // NewGeoLite2CountryMMDBOut creates an output converter of type maxmindMMDB
-func NewGeoLite2CountryMMDBOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewGeoLite2CountryMMDBOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newGeoLite2CountryMMDBOut(TypeGeoLite2CountryMMDBOut, DescGeoLite2CountryMMDBOut, action, opts...)
 }
 
 // NewDBIPCountryMMDBOut creates an output converter of type dbipCountryMMDB
-func NewDBIPCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewDBIPCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newGeoLite2CountryMMDBOut(TypeDBIPCountryMMDBOut, DescDBIPCountryMMDBOut, action, opts...)
 }
 
 // NewIPInfoCountryMMDBOut creates an output converter of type ipinfoCountryMMDB
-func NewIPInfoCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) lib.OutputConverter {
+func NewIPInfoCountryMMDBOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newGeoLite2CountryMMDBOut(TypeIPInfoCountryMMDBOut, DescIPInfoCountryMMDBOut, action, opts...)
 }
 
@@ -226,7 +226,7 @@ func newGeoLite2CountryMMDBOutFromBytes(iType string, iDesc string, action lib.A
 		WithMMDBOutExcludedList(tmp.Exclude),
 		WithMMDBOutOnlyIPType(tmp.OnlyIPType),
 		WithSourceMMDBURI(tmp.SourceMMDBURI),
-	), nil
+	)
 }
 
 func (g *geoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
