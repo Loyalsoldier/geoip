@@ -61,19 +61,22 @@ var lookupCmd = &cobra.Command{
 		// Validate format
 		format, _ := cmd.Flags().GetString("format")
 		format = strings.ToLower(strings.TrimSpace(format))
-		if _, found := supportedInputFormats[format]; !found {
+		if !supportedInputFormats[format] {
 			log.Fatal("unsupported input format")
 		}
 
 		// Get dir
 		// Some formats are single-file formats and do not support directory input
 		dir, _ := cmd.Flags().GetString("dir")
-		if _, disallowed := supportedInputFormatsDisallowedDirFlag[format]; disallowed && dir != "" {
+		if supportedInputFormatsDisallowedDirFlag[format] && dir != "" {
 			log.Fatalf("format %s does not support \"dir\" flag, please use \"uri\" flag instead", format)
 		}
 
 		// Get uri
 		uri, _ := cmd.Flags().GetString("uri")
+		if supportedInputFormatsDisallowedDirFlag[format] && uri == "" {
+			log.Fatalf("format %s requires a non-empty \"uri\" flag", format)
+		}
 
 		// Set name, which must be specified together with uri
 		name := ""
@@ -173,15 +176,10 @@ func isValidIPOrCIDR(search string) bool {
 }
 
 func getInputForLookup(format, name, uri, dir string) lib.InputConverter {
-	format = strings.ToLower(format)
-	if supportedInputFormatsDisallowedDirFlag[format] && strings.TrimSpace(uri) == "" {
-		log.Fatalf("format %s requires a non-empty \"uri\" flag", format)
-	}
-
 	var input lib.InputConverter
 	var err error
 
-	switch format {
+	switch strings.ToLower(format) {
 	case strings.ToLower(maxmind.TypeGeoLite2CountryMMDBIn):
 		input, err = maxmind.NewGeoLite2CountryMMDBIn(
 			lib.ActionAdd,
