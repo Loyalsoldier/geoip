@@ -19,7 +19,7 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextInFromBytes(TypeTextIn, DescTextIn, action, data)
+		return NewTextInFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(TypeTextIn, &text_in{
 		Description: DescTextIn,
@@ -28,6 +28,10 @@ func init() {
 
 func NewTextIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
 	return newTextIn(TypeTextIn, DescTextIn, action, opts...)
+}
+
+func NewTextInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
+	return newTextInFromBytes(TypeTextIn, DescTextIn, action, data)
 }
 
 func (t *text_in) GetType() string {

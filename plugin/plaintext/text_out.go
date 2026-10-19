@@ -17,7 +17,7 @@ const (
 
 func init() {
 	lib.RegisterOutputConfigCreator(TypeTextOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
-		return newTextOutFromBytes(TypeTextOut, DescTextOut, action, data)
+		return NewTextOutFromBytes(action, data)
 	})
 	lib.RegisterOutputConverter(TypeTextOut, &text_out{
 		Description: DescTextOut,
@@ -26,6 +26,10 @@ func init() {
 
 func NewTextOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
 	return newTextOut(TypeTextOut, DescTextOut, action, opts...)
+}
+
+func NewTextOutFromBytes(action lib.Action, data []byte) (lib.OutputConverter, error) {
+	return newTextOutFromBytes(TypeTextOut, DescTextOut, action, data)
 }
 
 func (t *text_out) GetType() string {
