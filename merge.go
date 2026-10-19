@@ -41,38 +41,31 @@ var mergeCmd = &cobra.Command{
 }
 
 func getInputForMerge() lib.InputConverter {
-	return &special.Stdin{
-		Type:        special.TypeStdin,
-		Action:      lib.ActionAdd,
-		Description: special.DescStdin,
-		Name:        "temp",
+	input, err := special.NewStdin(
+		lib.ActionAdd,
+		special.WithStdinName("temp"),
+	)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	return input
 }
 
 func getOutputForMerge(otype string) lib.OutputConverter {
+	var onlyIPType lib.IPType
 	switch lib.IPType(otype) {
-	case lib.IPv4:
-		return &special.Stdout{
-			Type:        special.TypeStdout,
-			Action:      lib.ActionOutput,
-			Description: special.DescStdout,
-			OnlyIPType:  lib.IPv4,
-		}
-
-	case lib.IPv6:
-		return &special.Stdout{
-			Type:        special.TypeStdout,
-			Action:      lib.ActionOutput,
-			Description: special.DescStdout,
-			OnlyIPType:  lib.IPv6,
-		}
-
-	default:
-		return &special.Stdout{
-			Type:        special.TypeStdout,
-			Action:      lib.ActionOutput,
-			Description: special.DescStdout,
-		}
+	case lib.IPv4, lib.IPv6:
+		onlyIPType = lib.IPType(otype)
 	}
 
+	output, err := special.NewStdout(
+		lib.ActionOutput,
+		special.WithStdoutOnlyIPType(onlyIPType),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return output
 }
