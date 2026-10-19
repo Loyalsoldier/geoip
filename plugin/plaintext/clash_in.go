@@ -21,16 +21,24 @@ const (
 
 func init() {
 	lib.RegisterInputConfigCreator(TypeClashRuleSetClassicalIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, data)
+		return newTextInFromBytes(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeClashRuleSetClassicalIn, &TextIn{
+	lib.RegisterInputConverter(TypeClashRuleSetClassicalIn, &textIn{
 		Description: DescClashRuleSetClassicalIn,
 	})
 
 	lib.RegisterInputConfigCreator(TypeClashRuleSetIPCIDRIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, data)
+		return newTextInFromBytes(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeClashRuleSetIPCIDRIn, &TextIn{
+	lib.RegisterInputConverter(TypeClashRuleSetIPCIDRIn, &textIn{
 		Description: DescClashRuleSetIPCIDRIn,
 	})
+}
+
+func NewClashRuleSetClassicalIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
+	return newTextIn(TypeClashRuleSetClassicalIn, DescClashRuleSetClassicalIn, action, opts...)
+}
+
+func NewClashRuleSetIPCIDRIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
+	return newTextIn(TypeClashRuleSetIPCIDRIn, DescClashRuleSetIPCIDRIn, action, opts...)
 }

@@ -19,25 +19,37 @@ var testCIDRs = []string{
 
 func init() {
 	lib.RegisterInputConfigCreator(typeTest, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-		return newTest(action, data)
+		return newTestFromBytes(action, data)
 	})
 	lib.RegisterInputConverter(typeTest, &test{
 		Description: descTest,
 	})
 }
 
-func newTest(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
-	return &test{
-		Type:        typeTest,
-		Action:      action,
-		Description: descTest,
-	}, nil
-}
-
 type test struct {
 	Type        string
 	Action      lib.Action
 	Description string
+}
+
+func newTest(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
+	t := &test{
+		Type:        typeTest,
+		Action:      action,
+		Description: descTest,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(t)
+		}
+	}
+
+	return t, nil
+}
+
+func newTestFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
+	return newTest(action)
 }
 
 func (t *test) GetType() string {
