@@ -22,12 +22,12 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeGeoIPDatIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return NewGeoIPDatInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoIPDatIn, &geoIPDatIn{
+	lib.RegisterInputConverter(TypeGeoIPDatIn, &geoip_dat_in{
 		Description: DescGeoIPDatIn,
 	})
 }
 
-type geoIPDatIn struct {
+type geoip_dat_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -37,7 +37,7 @@ type geoIPDatIn struct {
 }
 
 func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
-	g := &geoIPDatIn{
+	g := &geoip_dat_in{
 		Type:        TypeGeoIPDatIn,
 		Action:      action,
 		Description: DescGeoIPDatIn,
@@ -58,7 +58,7 @@ func NewGeoIPDatIn(action lib.Action, opts ...lib.InputOption) (lib.InputConvert
 
 func WithURI(uri string) lib.InputOption {
 	return func(g lib.InputConverter) {
-		g.(*geoIPDatIn).URI = strings.TrimSpace(uri)
+		g.(*geoip_dat_in).URI = strings.TrimSpace(uri)
 	}
 }
 
@@ -71,13 +71,13 @@ func WithInputWantedList(lists []string) lib.InputOption {
 			}
 		}
 
-		g.(*geoIPDatIn).Want = wantList
+		g.(*geoip_dat_in).Want = wantList
 	}
 }
 
 func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
 	return func(g lib.InputConverter) {
-		g.(*geoIPDatIn).OnlyIPType = onlyIPType
+		g.(*geoip_dat_in).OnlyIPType = onlyIPType
 	}
 }
 
@@ -102,19 +102,19 @@ func NewGeoIPDatInFromBytes(action lib.Action, data []byte) (lib.InputConverter,
 	)
 }
 
-func (g *geoIPDatIn) GetType() string {
+func (g *geoip_dat_in) GetType() string {
 	return g.Type
 }
 
-func (g *geoIPDatIn) GetAction() lib.Action {
+func (g *geoip_dat_in) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *geoIPDatIn) GetDescription() string {
+func (g *geoip_dat_in) GetDescription() string {
 	return g.Description
 }
 
-func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geoip_dat_in) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -153,7 +153,7 @@ func (g *geoIPDatIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (g *geoIPDatIn) walkLocalFile(path string, entries map[string]*lib.Entry) error {
+func (g *geoip_dat_in) walkLocalFile(path string, entries map[string]*lib.Entry) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func (g *geoIPDatIn) walkLocalFile(path string, entries map[string]*lib.Entry) e
 	return nil
 }
 
-func (g *geoIPDatIn) walkRemoteFile(url string, entries map[string]*lib.Entry) error {
+func (g *geoip_dat_in) walkRemoteFile(url string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func (g *geoIPDatIn) walkRemoteFile(url string, entries map[string]*lib.Entry) e
 	return nil
 }
 
-func (g *geoIPDatIn) generateEntries(reader io.Reader, entries map[string]*lib.Entry) error {
+func (g *geoip_dat_in) generateEntries(reader io.Reader, entries map[string]*lib.Entry) error {
 	geoipBytes, err := io.ReadAll(reader)
 	if err != nil {
 		return err

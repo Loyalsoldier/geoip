@@ -16,7 +16,7 @@ func init() {
 		return newTextInFromBytes(TypeJSONIn, DescJSONIn, action, data)
 	})
 
-	lib.RegisterInputConverter(TypeJSONIn, &textIn{
+	lib.RegisterInputConverter(TypeJSONIn, &text_in{
 		Description: DescJSONIn,
 	})
 }

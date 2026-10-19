@@ -101,7 +101,7 @@ func (d dbipCountry) HasData() bool {
 }
 
 func newGeoLite2CountryMMDBOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
-	g := &geoLite2CountryMMDBOut{
+	g := &geolite2_country_mmdb_out{
 		Type:        iType,
 		Action:      action,
 		Description: iDesc,
@@ -168,7 +168,7 @@ func WithOutputName(name string) lib.OutputOption {
 			name = defaultGeoLite2CountryMMDBOutputName
 		}
 
-		g.(*geoLite2CountryMMDBOut).OutputName = name
+		g.(*geolite2_country_mmdb_out).OutputName = name
 	}
 }
 
@@ -178,44 +178,44 @@ func WithOutputDir(dir string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
 		dir = strings.TrimSpace(dir)
 		if dir == "" {
-			dir = getDefaultMMDBOutputDir(g.(*geoLite2CountryMMDBOut).Type)
+			dir = getDefaultMMDBOutputDir(g.(*geolite2_country_mmdb_out).Type)
 		}
 
-		g.(*geoLite2CountryMMDBOut).OutputDir = dir
+		g.(*geolite2_country_mmdb_out).OutputDir = dir
 	}
 }
 
 func WithOutputWantedList(lists []string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		g.(*geoLite2CountryMMDBOut).Want = lists
+		g.(*geolite2_country_mmdb_out).Want = lists
 	}
 }
 
 func WithOverwriteList(lists []string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		g.(*geoLite2CountryMMDBOut).Overwrite = lists
+		g.(*geolite2_country_mmdb_out).Overwrite = lists
 	}
 }
 
 func WithOutputExcludedList(lists []string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		g.(*geoLite2CountryMMDBOut).Exclude = lists
+		g.(*geolite2_country_mmdb_out).Exclude = lists
 	}
 }
 
 func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		g.(*geoLite2CountryMMDBOut).OnlyIPType = onlyIPType
+		g.(*geolite2_country_mmdb_out).OnlyIPType = onlyIPType
 	}
 }
 
 func WithSourceMMDBURI(uri string) lib.OutputOption {
 	return func(g lib.OutputConverter) {
-		g.(*geoLite2CountryMMDBOut).SourceMMDBURI = strings.TrimSpace(uri)
+		g.(*geolite2_country_mmdb_out).SourceMMDBURI = strings.TrimSpace(uri)
 	}
 }
 
-func (g *geoLite2CountryMMDBOut) GetExtraInfo() (map[string]any, error) {
+func (g *geolite2_country_mmdb_out) GetExtraInfo() (map[string]any, error) {
 	if strings.TrimSpace(g.SourceMMDBURI) == "" {
 		return nil, nil
 	}

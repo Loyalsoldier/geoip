@@ -20,12 +20,12 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryMMDBIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newGeoLite2CountryMMDBInFromBytes(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &geoLite2CountryMMDBIn{
+	lib.RegisterInputConverter(TypeGeoLite2CountryMMDBIn, &geolite2_country_mmdb_in{
 		Description: DescGeoLite2CountryMMDBIn,
 	})
 }
 
-type geoLite2CountryMMDBIn struct {
+type geolite2_country_mmdb_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -38,19 +38,19 @@ func NewGeoLite2CountryMMDBIn(action lib.Action, opts ...lib.InputOption) (lib.I
 	return newGeoLite2CountryMMDBIn(TypeGeoLite2CountryMMDBIn, DescGeoLite2CountryMMDBIn, action, opts...)
 }
 
-func (g *geoLite2CountryMMDBIn) GetType() string {
+func (g *geolite2_country_mmdb_in) GetType() string {
 	return g.Type
 }
 
-func (g *geoLite2CountryMMDBIn) GetAction() lib.Action {
+func (g *geolite2_country_mmdb_in) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *geoLite2CountryMMDBIn) GetDescription() string {
+func (g *geolite2_country_mmdb_in) GetDescription() string {
 	return g.Description
 }
 
-func (g *geoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geolite2_country_mmdb_in) Input(container lib.Container) (lib.Container, error) {
 	var content []byte
 	var err error
 	switch {
@@ -93,7 +93,7 @@ func (g *geoLite2CountryMMDBIn) Input(container lib.Container) (lib.Container, e
 	return container, nil
 }
 
-func (g *geoLite2CountryMMDBIn) generateEntries(content []byte, entries map[string]*lib.Entry) error {
+func (g *geolite2_country_mmdb_in) generateEntries(content []byte, entries map[string]*lib.Entry) error {
 	db, err := maxminddb.OpenBytes(content)
 	if err != nil {
 		return err

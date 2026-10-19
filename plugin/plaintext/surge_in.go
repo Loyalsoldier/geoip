@@ -20,7 +20,7 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeSurgeRuleSetIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newTextInFromBytes(TypeSurgeRuleSetIn, DescSurgeRuleSetIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeSurgeRuleSetIn, &textIn{
+	lib.RegisterInputConverter(TypeSurgeRuleSetIn, &text_in{
 		Description: DescSurgeRuleSetIn,
 	})
 }

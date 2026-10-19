@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type textIn struct {
+type text_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -29,7 +29,7 @@ type textIn struct {
 }
 
 func newTextIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
-	t := &textIn{
+	t := &text_in{
 		Type:        iType,
 		Action:      action,
 		Description: iDesc,
@@ -102,21 +102,21 @@ func newTextInFromBytes(iType string, iDesc string, action lib.Action, data []by
 // For text input, uri can be empty if ipOrCIDR is specified with WithIPOrCIDR.
 func WithNameAndURI(name, uri string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).Name = strings.TrimSpace(name)
-		t.(*textIn).URI = strings.TrimSpace(uri)
+		t.(*text_in).Name = strings.TrimSpace(name)
+		t.(*text_in).URI = strings.TrimSpace(uri)
 	}
 }
 
 // WithIPOrCIDR is only valid for text input, and must be used with WithNameAndURI.
 func WithIPOrCIDR(ipOrCIDR []string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).IPOrCIDR = ipOrCIDR
+		t.(*text_in).IPOrCIDR = ipOrCIDR
 	}
 }
 
 func WithInputDir(dir string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).InputDir = strings.TrimSpace(dir)
+		t.(*text_in).InputDir = strings.TrimSpace(dir)
 	}
 }
 
@@ -129,36 +129,36 @@ func WithInputWantedList(lists []string) lib.InputOption {
 			}
 		}
 
-		t.(*textIn).Want = wantList
+		t.(*text_in).Want = wantList
 	}
 }
 
 func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).OnlyIPType = onlyIPType
+		t.(*text_in).OnlyIPType = onlyIPType
 	}
 }
 
 // WithJSONPath is required for JSON input.
 func WithJSONPath(jsonPath []string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).JSONPath = jsonPath
+		t.(*text_in).JSONPath = jsonPath
 	}
 }
 
 func WithRemovePrefixesInLine(prefixes []string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).RemovePrefixesInLine = prefixes
+		t.(*text_in).RemovePrefixesInLine = prefixes
 	}
 }
 
 func WithRemoveSuffixesInLine(suffixes []string) lib.InputOption {
 	return func(t lib.InputConverter) {
-		t.(*textIn).RemoveSuffixesInLine = suffixes
+		t.(*text_in).RemoveSuffixesInLine = suffixes
 	}
 }
 
-func (t *textIn) scanFile(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFile(reader io.Reader, entry *lib.Entry) error {
 	var err error
 	switch t.Type {
 	case TypeTextIn:
@@ -178,7 +178,7 @@ func (t *textIn) scanFile(reader io.Reader, entry *lib.Entry) error {
 	return err
 }
 
-func (t *textIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -214,7 +214,7 @@ func (t *textIn) scanFileForTextIn(reader io.Reader, entry *lib.Entry) error {
 	return nil
 }
 
-func (t *textIn) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
+func (t *text_in) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
 	var payload struct {
 		Payload []string `yaml:"payload"`
 	}
@@ -231,7 +231,7 @@ func (t *textIn) readClashRuleSetYAMLFile(reader io.Reader) ([]string, error) {
 	return payload.Payload, nil
 }
 
-func (t *textIn) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	payload, err := t.readClashRuleSetYAMLFile(reader)
 	if err != nil {
 		return err
@@ -250,7 +250,7 @@ func (t *textIn) scanFileForClashIPCIDRRuleSetIn(reader io.Reader, entry *lib.En
 	return nil
 }
 
-func (t *textIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	payload, err := t.readClashRuleSetYAMLFile(reader)
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func (t *textIn) scanFileForClashClassicalRuleSetIn(reader io.Reader, entry *lib
 	return nil
 }
 
-func (t *textIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) error {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -324,7 +324,7 @@ func (t *textIn) scanFileForSurgeRuleSetIn(reader io.Reader, entry *lib.Entry) e
 	return nil
 }
 
-func (t *textIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
+func (t *text_in) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -348,7 +348,7 @@ func (t *textIn) scanFileForJSONIn(reader io.Reader, entry *lib.Entry) error {
 	return nil
 }
 
-func (t *textIn) processJSONResult(result gjson.Result, entry *lib.Entry) error {
+func (t *text_in) processJSONResult(result gjson.Result, entry *lib.Entry) error {
 	switch {
 	case !result.Exists():
 		return fmt.Errorf("invalid IP address or CIDR (value not exist), please check your specified JSON path or JSON source")

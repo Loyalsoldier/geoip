@@ -22,7 +22,7 @@ var (
 	defaultOutputDirForSurgeRuleSetOut          = filepath.Join("./", "output", "surge")
 )
 
-type textOut struct {
+type text_out struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -37,7 +37,7 @@ type textOut struct {
 }
 
 func newTextOut(iType string, iDesc string, action lib.Action, opts ...lib.OutputOption) (lib.OutputConverter, error) {
-	t := &textOut{
+	t := &text_out{
 		Type:        iType,
 		Action:      action,
 		Description: iDesc,
@@ -105,10 +105,10 @@ func WithOutputDir(dir string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
 		dir = strings.TrimSpace(dir)
 		if dir == "" {
-			dir = getDefaultOutputDir(t.(*textOut).Type)
+			dir = getDefaultOutputDir(t.(*text_out).Type)
 		}
 
-		t.(*textOut).OutputDir = dir
+		t.(*text_out).OutputDir = dir
 	}
 }
 
@@ -119,41 +119,41 @@ func WithOutputExtension(ext string) lib.OutputOption {
 			ext = defaultOutputExt
 		}
 
-		t.(*textOut).OutputExt = ext
+		t.(*text_out).OutputExt = ext
 	}
 }
 
 func WithOutputWantedList(lists []string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		t.(*textOut).Want = lists
+		t.(*text_out).Want = lists
 	}
 }
 
 func WithOutputExcludedList(lists []string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		t.(*textOut).Exclude = lists
+		t.(*text_out).Exclude = lists
 	}
 }
 
 func WithOutputOnlyIPType(onlyIPType lib.IPType) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		t.(*textOut).OnlyIPType = onlyIPType
+		t.(*text_out).OnlyIPType = onlyIPType
 	}
 }
 
 func WithAddPrefixInLine(prefix string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		t.(*textOut).AddPrefixInLine = prefix
+		t.(*text_out).AddPrefixInLine = prefix
 	}
 }
 
 func WithAddSuffixInLine(suffix string) lib.OutputOption {
 	return func(t lib.OutputConverter) {
-		t.(*textOut).AddSuffixInLine = suffix
+		t.(*text_out).AddSuffixInLine = suffix
 	}
 }
 
-func (t *textOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
+func (t *text_out) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(t.OnlyIPType))
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (t *textOut) marshalBytes(entry *lib.Entry) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (t *textOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		if t.AddPrefixInLine != "" {
 			buf.WriteString(t.AddPrefixInLine)
@@ -193,7 +193,7 @@ func (t *textOut) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string) 
 	return nil
 }
 
-func (t *textOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
@@ -212,7 +212,7 @@ func (t *textOut) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, ent
 	return nil
 }
 
-func (t *textOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
 		buf.WriteString("  - '")
@@ -223,7 +223,7 @@ func (t *textOut) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entryC
 	return nil
 }
 
-func (t *textOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
+func (t *text_out) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
 		ip, _, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -244,7 +244,7 @@ func (t *textOut) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []
 	return nil
 }
 
-func (t *textOut) writeFile(filename string, data []byte) error {
+func (t *text_out) writeFile(filename string, data []byte) error {
 	if err := os.MkdirAll(t.OutputDir, 0755); err != nil {
 		return err
 	}

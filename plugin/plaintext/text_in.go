@@ -21,7 +21,7 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeTextIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return newTextInFromBytes(TypeTextIn, DescTextIn, action, data)
 	})
-	lib.RegisterInputConverter(TypeTextIn, &textIn{
+	lib.RegisterInputConverter(TypeTextIn, &text_in{
 		Description: DescTextIn,
 	})
 }
@@ -30,19 +30,19 @@ func NewTextIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, 
 	return newTextIn(TypeTextIn, DescTextIn, action, opts...)
 }
 
-func (t *textIn) GetType() string {
+func (t *text_in) GetType() string {
 	return t.Type
 }
 
-func (t *textIn) GetAction() lib.Action {
+func (t *text_in) GetAction() lib.Action {
 	return t.Action
 }
 
-func (t *textIn) GetDescription() string {
+func (t *text_in) GetDescription() string {
 	return t.Description
 }
 
-func (t *textIn) Input(container lib.Container) (lib.Container, error) {
+func (t *text_in) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 	var err error
 
@@ -98,7 +98,7 @@ func (t *textIn) Input(container lib.Container) (lib.Container, error) {
 	return container, nil
 }
 
-func (t *textIn) walkDir(dir string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkDir(dir string, entries map[string]*lib.Entry) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -117,7 +117,7 @@ func (t *textIn) walkDir(dir string, entries map[string]*lib.Entry) error {
 	return err
 }
 
-func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkLocalFile(path, name string, entries map[string]*lib.Entry) error {
 	entryName := ""
 	name = strings.TrimSpace(name)
 	if name != "" {
@@ -161,7 +161,7 @@ func (t *textIn) walkLocalFile(path, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) walkRemoteFile(url, name string, entries map[string]*lib.Entry) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ func (t *textIn) walkRemoteFile(url, name string, entries map[string]*lib.Entry)
 	return nil
 }
 
-func (t *textIn) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
+func (t *text_in) appendIPOrCIDR(ipOrCIDR []string, name string, entries map[string]*lib.Entry) error {
 	if len(ipOrCIDR) == 0 {
 		return nil
 	}

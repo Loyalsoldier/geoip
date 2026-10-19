@@ -27,12 +27,12 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2CountryCSVIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return NewGeoLite2CountryCSVInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2CountryCSVIn, &geoLite2CountryCSVIn{
+	lib.RegisterInputConverter(TypeGeoLite2CountryCSVIn, &geolite2_country_csv_in{
 		Description: DescGeoLite2CountryCSVIn,
 	})
 }
 
-type geoLite2CountryCSVIn struct {
+type geolite2_country_csv_in struct {
 	Type            string
 	Action          lib.Action
 	Description     string
@@ -44,7 +44,7 @@ type geoLite2CountryCSVIn struct {
 }
 
 func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
-	g := &geoLite2CountryCSVIn{
+	g := &geolite2_country_csv_in{
 		Type:        TypeGeoLite2CountryCSVIn,
 		Action:      action,
 		Description: DescGeoLite2CountryCSVIn,
@@ -72,7 +72,7 @@ func NewGeoLite2CountryCSVIn(action lib.Action, opts ...lib.InputOption) (lib.In
 
 func WithCountryCodeFile(file string) lib.InputOption {
 	return func(g lib.InputConverter) {
-		g.(*geoLite2CountryCSVIn).CountryCodeFile = strings.TrimSpace(file)
+		g.(*geolite2_country_csv_in).CountryCodeFile = strings.TrimSpace(file)
 	}
 }
 
@@ -101,19 +101,19 @@ func NewGeoLite2CountryCSVInFromBytes(action lib.Action, data []byte) (lib.Input
 	)
 }
 
-func (g *geoLite2CountryCSVIn) GetType() string {
+func (g *geolite2_country_csv_in) GetType() string {
 	return g.Type
 }
 
-func (g *geoLite2CountryCSVIn) GetAction() lib.Action {
+func (g *geolite2_country_csv_in) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *geoLite2CountryCSVIn) GetDescription() string {
+func (g *geolite2_country_csv_in) GetDescription() string {
 	return g.Description
 }
 
-func (g *geoLite2CountryCSVIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geolite2_country_csv_in) Input(container lib.Container) (lib.Container, error) {
 	ccMap, err := g.getCountryCode()
 	if err != nil {
 		return nil, fmt.Errorf("❌ [type %s | action %s] %w", g.Type, g.Action, err)
@@ -157,7 +157,7 @@ func (g *geoLite2CountryCSVIn) Input(container lib.Container) (lib.Container, er
 	return container, nil
 }
 
-func (g *geoLite2CountryCSVIn) getCountryCode() (map[string]string, error) {
+func (g *geolite2_country_csv_in) getCountryCode() (map[string]string, error) {
 	var f io.ReadCloser
 	var err error
 	switch {
@@ -203,7 +203,7 @@ func (g *geoLite2CountryCSVIn) getCountryCode() (map[string]string, error) {
 	return ccMap, nil
 }
 
-func (g *geoLite2CountryCSVIn) process(file string, ccMap map[string]string, entries map[string]*lib.Entry) error {
+func (g *geolite2_country_csv_in) process(file string, ccMap map[string]string, entries map[string]*lib.Entry) error {
 	if len(ccMap) == 0 {
 		return fmt.Errorf("invalid country code data")
 	}

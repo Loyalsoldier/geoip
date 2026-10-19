@@ -19,7 +19,7 @@ func init() {
 	lib.RegisterOutputConfigCreator(TypeTextOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newTextOutFromBytes(TypeTextOut, DescTextOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeTextOut, &textOut{
+	lib.RegisterOutputConverter(TypeTextOut, &text_out{
 		Description: DescTextOut,
 	})
 }
@@ -28,19 +28,19 @@ func NewTextOut(action lib.Action, opts ...lib.OutputOption) (lib.OutputConverte
 	return newTextOut(TypeTextOut, DescTextOut, action, opts...)
 }
 
-func (t *textOut) GetType() string {
+func (t *text_out) GetType() string {
 	return t.Type
 }
 
-func (t *textOut) GetAction() lib.Action {
+func (t *text_out) GetAction() lib.Action {
 	return t.Action
 }
 
-func (t *textOut) GetDescription() string {
+func (t *text_out) GetDescription() string {
 	return t.Description
 }
 
-func (t *textOut) Output(container lib.Container) error {
+func (t *text_out) Output(container lib.Container) error {
 	for _, name := range t.filterAndSortList(container) {
 		entry, found := container.GetEntry(name)
 		if !found {
@@ -62,7 +62,7 @@ func (t *textOut) Output(container lib.Container) error {
 	return nil
 }
 
-func (t *textOut) filterAndSortList(container lib.Container) []string {
+func (t *text_out) filterAndSortList(container lib.Container) []string {
 	excludeMap := make(map[string]bool)
 	for _, exclude := range t.Exclude {
 		if exclude = strings.ToUpper(strings.TrimSpace(exclude)); exclude != "" {

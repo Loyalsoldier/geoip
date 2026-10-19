@@ -23,14 +23,14 @@ func init() {
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetClassicalOut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newTextOutFromBytes(TypeClashRuleSetClassicalOut, DescClashRuleSetClassicalOut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeClashRuleSetClassicalOut, &textOut{
+	lib.RegisterOutputConverter(TypeClashRuleSetClassicalOut, &text_out{
 		Description: DescClashRuleSetClassicalOut,
 	})
 
 	lib.RegisterOutputConfigCreator(TypeClashRuleSetIPCIDROut, func(action lib.Action, data json.RawMessage) (lib.OutputConverter, error) {
 		return newTextOutFromBytes(TypeClashRuleSetIPCIDROut, DescClashRuleSetIPCIDROut, action, data)
 	})
-	lib.RegisterOutputConverter(TypeClashRuleSetIPCIDROut, &textOut{
+	lib.RegisterOutputConverter(TypeClashRuleSetIPCIDROut, &text_out{
 		Description: DescClashRuleSetIPCIDROut,
 	})
 }

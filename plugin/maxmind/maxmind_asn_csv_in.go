@@ -26,12 +26,12 @@ func init() {
 	lib.RegisterInputConfigCreator(TypeGeoLite2ASNCSVIn, func(action lib.Action, data json.RawMessage) (lib.InputConverter, error) {
 		return NewGeoLite2ASNCSVInFromBytes(action, data)
 	})
-	lib.RegisterInputConverter(TypeGeoLite2ASNCSVIn, &geoLite2ASNCSVIn{
+	lib.RegisterInputConverter(TypeGeoLite2ASNCSVIn, &geolite2_asn_csv_in{
 		Description: DescGeoLite2ASNCSVIn,
 	})
 }
 
-type geoLite2ASNCSVIn struct {
+type geolite2_asn_csv_in struct {
 	Type        string
 	Action      lib.Action
 	Description string
@@ -42,7 +42,7 @@ type geoLite2ASNCSVIn struct {
 }
 
 func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
-	g := &geoLite2ASNCSVIn{
+	g := &geolite2_asn_csv_in{
 		Type:        TypeGeoLite2ASNCSVIn,
 		Action:      action,
 		Description: DescGeoLite2ASNCSVIn,
@@ -93,7 +93,7 @@ func WithASNWantedList(want lib.WantedListExtended) lib.InputOption {
 			wantList[asn] = []string{"AS" + asn}
 		}
 
-		g.(*geoLite2ASNCSVIn).Want = wantList
+		g.(*geolite2_asn_csv_in).Want = wantList
 	}
 }
 
@@ -120,19 +120,19 @@ func NewGeoLite2ASNCSVInFromBytes(action lib.Action, data []byte) (lib.InputConv
 	)
 }
 
-func (g *geoLite2ASNCSVIn) GetType() string {
+func (g *geolite2_asn_csv_in) GetType() string {
 	return g.Type
 }
 
-func (g *geoLite2ASNCSVIn) GetAction() lib.Action {
+func (g *geolite2_asn_csv_in) GetAction() lib.Action {
 	return g.Action
 }
 
-func (g *geoLite2ASNCSVIn) GetDescription() string {
+func (g *geolite2_asn_csv_in) GetDescription() string {
 	return g.Description
 }
 
-func (g *geoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error) {
+func (g *geolite2_asn_csv_in) Input(container lib.Container) (lib.Container, error) {
 	entries := make(map[string]*lib.Entry)
 
 	if g.IPv4File != "" {
@@ -171,7 +171,7 @@ func (g *geoLite2ASNCSVIn) Input(container lib.Container) (lib.Container, error)
 	return container, nil
 }
 
-func (g *geoLite2ASNCSVIn) process(file string, entries map[string]*lib.Entry) error {
+func (g *geolite2_asn_csv_in) process(file string, entries map[string]*lib.Entry) error {
 	if entries == nil {
 		entries = make(map[string]*lib.Entry)
 	}

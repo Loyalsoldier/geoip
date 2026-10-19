@@ -16,7 +16,7 @@ var (
 )
 
 func newGeoLite2CountryMMDBIn(iType string, iDesc string, action lib.Action, opts ...lib.InputOption) (lib.InputConverter, error) {
-	g := &geoLite2CountryMMDBIn{
+	g := &geolite2_country_mmdb_in{
 		Type:        iType,
 		Action:      action,
 		Description: iDesc,
@@ -78,10 +78,10 @@ func WithURI(uri string) lib.InputOption {
 	return func(g lib.InputConverter) {
 		uri = strings.TrimSpace(uri)
 		if uri == "" {
-			uri = getDefaultMMDBInputURI(g.(*geoLite2CountryMMDBIn).Type)
+			uri = getDefaultMMDBInputURI(g.(*geolite2_country_mmdb_in).Type)
 		}
 
-		g.(*geoLite2CountryMMDBIn).URI = uri
+		g.(*geolite2_country_mmdb_in).URI = uri
 	}
 }
 
@@ -96,9 +96,9 @@ func WithInputWantedList(lists []string) lib.InputOption {
 		}
 
 		switch g := g.(type) {
-		case *geoLite2CountryMMDBIn:
+		case *geolite2_country_mmdb_in:
 			g.Want = wantList
-		case *geoLite2CountryCSVIn:
+		case *geolite2_country_csv_in:
 			g.Want = wantList
 		}
 	}
@@ -108,11 +108,11 @@ func WithInputWantedList(lists []string) lib.InputOption {
 func WithInputOnlyIPType(onlyIPType lib.IPType) lib.InputOption {
 	return func(g lib.InputConverter) {
 		switch g := g.(type) {
-		case *geoLite2CountryMMDBIn:
+		case *geolite2_country_mmdb_in:
 			g.OnlyIPType = onlyIPType
-		case *geoLite2CountryCSVIn:
+		case *geolite2_country_csv_in:
 			g.OnlyIPType = onlyIPType
-		case *geoLite2ASNCSVIn:
+		case *geolite2_asn_csv_in:
 			g.OnlyIPType = onlyIPType
 		}
 	}
@@ -123,9 +123,9 @@ func WithIPv4File(file string) lib.InputOption {
 	return func(g lib.InputConverter) {
 		file = strings.TrimSpace(file)
 		switch g := g.(type) {
-		case *geoLite2CountryCSVIn:
+		case *geolite2_country_csv_in:
 			g.IPv4File = file
-		case *geoLite2ASNCSVIn:
+		case *geolite2_asn_csv_in:
 			g.IPv4File = file
 		}
 	}
@@ -136,9 +136,9 @@ func WithIPv6File(file string) lib.InputOption {
 	return func(g lib.InputConverter) {
 		file = strings.TrimSpace(file)
 		switch g := g.(type) {
-		case *geoLite2CountryCSVIn:
+		case *geolite2_country_csv_in:
 			g.IPv6File = file
-		case *geoLite2ASNCSVIn:
+		case *geolite2_asn_csv_in:
 			g.IPv6File = file
 		}
 	}
