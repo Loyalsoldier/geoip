@@ -205,11 +205,11 @@ func TestConvertCmdFatal(t *testing.T) {
 		args    []string
 		wantMsg string
 	}{
-		{name: "config file not found", args: []string{"convert", "-c", filepath.Join(dir, "missing.json")}, wantMsg: "no such file or directory"},
+		{name: "config file not found", args: []string{"convert", "-c", filepath.Join(dir, "missing.json")}, wantMsg: missingFileError(t, filepath.Join(dir, "missing.json"))},
 		{name: "invalid config JSON", args: []string{"convert", "-c", invalidJSON}, wantMsg: "unexpected end of JSON input"},
 		{name: "unknown converter type", args: []string{"convert", "-c", unknownType}, wantMsg: "unknown config type"},
 		{name: "config without output", args: []string{"convert", "-c", noOutput}, wantMsg: "input type and output type must be specified"},
-		{name: "input fails at run time", args: []string{"convert", "-c", missingInput}, wantMsg: "missing.txt: no such file or directory"},
+		{name: "input fails at run time", args: []string{"convert", "-c", missingInput}, wantMsg: missingFileError(t, filepath.Join(dir, "missing.txt"))},
 	}
 
 	for _, tt := range tests {

@@ -248,15 +248,15 @@ func newTestTLSServer(t *testing.T, body string) *httptest.Server {
 	return srv
 }
 
-// closedServerURL returns the URL of an HTTP server which has already been
-// shut down, so that any request to it fails without real network access.
-func closedServerURL(t *testing.T) string {
+// failingServerURL returns the URL of a server that aborts every connection.
+func failingServerURL(t *testing.T) string {
 	t.Helper()
 
-	srv := httptest.NewServer(http.NotFoundHandler())
-	url := srv.URL
-	srv.Close()
-	return url
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic(http.ErrAbortHandler)
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL
 }
 
 // captureLog redirects the standard logger to a buffer until the test ends.

@@ -191,11 +191,12 @@ func newServer(t *testing.T, status int, body []byte) *httptest.Server {
 	return srv
 }
 
-// closedServerURL returns the URL of a server that no longer accepts connections.
-func closedServerURL(t *testing.T) string {
+// failingServerURL returns the URL of a server that aborts every connection.
+func failingServerURL(t *testing.T) string {
 	t.Helper()
-	srv := httptest.NewServer(http.NotFoundHandler())
-	url := srv.URL
-	srv.Close()
-	return url
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic(http.ErrAbortHandler)
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL
 }

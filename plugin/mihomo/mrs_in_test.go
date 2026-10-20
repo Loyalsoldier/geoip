@@ -497,7 +497,7 @@ func TestMRSIn_Input_Remote(t *testing.T) {
 		{name: "upper-case scheme", uri: strings.Replace(okServer.URL, "http://", "HTTP://", 1) + "/cn.mrs", want: map[string][]string{"CN": cnCIDRs}},
 		{name: "status 404", uri: notFoundServer.URL + "/cn.mrs", wantErr: "http status code 404"},
 		{name: "status 200 with invalid content", uri: garbageServer.URL + "/cn.mrs", wantErr: "[type mihomoMRS | action add]"},
-		{name: "connection refused", uri: closedServerURL(t) + "/cn.mrs", wantURLError: true},
+		{name: "connection aborted", uri: failingServerURL(t) + "/cn.mrs", wantURLError: true},
 		// The default client does not trust the test certificate: the error
 		// proves https URIs are fetched remotely instead of opened locally.
 		{name: "https is fetched remotely", uri: tlsServer.URL + "/cn.mrs", wantURLError: true},

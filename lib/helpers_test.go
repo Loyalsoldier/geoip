@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/netip"
 	"os"
@@ -82,6 +83,9 @@ func entryText(t *testing.T, entry *Entry, opts ...IgnoreIPOption) []string {
 	t.Helper()
 	text, err := entry.MarshalText(opts...)
 	if err != nil {
+		if err.Error() != fmt.Sprintf("entry %s has no prefix", entry.GetName()) {
+			t.Fatalf("MarshalText() error = %v", err)
+		}
 		return nil
 	}
 	return text

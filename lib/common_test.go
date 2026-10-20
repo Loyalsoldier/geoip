@@ -27,13 +27,14 @@ func newTestServer(t *testing.T) *httptest.Server {
 	return server
 }
 
-// closedServerURL returns the URL of a server that is no longer listening.
-func closedServerURL(t *testing.T) string {
+// failingServerURL returns the URL of a server that aborts every connection.
+func failingServerURL(t *testing.T) string {
 	t.Helper()
-	server := httptest.NewServer(http.NotFoundHandler())
-	url := server.URL
-	server.Close()
-	return url
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic(http.ErrAbortHandler)
+	}))
+	t.Cleanup(server.Close)
+	return server.URL
 }
 
 func remoteURLTestCases(t *testing.T) []struct {
@@ -54,7 +55,7 @@ func remoteURLTestCases(t *testing.T) []struct {
 		{name: "200 OK with empty body", url: server.URL + "/empty", want: ""},
 		{name: "404 Not Found", url: server.URL + "/missing", wantErr: "failed to get remote content -> " + server.URL + "/missing: 404 Not Found"},
 		{name: "500 Internal Server Error", url: server.URL + "/error", wantErr: "failed to get remote content -> " + server.URL + "/error: 500 Internal Server Error"},
-		{name: "connection refused", url: closedServerURL(t) + "/ok", wantErr: "connect"},
+		{name: "connection aborted", url: failingServerURL(t) + "/ok", wantErr: "EOF"},
 		{name: "invalid URL", url: "http://[::1", wantErr: "missing ']' in host"},
 		{name: "unsupported scheme", url: "ftp://example.com/file", wantErr: "unsupported protocol scheme"},
 	}

@@ -481,10 +481,10 @@ func TestLookupCmdFatal(t *testing.T) {
 		{name: "dir with mmdb format", args: []string{"lookup", "-f", "maxmindMMDB", "-d", data.dir}, wantMsg: `format maxmindmmdb does not support "dir" flag, please use "uri" flag instead`},
 		{name: "empty uri with single-file format", args: []string{"lookup", "-f", "dbipCountryMMDB", "-u", "", "1.1.1.1"}, wantMsg: `format dbipcountrymmdb requires a non-empty "uri" flag`},
 		{name: "empty uri and dir for text", args: []string{"lookup", "-f", "text", "-d", "", "1.1.1.1"}, wantMsg: "missing inputDir or name"},
-		{name: "once mode input file missing", args: []string{"lookup", "-f", "text", "-u", data.missingURI, "1.1.1.1"}, wantMsg: "missing.txt: no such file or directory"},
+		{name: "once mode input file missing", args: []string{"lookup", "-f", "text", "-u", data.missingURI, "1.1.1.1"}, wantMsg: missingFileError(t, data.missingURI)},
 		{name: "once mode invalid input file", args: []string{"lookup", "-f", "v2rayGeoIPDat", "-u", data.textFile, "1.1.1.1"}, wantMsg: "[type v2rayGeoIPDat | action add]"},
 		{name: "once mode lookup error", args: []string{"lookup", "-f", "text", "-u", data.textFile, "::ffff:1.1.1.0/95"}, wantMsg: "invalid CIDR"},
-		{name: "REPL input file missing", args: []string{"lookup", "-f", "text", "-u", data.missingURI}, stdin: "1.1.1.1\n", wantMsg: "missing.txt: no such file or directory"},
+		{name: "REPL input file missing", args: []string{"lookup", "-f", "text", "-u", data.missingURI}, stdin: "1.1.1.1\n", wantMsg: missingFileError(t, data.missingURI)},
 		{name: "REPL lookup error", args: []string{"lookup", "-f", "text", "-u", data.textFile}, stdin: "1.1.1.1\n::ffff:1.1.1.0/95\n", wantMsg: "invalid CIDR"},
 		{name: "REPL line too long", args: []string{"lookup", "-f", "text", "-u", data.textFile}, stdin: strings.Repeat("1", 70*1024) + "\n", wantMsg: "token too long"},
 	}

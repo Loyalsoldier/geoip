@@ -160,13 +160,14 @@ func TestInstanceInitConfig(t *testing.T) {
 	hostPort := strings.TrimPrefix(server.URL, "http://")
 
 	tests := []struct {
-		name    string
-		uri     string
-		wantErr string
+		name      string
+		uri       string
+		wantErr   string
+		wantErrIs error
 	}{
 		{name: "local file", uri: configFile},
 		{name: "local file with spaces", uri: "  " + configFile + "\t"},
-		{name: "missing local file", uri: filepath.Join(dir, "missing.json"), wantErr: "no such file or directory"},
+		{name: "missing local file", uri: filepath.Join(dir, "missing.json"), wantErrIs: os.ErrNotExist},
 		{name: "remote file", uri: server.URL + "/config.json"},
 		{name: "remote file with uppercase scheme", uri: "HTTP://" + hostPort + "/config.json"},
 		{name: "remote file not found", uri: server.URL + "/missing.json", wantErr: "404 Not Found"},
@@ -177,6 +178,10 @@ func TestInstanceInitConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			inst, _ := NewInstance()
 			err := inst.InitConfig(tt.uri)
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("error = %v, want containing %q", err, tt.wantErr)

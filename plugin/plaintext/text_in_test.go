@@ -743,10 +743,10 @@ func TestTextIn_Input_Remote(t *testing.T) {
 	}
 }
 
-func TestTextIn_Input_RemoteUnreachable(t *testing.T) {
+func TestTextIn_Input_RemoteConnectionAborted(t *testing.T) {
 	t.Parallel()
 
-	args := map[string]any{"name": "cn", "uri": closedServerURL(t) + "/cn.txt"}
+	args := map[string]any{"name": "cn", "uri": failingServerURL(t) + "/cn.txt"}
 	got, err := runInput(t, TypeTextIn, lib.ActionAdd, args, nil)
 	assertInputResult(t, TypeTextIn, lib.ActionAdd, got, err, nil, "[type text | action add]", nil)
 

@@ -139,6 +139,17 @@ func writeFile(t *testing.T, dir, name, content string) string {
 	return path
 }
 
+// missingFileError returns the platform-specific read error for a missing file.
+func missingFileError(t *testing.T, path string) string {
+	t.Helper()
+
+	_, err := os.ReadFile(path)
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("os.ReadFile(%q) error = %v, want os.ErrNotExist", path, err)
+	}
+	return err.Error()
+}
+
 // executeCommand runs rootCmd in-process with args. It returns what was
 // printed to os.Stdout, what cobra printed itself (usage and errors) and the
 // error returned by Execute. Flags are reset before and after the run.
