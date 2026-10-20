@@ -631,6 +631,12 @@ func TestGeoLite2CountryCSVIn_process(t *testing.T) {
 			wantEntries: map[string][]string{"US": {"1.0.0.0/24"}, "CN": {"1.0.1.0/24"}},
 		},
 		{
+			name:        "IPv4-mapped IPv6 CIDR is stored as IPv4",
+			content:     header + "::FFFF:1.0.0.0/120,1814991,,\n",
+			ccMap:       countryCSVCodes(),
+			wantEntries: map[string][]string{"CN": {"1.0.0.0/24"}},
+		},
+		{
 			name:        "header only",
 			content:     header,
 			ccMap:       countryCSVCodes(),
