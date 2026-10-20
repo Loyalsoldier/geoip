@@ -588,8 +588,8 @@ func TestGeoLite2ASNCSVIn_process(t *testing.T) {
 			errContains: "404 Not Found",
 		},
 		{
-			name:    "remote file unreachable",
-			uri:     unreachableURL(t),
+			name:    "remote connection aborted",
+			uri:     failingServerURL(t),
 			wantErr: true,
 		},
 		{

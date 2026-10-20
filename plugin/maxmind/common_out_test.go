@@ -559,7 +559,7 @@ func TestGeoLite2CountryMMDBOut_GetExtraInfo_Errors(t *testing.T) {
 	missingFile := filepath.Join(t.TempDir(), "missing.mmdb")
 	notFoundURL := newTestServer(t, http.StatusNotFound, []byte("not found")).URL + "/source.mmdb"
 	invalidURL := newTestServer(t, http.StatusOK, []byte("not a mmdb")).URL + "/source.mmdb"
-	brokenURL := unreachableURL(t)
+	brokenURL := failingServerURL(t)
 
 	types := []string{TypeGeoLite2CountryMMDBOut, TypeDBIPCountryMMDBOut, TypeIPInfoCountryMMDBOut}
 
@@ -581,7 +581,7 @@ func TestGeoLite2CountryMMDBOut_GetExtraInfo_Errors(t *testing.T) {
 			testCase{name: "blank URI", iType: iType, uri: " \t ", wantNil: true},
 			testCase{name: "missing file", iType: iType, uri: missingFile, target: os.ErrNotExist},
 			testCase{name: "remote not found", iType: iType, uri: notFoundURL, errContains: "404"},
-			testCase{name: "remote unreachable", iType: iType, uri: brokenURL},
+			testCase{name: "remote connection aborted", iType: iType, uri: brokenURL},
 			testCase{name: "invalid local mmdb", iType: iType, uri: invalidFile},
 			testCase{name: "invalid remote mmdb", iType: iType, uri: invalidURL},
 			testCase{name: "corrupted mmdb", iType: iType, uri: corruptedFile},

@@ -56,7 +56,7 @@ func TestMMDBIn_Input(t *testing.T) {
 	t.Parallel()
 
 	notFoundURL := newTestServer(t, http.StatusNotFound, []byte("not found")).URL + "/input.mmdb"
-	brokenURL := unreachableURL(t)
+	brokenURL := failingServerURL(t)
 	invalidFile := writeTempFile(t, "invalid.mmdb", []byte("this is not a mmdb file"))
 	missingFile := filepath.Join(t.TempDir(), "missing.mmdb")
 
@@ -186,7 +186,7 @@ func TestMMDBIn_Input(t *testing.T) {
 				errContains: "404",
 			},
 			{
-				name:        "remote URL unreachable",
+				name:        "remote connection aborted",
 				action:      lib.ActionAdd,
 				opts:        []lib.InputOption{WithURI(brokenURL)},
 				wantErr:     true,

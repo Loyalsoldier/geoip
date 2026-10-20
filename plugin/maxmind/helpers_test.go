@@ -156,15 +156,15 @@ func mustParseIPNet(t *testing.T, s string) *net.IPNet {
 	return network
 }
 
-// unreachableURL returns an http URL that refuses connections.
-func unreachableURL(t *testing.T) string {
+// failingServerURL returns the URL of a server that aborts every connection.
+func failingServerURL(t *testing.T) string {
 	t.Helper()
 
-	srv := httptest.NewServer(http.NotFoundHandler())
-	url := srv.URL + "/unreachable"
-	srv.Close()
-
-	return url
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic(http.ErrAbortHandler)
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL
 }
 
 // newContainer builds a container from a map of list name to CIDRs.

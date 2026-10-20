@@ -406,9 +406,18 @@ func TestSRSOut_Output_OverwritesExistingFile(t *testing.T) {
 	t.Parallel()
 
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "cn.srs"), bytes.Repeat([]byte("stale content "), 100))
+	want := srsBytes(t, ipcidrRule(cnCIDRs...))
+	path := filepath.Join(dir, "cn.srs")
+	writeFile(t, path, append(bytes.Clone(want), []byte("stale content")...))
 	if err := newSRSOut(t, WithOutputDir(dir)).Output(newTestContainer(t, pick(srsOutSource, "CN"))); err != nil {
 		t.Fatalf("Output: %v", err)
+	}
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("overwritten file differs from fresh output: got %d bytes, want %d", len(got), len(want))
 	}
 	assertContainer(t, readSRSDir(t, dir), pick(srsOutMerged, "CN"))
 }
