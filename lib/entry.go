@@ -197,12 +197,8 @@ func (e *Entry) getPrefixFromString(src string) (*netip.Prefix, IPType, error) {
 		if addr.Unmap().Is4() && strings.Contains(network.String(), "::") { // src is invalid IPv4-mapped IPv6 address
 			return nil, "", ErrInvalidCIDR
 		}
-		prefix, ok := netipx.FromStdIPNet(network)
-		if !ok {
-			return nil, "", ErrInvalidIPNet
-		}
 
-		return e.getPrefixFromPrefix(prefix)
+		return e.getPrefixFromIPNet(*network)
 
 	case false: // src is IP address
 		ip, err := netip.ParseAddr(src)
