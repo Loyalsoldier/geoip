@@ -10,6 +10,7 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -41,11 +42,7 @@ func buildMMDB(t *testing.T, records ...mmdbRecord) []byte {
 	}
 
 	for _, r := range records {
-		_, network, err := net.ParseCIDR(r.cidr)
-		if err != nil {
-			t.Fatalf("net.ParseCIDR(%q) error = %v", r.cidr, err)
-		}
-		if err := writer.Insert(network, r.data); err != nil {
+		if err := writer.Insert(mustParseIPNet(t, r.cidr), r.data); err != nil {
 			t.Fatalf("writer.Insert(%q) error = %v", r.cidr, err)
 		}
 	}
@@ -120,8 +117,8 @@ func sourceURIs(t *testing.T, content []byte) map[string]string {
 	srv := newTestServer(t, http.StatusOK, content)
 
 	return map[string]string{
-		"local file":                    writeTempFile(t, "source.mmdb", content),
-		"remote URL":                    srv.URL + "/source.mmdb",
+		"local file":                   writeTempFile(t, "source.mmdb", content),
+		"remote URL":                   srv.URL + "/source.mmdb",
 		"remote URL with upper scheme": "HTTP://" + strings.TrimPrefix(srv.URL, "http://") + "/source.mmdb",
 	}
 }
@@ -135,6 +132,28 @@ func mustParsePrefix(t *testing.T, s string) netip.Prefix {
 	}
 
 	return prefix
+}
+
+func mustParseAddr(t *testing.T, s string) netip.Addr {
+	t.Helper()
+
+	addr, err := netip.ParseAddr(s)
+	if err != nil {
+		t.Fatalf("netip.ParseAddr(%q) error = %v", s, err)
+	}
+
+	return addr
+}
+
+func mustParseIPNet(t *testing.T, s string) *net.IPNet {
+	t.Helper()
+
+	_, network, err := net.ParseCIDR(s)
+	if err != nil {
+		t.Fatalf("net.ParseCIDR(%q) error = %v", s, err)
+	}
+
+	return network
 }
 
 // unreachableURL returns an http URL that refuses connections.
@@ -263,9 +282,9 @@ func sortedKeys[V any](m map[string]V) []string {
 // package. It is used to check that options ignore unknown converters.
 type fakeInputConverter struct{}
 
-func (fakeInputConverter) GetType() string                                 { return "fake" }
-func (fakeInputConverter) GetAction() lib.Action                           { return lib.ActionAdd }
-func (fakeInputConverter) GetDescription() string                          { return "fake" }
+func (fakeInputConverter) GetType() string                              { return "fake" }
+func (fakeInputConverter) GetAction() lib.Action                        { return lib.ActionAdd }
+func (fakeInputConverter) GetDescription() string                       { return "fake" }
 func (fakeInputConverter) Input(c lib.Container) (lib.Container, error) { return c, nil }
 
 type (
@@ -571,4 +590,467 @@ func readMMDBNetworks(t *testing.T, path string) (map[string]map[string]any, max
 	}
 
 	return networks, db.Metadata
+}
+
+var (
+	geoLite2Languages = []string{"de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"}
+	dbipLanguages     = []string{"de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN", "fa", "ko"}
+)
+
+// mmdbOutputType describes one of the MMDB output formats of this package.
+type mmdbOutputType struct {
+	iType          string
+	desc           string
+	defaultDir     string
+	newOut         func(lib.Action, ...lib.OutputOption) (lib.OutputConverter, error)
+	newOutFromByte func(lib.Action, []byte) (lib.OutputConverter, error)
+	newIn          func(lib.Action, ...lib.InputOption) (lib.InputConverter, error)
+	dbType         string
+	dbDesc         string
+	languages      []string
+	recordSize     uint
+	// plainRecord is the record written for a list without extra info.
+	plainRecord func(name string) map[string]any
+}
+
+func isoCodeRecord(name string) map[string]any {
+	return map[string]any{"country": map[string]any{"iso_code": name}}
+}
+
+func countryCodeRecord(name string) map[string]any {
+	return map[string]any{"country_code": name}
+}
+
+func mmdbOutputTypes() []mmdbOutputType {
+	return []mmdbOutputType{
+		{
+			iType:          TypeGeoLite2CountryMMDBOut,
+			desc:           DescGeoLite2CountryMMDBOut,
+			defaultDir:     defaultMaxmindOutputDir,
+			newOut:         NewGeoLite2CountryMMDBOut,
+			newOutFromByte: NewGeoLite2CountryMMDBOutFromBytes,
+			newIn:          NewGeoLite2CountryMMDBIn,
+			dbType:         "GeoLite2-Country",
+			dbDesc:         "Customized GeoLite2 Country database",
+			languages:      geoLite2Languages,
+			recordSize:     24,
+			plainRecord:    isoCodeRecord,
+		},
+		{
+			iType:          TypeDBIPCountryMMDBOut,
+			desc:           DescDBIPCountryMMDBOut,
+			defaultDir:     defaultDBIPOutputDir,
+			newOut:         NewDBIPCountryMMDBOut,
+			newOutFromByte: NewDBIPCountryMMDBOutFromBytes,
+			newIn:          NewDBIPCountryMMDBIn,
+			dbType:         "DBIP-Country-Lite",
+			dbDesc:         "Customized DB-IP Country Lite database",
+			languages:      dbipLanguages,
+			recordSize:     24,
+			plainRecord:    isoCodeRecord,
+		},
+		{
+			iType:          TypeIPInfoCountryMMDBOut,
+			desc:           DescIPInfoCountryMMDBOut,
+			defaultDir:     defaultIPInfoOutputDir,
+			newOut:         NewIPInfoCountryMMDBOut,
+			newOutFromByte: NewIPInfoCountryMMDBOutFromBytes,
+			newIn:          NewIPInfoCountryMMDBIn,
+			dbType:         "IPInfo-Lite",
+			dbDesc:         "Customized IPInfo Lite database",
+			languages:      []string{"en"},
+			recordSize:     32,
+			plainRecord:    countryCodeRecord,
+		},
+	}
+}
+
+// namesRecord returns the localized names record written for the given
+// languages, where missing names are empty strings.
+func namesRecord(languages []string, names map[string]string) map[string]any {
+	record := make(map[string]any, len(languages))
+	for _, lang := range languages {
+		record[lang] = names[lang]
+	}
+	return record
+}
+
+// assertMMDBNetworks compares both the number and the exact content of the
+// networks and records of an MMDB database.
+func assertMMDBNetworks(t *testing.T, got, want map[string]map[string]any) {
+	t.Helper()
+
+	if len(got) != len(want) {
+		t.Fatalf("MMDB has %d networks %v, want %d networks %v", len(got), sortedKeys(got), len(want), sortedKeys(want))
+	}
+	for network, wantRecord := range want {
+		gotRecord, found := got[network]
+		if !found {
+			t.Fatalf("network %s not found in MMDB, got networks %v", network, sortedKeys(got))
+		}
+		if !reflect.DeepEqual(gotRecord, wantRecord) {
+			t.Fatalf("record of network %s = %#v, want %#v", network, gotRecord, wantRecord)
+		}
+	}
+}
+
+func assertFileNotExist(t *testing.T, path string) {
+	t.Helper()
+
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("file %s should not exist, os.Stat() error = %v", path, err)
+	}
+}
+
+// marshalAndRead writes an entry with marshalData into a new MMDB database
+// and returns the networks of the database.
+func marshalAndRead(t *testing.T, g *geolite2_country_mmdb_out, entry *lib.Entry, extraInfo map[string]any) map[string]map[string]any {
+	t.Helper()
+
+	writer, err := mmdbwriter.New(mmdbwriter.Options{
+		DatabaseType:            "Test-DB",
+		Description:             map[string]string{"en": "Test database"},
+		RecordSize:              24,
+		IncludeReservedNetworks: true,
+	})
+	if err != nil {
+		t.Fatalf("mmdbwriter.New() error = %v", err)
+	}
+
+	assertError(t, g.marshalData(writer, entry, extraInfo), false, "", nil)
+
+	g.OutputDir = t.TempDir()
+	assertError(t, g.writeFile("marshal.mmdb", writer), false, "", nil)
+
+	networks, _ := readMMDBNetworks(t, filepath.Join(g.OutputDir, "marshal.mmdb"))
+	return networks
+}
+
+func newEntry(t *testing.T, name string, cidrs ...string) *lib.Entry {
+	t.Helper()
+
+	entry := lib.NewEntry(name)
+	for _, cidr := range cidrs {
+		if err := entry.AddPrefix(cidr); err != nil {
+			t.Fatalf("AddPrefix(%q) error = %v", cidr, err)
+		}
+	}
+	return entry
+}
+
+func findMMDBInputType(t *testing.T, iType string) mmdbInputType {
+	t.Helper()
+
+	for _, typ := range mmdbInputTypes() {
+		if typ.iType == iType {
+			return typ
+		}
+	}
+	t.Fatalf("unknown MMDB input type %q", iType)
+	return mmdbInputType{}
+}
+
+func findMMDBOutputType(t *testing.T, iType string) mmdbOutputType {
+	t.Helper()
+
+	for _, typ := range mmdbOutputTypes() {
+		if typ.iType == iType {
+			return typ
+		}
+	}
+	t.Fatalf("unknown MMDB output type %q", iType)
+	return mmdbOutputType{}
+}
+
+// testMMDBInConstructors tests the exported constructors, the getters and the
+// registration of an MMDB input type. The option semantics are tested in
+// common_in_test.go.
+func testMMDBInConstructors(t *testing.T, typ mmdbInputType) {
+	t.Helper()
+
+	newIn := func(action lib.Action) *geolite2_country_mmdb_in {
+		return &geolite2_country_mmdb_in{
+			Type:        typ.iType,
+			Action:      action,
+			Description: typ.desc,
+			URI:         typ.defaultURI,
+		}
+	}
+
+	optionTests := []struct {
+		name   string
+		action lib.Action
+		opts   []lib.InputOption
+		want   *geolite2_country_mmdb_in
+	}{
+		{name: "defaults", action: lib.ActionAdd, want: newIn(lib.ActionAdd)},
+		{
+			name:   "all options",
+			action: lib.ActionRemove,
+			opts: []lib.InputOption{
+				WithURI(" ./a.mmdb "),
+				WithInputWantedList([]string{" cn ", "", "us"}),
+				WithInputOnlyIPType(lib.IPv6),
+			},
+			want: func() *geolite2_country_mmdb_in {
+				g := newIn(lib.ActionRemove)
+				g.URI = "./a.mmdb"
+				g.Want = map[string]bool{"CN": true, "US": true}
+				g.OnlyIPType = lib.IPv6
+				return g
+			}(),
+		},
+	}
+
+	for _, tt := range optionTests {
+		t.Run("new/"+tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			converter, err := typ.newIn(tt.action, tt.opts...)
+			assertError(t, err, false, "", nil)
+
+			if got := converter.GetType(); got != typ.iType {
+				t.Errorf("GetType() = %q, want %q", got, typ.iType)
+			}
+			if got := converter.GetAction(); got != tt.action {
+				t.Errorf("GetAction() = %q, want %q", got, tt.action)
+			}
+			if got := converter.GetDescription(); got != typ.desc {
+				t.Errorf("GetDescription() = %q, want %q", got, typ.desc)
+			}
+			if !reflect.DeepEqual(converter, tt.want) {
+				t.Fatalf("converter = %#v, want %#v", converter, tt.want)
+			}
+		})
+	}
+
+	bytesTests := []struct {
+		name    string
+		data    string
+		want    *geolite2_country_mmdb_in
+		wantErr bool
+	}{
+		{
+			name: "empty args",
+			data: "",
+			want: func() *geolite2_country_mmdb_in {
+				g := newIn(lib.ActionAdd)
+				g.Want = map[string]bool{}
+				return g
+			}(),
+		},
+		{
+			name: "all args",
+			data: `{"uri": "./geo.mmdb", "wantedList": ["cn", " Us "], "onlyIPType": "ipv4"}`,
+			want: func() *geolite2_country_mmdb_in {
+				g := newIn(lib.ActionAdd)
+				g.URI = "./geo.mmdb"
+				g.Want = map[string]bool{"CN": true, "US": true}
+				g.OnlyIPType = lib.IPv4
+				return g
+			}(),
+		},
+		{name: "invalid JSON", data: `[`, wantErr: true},
+	}
+
+	for _, tt := range bytesTests {
+		t.Run("from bytes/"+tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := typ.newInFromBytes(lib.ActionAdd, []byte(tt.data))
+			assertError(t, err, tt.wantErr, "[type "+typ.iType+" | action add]", nil)
+			if tt.wantErr {
+				if got != nil {
+					t.Fatalf("expected nil converter on error, got %#v", got)
+				}
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("converter = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+
+	t.Run("registration", func(t *testing.T) {
+		t.Parallel()
+
+		assertInputRegistered(t, typ.iType)
+	})
+}
+
+// testMMDBOutConstructors tests the exported constructors, the getters and the
+// registration of an MMDB output type. The option semantics are tested in
+// common_out_test.go.
+func testMMDBOutConstructors(t *testing.T, typ mmdbOutputType) {
+	t.Helper()
+
+	t.Run("defaults", func(t *testing.T) {
+		t.Parallel()
+
+		converter, err := typ.newOut(lib.ActionOutput)
+		assertError(t, err, false, "", nil)
+
+		if got := converter.GetType(); got != typ.iType {
+			t.Errorf("GetType() = %q, want %q", got, typ.iType)
+		}
+		if got := converter.GetAction(); got != lib.ActionOutput {
+			t.Errorf("GetAction() = %q, want %q", got, lib.ActionOutput)
+		}
+		if got := converter.GetDescription(); got != typ.desc {
+			t.Errorf("GetDescription() = %q, want %q", got, typ.desc)
+		}
+
+		want := &geolite2_country_mmdb_out{
+			Type:        typ.iType,
+			Action:      lib.ActionOutput,
+			Description: typ.desc,
+			OutputName:  defaultGeoLite2CountryMMDBOutputName,
+			OutputDir:   typ.defaultDir,
+		}
+		if !reflect.DeepEqual(converter, want) {
+			t.Fatalf("converter = %#v, want %#v", converter, want)
+		}
+	})
+
+	t.Run("options", func(t *testing.T) {
+		t.Parallel()
+
+		converter, err := typ.newOut(lib.ActionOutput,
+			WithOutputName("a.mmdb"),
+			nil,
+			WithOutputDir("./a"),
+			WithOutputWantedList([]string{"cn"}),
+			WithOverwriteList([]string{"us"}),
+			WithOutputExcludedList([]string{"jp"}),
+			WithOutputOnlyIPType(lib.IPv4),
+			WithSourceMMDBURI("./source.mmdb"),
+		)
+		assertError(t, err, false, "", nil)
+
+		want := &geolite2_country_mmdb_out{
+			Type:          typ.iType,
+			Action:        lib.ActionOutput,
+			Description:   typ.desc,
+			OutputName:    "a.mmdb",
+			OutputDir:     "./a",
+			Want:          []string{"cn"},
+			Overwrite:     []string{"us"},
+			Exclude:       []string{"jp"},
+			OnlyIPType:    lib.IPv4,
+			SourceMMDBURI: "./source.mmdb",
+		}
+		if !reflect.DeepEqual(converter, want) {
+			t.Fatalf("converter = %#v, want %#v", converter, want)
+		}
+	})
+
+	t.Run("from bytes", func(t *testing.T) {
+		t.Parallel()
+
+		converter, err := typ.newOutFromByte(lib.ActionOutput, []byte(`{"outputName": "b.mmdb", "outputDir": "./b", "onlyIPType": "ipv6"}`))
+		assertError(t, err, false, "", nil)
+
+		want := &geolite2_country_mmdb_out{
+			Type:        typ.iType,
+			Action:      lib.ActionOutput,
+			Description: typ.desc,
+			OutputName:  "b.mmdb",
+			OutputDir:   "./b",
+			OnlyIPType:  lib.IPv6,
+		}
+		if !reflect.DeepEqual(converter, want) {
+			t.Fatalf("converter = %#v, want %#v", converter, want)
+		}
+	})
+
+	t.Run("from invalid bytes", func(t *testing.T) {
+		t.Parallel()
+
+		converter, err := typ.newOutFromByte(lib.ActionOutput, []byte(`{"outputName": 1}`))
+		assertError(t, err, true, "[type "+typ.iType+" | action output]", nil)
+		if converter != nil {
+			t.Fatalf("expected nil converter on error, got %#v", converter)
+		}
+	})
+
+	t.Run("registration", func(t *testing.T) {
+		t.Parallel()
+
+		assertOutputRegistered(t, typ.iType)
+	})
+}
+
+const (
+	// extraIPv4 and extraIPv6 are CIDRs of the containers built by
+	// fullContainer that are not part of any fixture.
+	extraIPv4 = "9.9.9.0/24"
+	extraIPv6 = "2620:fe::/48"
+	// otherList is an unrelated list of the containers built by fullContainer.
+	otherList = "OTHER"
+	otherCIDR = "8.8.8.0/24"
+)
+
+// fullContainer returns a container holding every given list plus the extra
+// CIDRs, together with an unrelated list.
+func fullContainer(t *testing.T, lists map[string][]string) lib.Container {
+	t.Helper()
+
+	all := map[string][]string{otherList: {otherCIDR}}
+	for name, cidrs := range lists {
+		all[name] = append(slices.Clone(cidrs), extraIPv4, extraIPv6)
+	}
+	return newContainer(t, all)
+}
+
+// afterRemove returns the expected lists of fullContainer(lists) after
+// removing the CIDRs of the given lists of onlyIPType.
+func afterRemove(lists map[string][]string, onlyIPType lib.IPType) map[string][]string {
+	want := map[string][]string{otherList: {otherCIDR}}
+	for name, cidrs := range lists {
+		ipv4, ipv6 := splitCIDRs(cidrs)
+		switch onlyIPType {
+		case lib.IPv4:
+			ipv4 = nil
+		case lib.IPv6:
+			ipv6 = nil
+		default:
+			ipv4, ipv6 = nil, nil
+		}
+		want[name] = slices.Concat(ipv4, []string{extraIPv4}, ipv6, []string{extraIPv6})
+	}
+	return want
+}
+
+// assertEntries compares both the number and the exact CIDRs of entries.
+func assertEntries(t *testing.T, entries map[string]*lib.Entry, want map[string][]string) {
+	t.Helper()
+
+	container := lib.NewContainer()
+	for name, entry := range entries {
+		if name != entry.GetName() {
+			t.Fatalf("entries[%q] has name %q", name, entry.GetName())
+		}
+		if err := container.Add(entry); err != nil {
+			t.Fatalf("container.Add(%q) error = %v", name, err)
+		}
+	}
+	assertContainer(t, container, want)
+}
+
+// newFileServer serves the given contents by URL path and responds with
+// 404 Not Found to unknown paths.
+func newFileServer(t *testing.T, files map[string]string) *httptest.Server {
+	t.Helper()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		content, found := files[r.URL.Path]
+		if !found {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write([]byte(content))
+	}))
+	t.Cleanup(srv.Close)
+
+	return srv
 }

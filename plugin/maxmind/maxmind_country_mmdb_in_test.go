@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
-	"slices"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -15,95 +13,7 @@ import (
 func TestNewGeoLite2CountryMMDBIn(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name    string
-		action  lib.Action
-		opts    []lib.InputOption
-		wantURI string
-	}{
-		{name: "default URI", action: lib.ActionAdd, wantURI: defaultGeoLite2CountryMMDBFile},
-		{name: "custom URI", action: lib.ActionRemove, opts: []lib.InputOption{WithURI(" ./a.mmdb ")}, wantURI: "./a.mmdb"},
-		{name: "nil option", action: lib.ActionAdd, opts: []lib.InputOption{nil}, wantURI: defaultGeoLite2CountryMMDBFile},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			converter, err := NewGeoLite2CountryMMDBIn(tt.action, tt.opts...)
-			assertError(t, err, false, "", nil)
-
-			if got := converter.GetType(); got != TypeGeoLite2CountryMMDBIn {
-				t.Errorf("GetType() = %q, want %q", got, TypeGeoLite2CountryMMDBIn)
-			}
-			if got := converter.GetAction(); got != tt.action {
-				t.Errorf("GetAction() = %q, want %q", got, tt.action)
-			}
-			if got := converter.GetDescription(); got != DescGeoLite2CountryMMDBIn {
-				t.Errorf("GetDescription() = %q, want %q", got, DescGeoLite2CountryMMDBIn)
-			}
-			if got := converter.(*geolite2_country_mmdb_in).URI; got != tt.wantURI {
-				t.Errorf("URI = %q, want %q", got, tt.wantURI)
-			}
-		})
-	}
-}
-
-func TestNewGeoLite2CountryMMDBInFromBytes(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		data    string
-		want    *geolite2_country_mmdb_in
-		wantErr bool
-	}{
-		{
-			name: "empty args",
-			data: "",
-			want: &geolite2_country_mmdb_in{
-				Type:        TypeGeoLite2CountryMMDBIn,
-				Action:      lib.ActionAdd,
-				Description: DescGeoLite2CountryMMDBIn,
-				URI:         defaultGeoLite2CountryMMDBFile,
-				Want:        map[string]bool{},
-			},
-		},
-		{
-			name: "all args",
-			data: `{"uri": "./geo.mmdb", "wantedList": ["cn"], "onlyIPType": "ipv4"}`,
-			want: &geolite2_country_mmdb_in{
-				Type:        TypeGeoLite2CountryMMDBIn,
-				Action:      lib.ActionAdd,
-				Description: DescGeoLite2CountryMMDBIn,
-				URI:         "./geo.mmdb",
-				Want:        map[string]bool{"CN": true},
-				OnlyIPType:  lib.IPv4,
-			},
-		},
-		{name: "invalid JSON", data: `[`, wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := NewGeoLite2CountryMMDBInFromBytes(lib.ActionAdd, []byte(tt.data))
-			assertError(t, err, tt.wantErr, "[type "+TypeGeoLite2CountryMMDBIn+" | action add]", nil)
-			if tt.wantErr {
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("NewGeoLite2CountryMMDBInFromBytes() = %#v, want %#v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGeoLite2CountryMMDBIn_Registration(t *testing.T) {
-	t.Parallel()
-
-	assertInputRegistered(t, TypeGeoLite2CountryMMDBIn)
+	testMMDBInConstructors(t, findMMDBInputType(t, TypeGeoLite2CountryMMDBIn))
 }
 
 // TestMMDBIn_Config checks that every MMDB input type can be created from a
@@ -145,11 +55,6 @@ func TestMMDBIn_Config(t *testing.T) {
 func TestMMDBIn_Input(t *testing.T) {
 	t.Parallel()
 
-	const (
-		extraIPv4 = "9.9.9.0/24"
-		extraIPv6 = "2620:fe::/48"
-	)
-
 	notFoundURL := newTestServer(t, http.StatusNotFound, []byte("not found")).URL + "/input.mmdb"
 	brokenURL := unreachableURL(t)
 	invalidFile := writeTempFile(t, "invalid.mmdb", []byte("this is not a mmdb file"))
@@ -162,35 +67,10 @@ func TestMMDBIn_Input(t *testing.T) {
 		corruptedFile := writeTempFile(t, "corrupted.mmdb", corruptMMDB(t, content))
 		decodeErrorFile := writeTempFile(t, "decode-error.mmdb", buildMMDB(t, decodeErrorRecords(typ.iType)...))
 
-		// fullContainer holds every list of the fixture plus extra CIDRs,
-		// together with an unrelated list.
-		fullContainer := func(t *testing.T) lib.Container {
+		newFullContainer := func(t *testing.T) lib.Container {
 			t.Helper()
 
-			lists := map[string][]string{"OTHER": {"8.8.8.0/24"}}
-			for name, cidrs := range typ.lists {
-				lists[name] = append(slices.Clone(cidrs), extraIPv4, extraIPv6)
-			}
-			return newContainer(t, lists)
-		}
-
-		// afterRemove returns the expected lists of fullContainer after
-		// removing the fixture lists of onlyIPType.
-		afterRemove := func(onlyIPType lib.IPType) map[string][]string {
-			want := map[string][]string{"OTHER": {"8.8.8.0/24"}}
-			for name, cidrs := range typ.lists {
-				ipv4, ipv6 := splitCIDRs(cidrs)
-				switch onlyIPType {
-				case lib.IPv4:
-					ipv4 = nil
-				case lib.IPv6:
-					ipv6 = nil
-				default:
-					ipv4, ipv6 = nil, nil
-				}
-				want[name] = slices.Concat(ipv4, []string{extraIPv4}, ipv6, []string{extraIPv6})
-			}
-			return want
+			return fullContainer(t, typ.lists)
 		}
 
 		tests := []struct {
@@ -239,35 +119,35 @@ func TestMMDBIn_Input(t *testing.T) {
 				opts:   []lib.InputOption{WithURI(file), WithInputWantedList([]string{"CN"})},
 				container: func(t *testing.T) lib.Container {
 					return newContainer(t, map[string][]string{
-						"CN":    {extraIPv4, "1.0.0.0/24", extraIPv6},
-						"OTHER": {"8.8.8.0/24"},
+						"CN":      {extraIPv4, "1.0.0.0/24", extraIPv6},
+						otherList: {otherCIDR},
 					})
 				},
 				want: map[string][]string{
-					"CN":    {"1.0.0.0/23", extraIPv4, "2402:4e00::/32", extraIPv6},
-					"OTHER": {"8.8.8.0/24"},
+					"CN":      {"1.0.0.0/23", extraIPv4, "2402:4e00::/32", extraIPv6},
+					otherList: {otherCIDR},
 				},
 			},
 			{
 				name:      "remove all lists",
 				action:    lib.ActionRemove,
 				opts:      []lib.InputOption{WithURI(file)},
-				container: fullContainer,
-				want:      afterRemove(""),
+				container: newFullContainer,
+				want:      afterRemove(typ.lists, ""),
 			},
 			{
 				name:      "remove only IPv4",
 				action:    lib.ActionRemove,
 				opts:      []lib.InputOption{WithURI(file), WithInputOnlyIPType(lib.IPv4)},
-				container: fullContainer,
-				want:      afterRemove(lib.IPv4),
+				container: newFullContainer,
+				want:      afterRemove(typ.lists, lib.IPv4),
 			},
 			{
 				name:      "remove only IPv6",
 				action:    lib.ActionRemove,
 				opts:      []lib.InputOption{WithURI(remoteURL), WithInputOnlyIPType(lib.IPv6)},
-				container: fullContainer,
-				want:      afterRemove(lib.IPv6),
+				container: newFullContainer,
+				want:      afterRemove(typ.lists, lib.IPv6),
 			},
 			{
 				name:        "remove list not in container",

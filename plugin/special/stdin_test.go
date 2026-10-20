@@ -230,6 +230,13 @@ func TestStdinInput(t *testing.T) {
 			wantEntries: []testEntry{{name: "temp", cidrs: []string{"192.168.0.0/24", "192.168.1.1/32"}}},
 		},
 		{
+			name:        "IPv4-mapped IPv6 CIDRs are masked and converted",
+			input:       "::ffff:10.1.2.5/120\n::ffff:172.16.0.9/128\n::ffff:100.64.0.0/104\n::ffff:1.2.3.4/24\n",
+			action:      lib.ActionAdd,
+			wantLen:     1,
+			wantEntries: []testEntry{{name: "temp", cidrs: []string{"10.1.2.0/24", "100.0.0.0/8", "172.16.0.9/32"}}},
+		},
+		{
 			name:        "IPv4 CIDRs are normalized and merged",
 			input:       "192.168.0.3/24\n192.168.1.5/24\n",
 			action:      lib.ActionAdd,

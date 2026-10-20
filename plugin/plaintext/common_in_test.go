@@ -645,9 +645,29 @@ func TestTextIn_ScanFileForTextIn(t *testing.T) {
 			want:    []string{"1.2.3.0/24"},
 		},
 		{
+			name:    "IPv4-mapped IPv6 CIDR with host bits set",
+			content: "::ffff:192.168.0.5/120\n",
+			want:    []string{"192.168.0.0/24"},
+		},
+		{
+			name:    "IPv4-mapped IPv6 CIDR with full prefix length",
+			content: "::ffff:192.168.0.0/128\n",
+			want:    []string{"192.168.0.0/32"},
+		},
+		{
+			name:    "IPv4-mapped IPv6 CIDR with short prefix length",
+			content: "::ffff:192.168.0.0/104\n",
+			want:    []string{"192.0.0.0/8"},
+		},
+		{
 			name:    "IPv4-mapped IPv6 CIDR covering whole IPv4 space",
 			content: "::ffff:0:0/96\n",
 			want:    []string{"0.0.0.0/0"},
+		},
+		{
+			name:    "IPv4-mapped IPv6 CIDRs are merged",
+			content: "::ffff:192.168.0.3/120\n::ffff:192.168.1.5/120\n",
+			want:    []string{"192.168.0.0/23"},
 		},
 		{
 			name:    "upper-case IPv6 is lower-cased",
@@ -728,9 +748,9 @@ func TestTextIn_ScanFileForTextIn(t *testing.T) {
 			want:     []string{"1.1.1.1/32"},
 		},
 		{
-			name:     "each prefix is removed at most once",
-			content:  "host,host,1.1.1.1\n",
-			prefixes: []string{"host,"},
+			name:      "each prefix is removed at most once",
+			content:   "host,host,1.1.1.1\n",
+			prefixes:  []string{"host,"},
 			wantErrIs: lib.ErrInvalidIP,
 		},
 		{
@@ -771,6 +791,11 @@ func TestTextIn_ScanFileForTextIn(t *testing.T) {
 		{
 			name:      "IPv4-mapped IPv6 CIDR with too long prefix",
 			content:   "::ffff:1.2.3.4/129\n",
+			wantErrIs: lib.ErrInvalidCIDR,
+		},
+		{
+			name:      "IPv4-mapped IPv6 CIDR with IPv4 prefix length",
+			content:   "::ffff:1.2.3.4/24\n",
 			wantErrIs: lib.ErrInvalidCIDR,
 		},
 		{

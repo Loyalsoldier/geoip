@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"log"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -231,6 +233,21 @@ func newTestServer(t *testing.T, status int, body string) *httptest.Server {
 	return srv
 }
 
+// newTestTLSServer starts an HTTPS server with a self-signed certificate that
+// responds to every request with status 200 and the given body. TLS handshake
+// errors are not logged. The server is closed when the test finishes.
+func newTestTLSServer(t *testing.T, body string) *httptest.Server {
+	t.Helper()
+
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, body)
+	}))
+	srv.Config.ErrorLog = log.New(io.Discard, "", 0)
+	srv.StartTLS()
+	t.Cleanup(srv.Close)
+	return srv
+}
+
 // closedServerURL returns the URL of an HTTP server which has already been
 // shut down, so that any request to it fails without real network access.
 func closedServerURL(t *testing.T) string {
@@ -311,4 +328,292 @@ func assertOutputRegistered(t *testing.T, iType string) {
 	if err == nil {
 		t.Errorf("output config creator %s: expected already registered error, got nil", iType)
 	}
+}
+
+// mustMarshalJSON marshals v to JSON or fails the test.
+func mustMarshalJSON(t *testing.T, v any) []byte {
+	t.Helper()
+
+	data, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("failed to marshal %v: %v", v, err)
+	}
+	return data
+}
+
+// runInput creates an input converter of iType from the JSON args, runs it
+// against a container pre-populated with initial and returns the result.
+// Construction errors fail the test immediately.
+func runInput(t *testing.T, iType string, action lib.Action, args map[string]any, initial map[string][]string) (lib.Container, error) {
+	t.Helper()
+
+	conv, err := newTextInFromBytes(iType, inputDescriptions[iType], action, mustMarshalJSON(t, args))
+	if err != nil {
+		t.Fatalf("failed to create input converter: %v", err)
+	}
+
+	container := newTestContainer(t, initial)
+	got, err := conv.Input(container)
+	if err == nil && got != container {
+		t.Errorf("Input() should return the container it was given")
+	}
+	if err != nil && got != nil {
+		t.Errorf("Input() should return a nil container on error, got %#v", got)
+	}
+	return got, err
+}
+
+// assertInputResult checks the outcome of runInput against the expectations
+// of a test case.
+func assertInputResult(t *testing.T, iType string, action lib.Action, got lib.Container, err error, want map[string][]string, wantErr string, wantErrIs error) {
+	t.Helper()
+
+	assertErr(t, err, wantErr, wantErrIs)
+	if wantErr != "" || wantErrIs != nil {
+		assertErrContains(t, err, "❌ [type "+iType+" | action "+string(action)+"]")
+		return
+	}
+	assertContainer(t, got, want)
+}
+
+// runOutput creates an output converter of iType from the JSON args with the
+// output dir set to a fresh temporary directory, runs it against a container
+// holding lists and returns the output dir together with the error.
+func runOutput(t *testing.T, iType string, args map[string]any, lists map[string][]string) (string, error) {
+	t.Helper()
+
+	outputDir := filepath.Join(t.TempDir(), "output")
+	args = maps.Clone(args)
+	if args == nil {
+		args = make(map[string]any)
+	}
+	args["outputDir"] = outputDir
+
+	conv, err := newTextOutFromBytes(iType, outputDescriptions[iType], lib.ActionOutput, mustMarshalJSON(t, args))
+	if err != nil {
+		t.Fatalf("failed to create output converter: %v", err)
+	}
+
+	return outputDir, conv.Output(newTestContainer(t, lists))
+}
+
+// assertOutputFiles checks that outputDir contains exactly the files in want.
+// An empty want means the output dir must not have been created at all.
+func assertOutputFiles(t *testing.T, outputDir string, want map[string]string) {
+	t.Helper()
+
+	if len(want) == 0 {
+		if _, err := os.Stat(outputDir); !errors.Is(err, fs.ErrNotExist) {
+			t.Fatalf("expected output dir %s not to exist, got stat error %v", outputDir, err)
+		}
+		return
+	}
+	assertFiles(t, readDirFiles(t, outputDir), want)
+}
+
+// inputSource is a way of feeding a file to an input converter.
+type inputSource string
+
+const (
+	sourceLocalFile inputSource = "local file"
+	sourceInputDir  inputSource = "input dir"
+	sourceRemote    inputSource = "remote"
+)
+
+// allInputSources lists every supported way of feeding a file to an input
+// converter.
+var allInputSources = []inputSource{sourceLocalFile, sourceInputDir, sourceRemote}
+
+// withInputSource serves content as the list "cn" (file name "cn"+ext) from
+// source and returns a copy of args extended with the matching "name" and
+// "uri", or "inputDir" fields.
+func withInputSource(t *testing.T, source inputSource, ext, content string, args map[string]any) map[string]any {
+	t.Helper()
+
+	args = maps.Clone(args)
+	if args == nil {
+		args = make(map[string]any)
+	}
+
+	filename := "cn" + ext
+	switch source {
+	case sourceLocalFile:
+		args["name"] = "cn"
+		args["uri"] = writeTestFile(t, t.TempDir(), filename, content)
+	case sourceInputDir:
+		dir := t.TempDir()
+		writeTestFile(t, dir, filename, content)
+		args["inputDir"] = dir
+	case sourceRemote:
+		args["name"] = "cn"
+		args["uri"] = newTestServer(t, http.StatusOK, content).URL + "/" + filename
+	default:
+		t.Fatalf("unknown input source %q", source)
+	}
+
+	return args
+}
+
+// testInputConstructors checks the exported constructors of an input type.
+// validOpts and validArgs must describe a valid configuration.
+func testInputConstructors(
+	t *testing.T,
+	iType, desc string,
+	newFn func(lib.Action, ...lib.InputOption) (lib.InputConverter, error),
+	newFromBytesFn func(lib.Action, []byte) (lib.InputConverter, error),
+	validOpts []lib.InputOption,
+	validArgs string,
+) {
+	t.Helper()
+
+	assertConv := func(t *testing.T, conv lib.InputConverter, action lib.Action) {
+		t.Helper()
+		if conv.GetType() != iType || conv.GetAction() != action || conv.GetDescription() != desc {
+			t.Errorf("type/action/description = %q/%q/%q, want %q/%q/%q",
+				conv.GetType(), conv.GetAction(), conv.GetDescription(), iType, action, desc)
+		}
+		if ti := asTextIn(t, conv); ti.Type != iType {
+			t.Errorf("Type = %q, want %q", ti.Type, iType)
+		}
+	}
+
+	t.Run("registered by init", func(t *testing.T) {
+		t.Parallel()
+		assertInputRegistered(t, iType)
+	})
+
+	t.Run("New", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFn(lib.ActionAdd, validOpts...)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertConv(t, conv, lib.ActionAdd)
+	})
+
+	t.Run("New without options", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFn(lib.ActionRemove)
+		assertErrContains(t, err, "❌ [type "+iType+" | action remove]")
+		if conv != nil {
+			t.Errorf("expected nil converter, got %#v", conv)
+		}
+	})
+
+	t.Run("NewFromBytes", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFromBytesFn(lib.ActionRemove, []byte(validArgs))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertConv(t, conv, lib.ActionRemove)
+	})
+
+	t.Run("NewFromBytes with invalid JSON", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFromBytesFn(lib.ActionAdd, []byte(`{"name":`))
+		assertErrContains(t, err, "❌ [type "+iType+" | action add]")
+		var syntaxErr *json.SyntaxError
+		if !errors.As(err, &syntaxErr) {
+			t.Errorf("expected *json.SyntaxError, got %v", err)
+		}
+		if conv != nil {
+			t.Errorf("expected nil converter, got %#v", conv)
+		}
+	})
+}
+
+// testOutputConstructors checks the exported constructors of an output type.
+func testOutputConstructors(
+	t *testing.T,
+	iType, desc, defaultDir string,
+	newFn func(lib.Action, ...lib.OutputOption) (lib.OutputConverter, error),
+	newFromBytesFn func(lib.Action, []byte) (lib.OutputConverter, error),
+) {
+	t.Helper()
+
+	t.Run("registered by init", func(t *testing.T) {
+		t.Parallel()
+		assertOutputRegistered(t, iType)
+	})
+
+	t.Run("New with defaults", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFn(lib.ActionOutput)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertTextOut(t, asTextOut(t, conv), &text_out{
+			Type:        iType,
+			Action:      lib.ActionOutput,
+			Description: desc,
+			OutputDir:   defaultDir,
+			OutputExt:   ".txt",
+		})
+	})
+
+	t.Run("New with options", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFn(lib.ActionOutput, WithOutputDir("./out"), WithOutputExtension(".yaml"), WithOutputOnlyIPType(lib.IPv6))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertTextOut(t, asTextOut(t, conv), &text_out{
+			Type:        iType,
+			Action:      lib.ActionOutput,
+			Description: desc,
+			OutputDir:   "./out",
+			OutputExt:   ".yaml",
+			OnlyIPType:  lib.IPv6,
+		})
+	})
+
+	t.Run("NewFromBytes", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFromBytesFn(lib.ActionOutput, []byte(`{"outputExtension":".list","wantedList":["cn"]}`))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertTextOut(t, asTextOut(t, conv), &text_out{
+			Type:        iType,
+			Action:      lib.ActionOutput,
+			Description: desc,
+			OutputDir:   defaultDir,
+			OutputExt:   ".list",
+			Want:        []string{"cn"},
+		})
+	})
+
+	t.Run("NewFromBytes with invalid JSON", func(t *testing.T) {
+		t.Parallel()
+
+		conv, err := newFromBytesFn(lib.ActionOutput, []byte(`{"outputDir":}`))
+		assertErrContains(t, err, "❌ [type "+iType+" | action output]")
+		var syntaxErr *json.SyntaxError
+		if !errors.As(err, &syntaxErr) {
+			t.Errorf("expected *json.SyntaxError, got %v", err)
+		}
+		if conv != nil {
+			t.Errorf("expected nil converter, got %#v", conv)
+		}
+	})
+}
+
+// newInstanceFromConfig parses config with lib.Instance, which goes through
+// the config creators registered by the init functions of this package.
+func newInstanceFromConfig(t *testing.T, config map[string]any) (lib.Instance, error) {
+	t.Helper()
+
+	instance, err := lib.NewInstance()
+	if err != nil {
+		t.Fatalf("failed to create instance: %v", err)
+	}
+	return instance, instance.InitConfigFromBytes(mustMarshalJSON(t, config))
 }
