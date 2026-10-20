@@ -151,6 +151,9 @@ func executeCommand(t *testing.T, args ...string) (stdout, cobraOutput string, e
 	var buf bytes.Buffer
 	rootCmd.SetOut(&buf)
 	rootCmd.SetErr(&buf)
+	if args == nil {
+		args = []string{}
+	}
 	rootCmd.SetArgs(args)
 	t.Cleanup(func() {
 		rootCmd.SetOut(nil)
