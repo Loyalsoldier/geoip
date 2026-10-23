@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/Loyalsoldier/geoip/plugin/ipipnet"
 	_ "github.com/Loyalsoldier/geoip/plugin/maxmind"
 	_ "github.com/Loyalsoldier/geoip/plugin/mihomo"
 	_ "github.com/Loyalsoldier/geoip/plugin/plaintext"
