@@ -68,7 +68,7 @@ func (e *Entry) GetIPv6Set() (*netipx.IPSet, error) {
 }
 
 func (e *Entry) getPrefixFromIP(src net.IP) (*netip.Prefix, IPType, error) {
-	ip, ok := netipx.FromStdIP(src)
+	ip, ok := netip.AddrFromSlice(src)
 	if !ok {
 		return nil, "", ErrInvalidIP
 	}
@@ -186,19 +186,12 @@ func (e *Entry) getPrefixFromString(src string) (*netip.Prefix, IPType, error) {
 
 	switch strings.Contains(src, "/") {
 	case true: // src is CIDR notation
-		ip, network, err := net.ParseCIDR(src)
+		prefix, err := netip.ParsePrefix(src)
 		if err != nil {
 			return nil, "", ErrInvalidCIDR
 		}
-		addr, ok := netipx.FromStdIP(ip)
-		if !ok {
-			return nil, "", ErrInvalidIP
-		}
-		if addr.Unmap().Is4() && strings.Contains(network.String(), "::") { // src is invalid IPv4-mapped IPv6 address
-			return nil, "", ErrInvalidCIDR
-		}
 
-		return e.getPrefixFromIPNet(*network)
+		return e.getPrefixFromPrefix(prefix)
 
 	case false: // src is IP address
 		ip, err := netip.ParseAddr(src)
