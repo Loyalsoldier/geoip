@@ -101,7 +101,9 @@
         "uri": "https://ip-ranges.amazonaws.com/ip-ranges.json",
         "jsonPath": [
           "prefixes.#(service==\"CLOUDFRONT\")#.ip_prefix",
-          "ipv6_prefixes.#(service==\"CLOUDFRONT\")#.ipv6_prefix"
+          "ipv6_prefixes.#(service==\"CLOUDFRONT\")#.ipv6_prefix",
+          "prefixes.#(service==\"CLOUDFRONT_ORIGIN_FACING\")#.ip_prefix",
+          "ipv6_prefixes.#(service==\"CLOUDFRONT_ORIGIN_FACING\")#.ipv6_prefix"
         ]
       }
     },
@@ -117,6 +119,7 @@
             "AS400095",
             "AS395747",
             "AS394536",
+            "AS22061",
             "AS209242",
             "AS203898",
             "AS202623",
@@ -135,6 +138,8 @@
             "AS43515",
             "AS41264",
             "AS40873",
+            "AS402727",
+            "AS402726",
             "AS396982",
             "AS396178",
             "AS395973",
