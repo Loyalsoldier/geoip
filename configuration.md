@@ -22,6 +22,7 @@
 - **ipinfoCountryMMDB**：IPInfo country mmdb 数据格式（`country.mmdb`）
 - **json**：JSON 数据格式
 - **maxmindGeoLite2ASNCSV**：MaxMind GeoLite2 ASN CSV 数据格式（`GeoLite2-ASN-CSV.zip`）
+- **ipipnetIPDB**：ipip.net IPDB 数据格式（`ipipfree.ipdb`）
 - **maxmindGeoLite2CountryCSV**：MaxMind GeoLite2 country CSV 数据格式（`GeoLite2-Country-CSV.zip`）
 - **maxmindMMDB**：MaxMind GeoLite2 country mmdb 数据格式（`GeoLite2-Country.mmdb`）
 - **mihomoMRS**：mihomo MRS 数据格式（`geoip-cn.mrs`）
@@ -410,6 +411,28 @@
   "args": {
     "wantedList": ["AS123", "AS4567"],  // 从名为 AS123 和 AS4567 的类别中分别移除各自的 IPv6 地址
     "onlyIPType": "ipv6"
+  }
+}
+```
+
+### **ipipnetIPDB**
+
+- **type**：（必须）输入格式的名称
+- **action**：（必须）操作类型，值为 `add`（添加 IP 地址）或 `remove`（移除 IP 地址）
+- **args**：（必须）
+  - **uri**：（必须）ipip.net IPDB 格式文件路径，可为本地文件路径或远程 `http`、`https` 文件 URL
+  - **field**：（可选）用作类别名称的 `CityInfo` 字段（JSON 标签名），如 `country_name`、`country_code`、`isp_domain`、`owner_domain`、`continent_code` 等。默认为 `country_code`
+  - **language**：（可选）数据库语言，默认为 `CN`
+  - **wantedList**：（可选，数组）指定需要的类别
+  - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
+
+```jsonc
+{
+  "type": "ipipnetIPDB",
+  "action": "add",
+  "args": {
+    "uri": "./ipipfree.ipdb",
+    "field": "country_name"   // 以 country_name 字段值作为类别名称
   }
 }
 ```
