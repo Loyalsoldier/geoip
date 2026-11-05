@@ -8,14 +8,6 @@ on:
         default: false
   schedule:
     - cron: "0 0 * * 4"
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - "assets/*"
-      - ".gitignore"
-      - "LICENSE*"
-      - "*.md"
   pull_request:
     branches:
       - master
