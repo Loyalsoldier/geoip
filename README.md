@@ -55,7 +55,7 @@ This project releases various formats of GeoIP files automatically every Thursda
 - 中国大陆 IPv4 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china.txt)
 - 中国大陆 IPv6 地址数据使用 [@gaoyifan/china-operator-ip](https://github.com/gaoyifan/china-operator-ip/blob/ip-lists/china6.txt)
 - 新增类别（方便有特殊需求的用户使用）：
-  - `geoip:anthropic`（`GEOIP,ANTHROPIC`）：Anthropic 服务接收连接的 IPv4 地址
+  - `geoip:anthropic`（`GEOIP,ANTHROPIC`）：Anthropic 服务接收连接的 IPv4 和 IPv6 地址
   - `geoip:anthropic-outbound`（`GEOIP,ANTHROPIC-OUTBOUND`）：Anthropic 发起连接时使用的 IPv4 源地址
   - `geoip:cloudflare`（`GEOIP,CLOUDFLARE`）
   - `geoip:cloudfront`（`GEOIP,CLOUDFRONT`）
