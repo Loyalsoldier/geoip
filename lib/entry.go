@@ -345,9 +345,31 @@ func (e *Entry) buildIPSet() error {
 	return nil
 }
 
-// collectPrefixes returns the prefixes of the built IP sets, allocating the
-// result slice exactly once. buildIPSet must be called before.
-func (e *Entry) collectPrefixes(disableIPv4, disableIPv6 bool) []netip.Prefix {
+func (e *Entry) getDisabledIPTypes(opts ...IgnoreIPOption) (disableIPv4, disableIPv6 bool) {
+	var ignoreIPType IPType
+	for _, opt := range opts {
+		if opt != nil {
+			ignoreIPType = opt()
+		}
+	}
+
+	switch ignoreIPType {
+	case IPv4:
+		disableIPv4 = true
+	case IPv6:
+		disableIPv6 = true
+	}
+
+	return
+}
+
+func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
+	disableIPv4, disableIPv6 := e.getDisabledIPTypes(opts...)
+
+	if err := e.buildIPSet(); err != nil {
+		return nil, err
+	}
+
 	var ipv4Prefixes, ipv6Prefixes []netip.Prefix
 	if !disableIPv4 && e.hasIPv4Set() {
 		ipv4Prefixes = e.ipv4Set.Prefixes()
@@ -359,29 +381,6 @@ func (e *Entry) collectPrefixes(disableIPv4, disableIPv6 bool) []netip.Prefix {
 	prefixes := make([]netip.Prefix, 0, len(ipv4Prefixes)+len(ipv6Prefixes))
 	prefixes = append(prefixes, ipv4Prefixes...)
 	prefixes = append(prefixes, ipv6Prefixes...)
-	return prefixes
-}
-
-func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
-	var ignoreIPType IPType
-	for _, opt := range opts {
-		if opt != nil {
-			ignoreIPType = opt()
-		}
-	}
-	disableIPv4, disableIPv6 := false, false
-	switch ignoreIPType {
-	case IPv4:
-		disableIPv4 = true
-	case IPv6:
-		disableIPv6 = true
-	}
-
-	if err := e.buildIPSet(); err != nil {
-		return nil, err
-	}
-
-	prefixes := e.collectPrefixes(disableIPv4, disableIPv6)
 
 	if len(prefixes) > 0 {
 		return prefixes, nil
@@ -391,19 +390,7 @@ func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
 }
 
 func (e *Entry) MarshalIPRange(opts ...IgnoreIPOption) ([]netipx.IPRange, error) {
-	var ignoreIPType IPType
-	for _, opt := range opts {
-		if opt != nil {
-			ignoreIPType = opt()
-		}
-	}
-	disableIPv4, disableIPv6 := false, false
-	switch ignoreIPType {
-	case IPv4:
-		disableIPv4 = true
-	case IPv6:
-		disableIPv6 = true
-	}
+	disableIPv4, disableIPv6 := e.getDisabledIPTypes(opts...)
 
 	if err := e.buildIPSet(); err != nil {
 		return nil, err
@@ -429,25 +416,11 @@ func (e *Entry) MarshalIPRange(opts ...IgnoreIPOption) ([]netipx.IPRange, error)
 }
 
 func (e *Entry) MarshalText(opts ...IgnoreIPOption) ([]string, error) {
-	var ignoreIPType IPType
-	for _, opt := range opts {
-		if opt != nil {
-			ignoreIPType = opt()
-		}
-	}
-	disableIPv4, disableIPv6 := false, false
-	switch ignoreIPType {
-	case IPv4:
-		disableIPv4 = true
-	case IPv6:
-		disableIPv6 = true
-	}
-
-	if err := e.buildIPSet(); err != nil {
+	prefixes, err := e.MarshalPrefix(opts...)
+	if err != nil {
 		return nil, err
 	}
 
-	prefixes := e.collectPrefixes(disableIPv4, disableIPv6)
 	cidrList := make([]string, 0, len(prefixes))
 	for _, prefix := range prefixes {
 		cidrList = append(cidrList, prefix.String())
