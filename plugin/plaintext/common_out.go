@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -197,11 +196,7 @@ func (t *text_out) marshalBytesForTextOut(buf *bytes.Buffer, entryCidr []string)
 func (t *text_out) marshalBytesForClashRuleSetClassicalOut(buf *bytes.Buffer, entryCidr []string) error {
 	buf.WriteString("payload:\n")
 	for _, cidr := range entryCidr {
-		ip, _, err := net.ParseCIDR(cidr)
-		if err != nil {
-			return err
-		}
-		if ip.To4() != nil {
+		if !strings.Contains(cidr, ":") {
 			buf.WriteString("  - IP-CIDR,")
 		} else {
 			buf.WriteString("  - IP-CIDR6,")
@@ -226,11 +221,7 @@ func (t *text_out) marshalBytesForClashRuleSetIPCIDROut(buf *bytes.Buffer, entry
 
 func (t *text_out) marshalBytesForSurgeRuleSetOut(buf *bytes.Buffer, entryCidr []string) error {
 	for _, cidr := range entryCidr {
-		ip, _, err := net.ParseCIDR(cidr)
-		if err != nil {
-			return err
-		}
-		if ip.To4() != nil {
+		if !strings.Contains(cidr, ":") {
 			buf.WriteString("IP-CIDR,")
 		} else {
 			buf.WriteString("IP-CIDR6,")
