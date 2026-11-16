@@ -345,6 +345,23 @@ func (e *Entry) buildIPSet() error {
 	return nil
 }
 
+// collectPrefixes returns the prefixes of the built IP sets, allocating the
+// result slice exactly once. buildIPSet must be called before.
+func (e *Entry) collectPrefixes(disableIPv4, disableIPv6 bool) []netip.Prefix {
+	var ipv4Prefixes, ipv6Prefixes []netip.Prefix
+	if !disableIPv4 && e.hasIPv4Set() {
+		ipv4Prefixes = e.ipv4Set.Prefixes()
+	}
+	if !disableIPv6 && e.hasIPv6Set() {
+		ipv6Prefixes = e.ipv6Set.Prefixes()
+	}
+
+	prefixes := make([]netip.Prefix, 0, len(ipv4Prefixes)+len(ipv6Prefixes))
+	prefixes = append(prefixes, ipv4Prefixes...)
+	prefixes = append(prefixes, ipv6Prefixes...)
+	return prefixes
+}
+
 func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
 	var ignoreIPType IPType
 	for _, opt := range opts {
@@ -364,15 +381,7 @@ func (e *Entry) MarshalPrefix(opts ...IgnoreIPOption) ([]netip.Prefix, error) {
 		return nil, err
 	}
 
-	prefixes := make([]netip.Prefix, 0, 1024)
-
-	if !disableIPv4 && e.hasIPv4Set() {
-		prefixes = append(prefixes, e.ipv4Set.Prefixes()...)
-	}
-
-	if !disableIPv6 && e.hasIPv6Set() {
-		prefixes = append(prefixes, e.ipv6Set.Prefixes()...)
-	}
+	prefixes := e.collectPrefixes(disableIPv4, disableIPv6)
 
 	if len(prefixes) > 0 {
 		return prefixes, nil
@@ -400,15 +409,17 @@ func (e *Entry) MarshalIPRange(opts ...IgnoreIPOption) ([]netipx.IPRange, error)
 		return nil, err
 	}
 
-	ipranges := make([]netipx.IPRange, 0, 1024)
-
+	var ipv4Ranges, ipv6Ranges []netipx.IPRange
 	if !disableIPv4 && e.hasIPv4Set() {
-		ipranges = append(ipranges, e.ipv4Set.Ranges()...)
+		ipv4Ranges = e.ipv4Set.Ranges()
+	}
+	if !disableIPv6 && e.hasIPv6Set() {
+		ipv6Ranges = e.ipv6Set.Ranges()
 	}
 
-	if !disableIPv6 && e.hasIPv6Set() {
-		ipranges = append(ipranges, e.ipv6Set.Ranges()...)
-	}
+	ipranges := make([]netipx.IPRange, 0, len(ipv4Ranges)+len(ipv6Ranges))
+	ipranges = append(ipranges, ipv4Ranges...)
+	ipranges = append(ipranges, ipv6Ranges...)
 
 	if len(ipranges) > 0 {
 		return ipranges, nil
@@ -436,18 +447,10 @@ func (e *Entry) MarshalText(opts ...IgnoreIPOption) ([]string, error) {
 		return nil, err
 	}
 
-	cidrList := make([]string, 0, 1024)
-
-	if !disableIPv4 && e.hasIPv4Set() {
-		for _, prefix := range e.ipv4Set.Prefixes() {
-			cidrList = append(cidrList, prefix.String())
-		}
-	}
-
-	if !disableIPv6 && e.hasIPv6Set() {
-		for _, prefix := range e.ipv6Set.Prefixes() {
-			cidrList = append(cidrList, prefix.String())
-		}
+	prefixes := e.collectPrefixes(disableIPv4, disableIPv6)
+	cidrList := make([]string, 0, len(prefixes))
+	for _, prefix := range prefixes {
+		cidrList = append(cidrList, prefix.String())
 	}
 
 	if len(cidrList) > 0 {

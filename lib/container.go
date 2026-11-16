@@ -268,7 +268,7 @@ func (c *container) lookup(addrOrPrefix any, iptype IPType, searchList ...string
 	isfound := false
 	result := make([]string, 0, 8)
 
-	for entry := range c.Loop() {
+	for _, entry := range c.entries {
 		if len(searchMap) > 0 && !searchMap[entry.GetName()] {
 			continue
 		}

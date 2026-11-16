@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"path/filepath"
 	"slices"
@@ -14,6 +13,7 @@ import (
 	"github.com/maxmind/mmdbwriter"
 	"github.com/maxmind/mmdbwriter/mmdbtype"
 	"github.com/oschwald/geoip2-golang/v2"
+	"go4.org/netipx"
 )
 
 const (
@@ -195,7 +195,7 @@ func (g *geolite2_country_mmdb_out) filterAndSortList(container lib.Container) [
 }
 
 func (g *geolite2_country_mmdb_out) marshalData(writer *mmdbwriter.Tree, entry *lib.Entry, extraInfo map[string]any) error {
-	entryCidr, err := entry.MarshalText(lib.GetIgnoreIPType(g.OnlyIPType))
+	entryCidr, err := entry.MarshalPrefix(lib.GetIgnoreIPType(g.OnlyIPType))
 	if err != nil {
 		return err
 	}
@@ -377,12 +377,8 @@ func (g *geolite2_country_mmdb_out) marshalData(writer *mmdbwriter.Tree, entry *
 		}
 	}
 
-	for _, cidr := range entryCidr {
-		_, network, err := net.ParseCIDR(cidr)
-		if err != nil {
-			return err
-		}
-		if err := writer.Insert(network, record); err != nil {
+	for _, prefix := range entryCidr {
+		if err := writer.Insert(netipx.PrefixIPNet(prefix), record); err != nil {
 			return err
 		}
 	}
