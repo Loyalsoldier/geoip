@@ -224,6 +224,10 @@ func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
 	case len(data) == 0:
 		return errors.New("empty JSON")
 
+	case bytes.Equal(data, []byte("null")):
+		*g = GeoLite2ASNCSVWantedList{}
+		return nil
+
 	case data[0] == '[':
 		var want []string
 		if err := json.Unmarshal(data, &want); err != nil {
