@@ -110,6 +110,15 @@ jobs:
             sha256sum ${name} > ./${name}.sha256sum
           done
 
+      - name: Upload artifacts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: output
+          path: |
+            ./output/*.{dat,mmdb,sha256sum}
+            !./output/GeoLite2*
+
       - name: Git push assets to "release" branch
         if: github.event_name != 'pull_request'
         run: |
