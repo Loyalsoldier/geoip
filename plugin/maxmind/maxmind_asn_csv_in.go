@@ -253,6 +253,19 @@ func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string,
 	}
 }
 
+// WithGeoLite2ASNCSVWantedList is an input option for specifying the wanted list of ASNs or customized lists with specific ASNs for the `maxmindGeoLite2ASNCSV` input convertor.
+// It accepts various types including int, string, []string, map[string][]string, and GeoLite2ASNCSVWantedList.
+//
+// For example:
+// integer `12345`, string `12345` and string `AS12345` for a single ASN,
+// string array or string slice `[]string{"AS12345", "AS67890"}` for multiple ASNs,
+//
+//	`map[string][]string{
+//			"google": []string{"AS12345", "AS123"},
+//			"apple":  []string{"AS67890"},
+//	}` for customized lists with specific ASNs,
+//
+// or `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
 func WithGeoLite2ASNCSVWantedList[T ~int | ~string | ~[]string | ~map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
 	return func(g lib.InputConverter) {
 		wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
