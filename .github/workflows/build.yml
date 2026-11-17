@@ -83,6 +83,11 @@ jobs:
           cp GeoLite2-Country-CSV_*/*.csv ./geolite2/
           cp GeoLite2-ASN-CSV_*/*.csv ./geolite2/
 
+      - name: Run tests
+        if: github.event_name == 'pull_request'
+        run: |
+          go test -v -cover -race ./...
+
       - name: Build geoip files
         run: |
           go build ./
