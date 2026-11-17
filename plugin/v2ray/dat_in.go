@@ -213,7 +213,7 @@ func (g *geoip_dat_in) generateEntries(reader io.Reader, entries map[string]*lib
 			bits := v2rayCIDR.GetPrefix()
 			addr, ok := netip.AddrFromSlice(ip)
 			if !ok {
-				return fmt.Errorf("invalid IP in list %s: %s", name, ip)
+				return fmt.Errorf("invalid IP in list %s: %v", name, ip)
 			}
 			if addr.Is4In6() && bits <= 32 {
 				addr = addr.Unmap()
