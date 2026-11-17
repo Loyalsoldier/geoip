@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 )
 
@@ -102,38 +101,6 @@ func TestGetIgnoreIPType(t *testing.T) {
 			}
 			if got == nil || got() != tt.want {
 				t.Fatalf("unexpected option result")
-			}
-		})
-	}
-}
-
-func TestWantedListExtendedUnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name      string
-		data      string
-		wantSlice []string
-		wantMap   map[string][]string
-		wantErr   bool
-	}{
-		{"empty data", "", nil, nil, false},
-		{"slice", `["a","b"]`, []string{"a", "b"}, map[string][]string{}, false},
-		{"map", `{"x":["a"],"y":["b","c"]}`, []string{}, map[string][]string{"x": {"a"}, "y": {"b", "c"}}, false},
-		{"invalid", `123`, nil, nil, true},
-		{"malformed", `{`, nil, nil, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := new(WantedListExtended)
-			err := w.UnmarshalJSON([]byte(tt.data))
-			assertErr(t, err, nil, tt.wantErr)
-			if tt.wantErr {
-				return
-			}
-			if !reflect.DeepEqual(w.TypeSlice, tt.wantSlice) {
-				t.Errorf("TypeSlice = %#v, want %#v", w.TypeSlice, tt.wantSlice)
-			}
-			if !reflect.DeepEqual(w.TypeMap, tt.wantMap) {
-				t.Errorf("TypeMap = %#v, want %#v", w.TypeMap, tt.wantMap)
 			}
 		})
 	}

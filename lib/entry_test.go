@@ -461,3 +461,28 @@ func TestEntryMarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestEntryGetDisabledIPTypes(t *testing.T) {
+	tests := []struct {
+		name  string
+		opts  []IgnoreIPOption
+		want4 bool
+		want6 bool
+	}{
+		{"no options", nil, false, false},
+		{"nil option", []IgnoreIPOption{nil}, false, false},
+		{"ignore ipv4", []IgnoreIPOption{IgnoreIPv4}, true, false},
+		{"ignore ipv6", []IgnoreIPOption{IgnoreIPv6}, false, true},
+		{"last option wins", []IgnoreIPOption{IgnoreIPv6, IgnoreIPv4}, true, false},
+		{"nil does not override", []IgnoreIPOption{IgnoreIPv6, nil}, false, true},
+		{"unknown type", []IgnoreIPOption{func() IPType { return "bad" }}, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got4, got6 := NewEntry("test").getDisabledIPTypes(tt.opts...)
+			if got4 != tt.want4 || got6 != tt.want6 {
+				t.Errorf("got (%v, %v), want (%v, %v)", got4, got6, tt.want4, tt.want6)
+			}
+		})
+	}
+}
