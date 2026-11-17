@@ -217,6 +217,10 @@ type GeoLite2ASNCSVWantedList struct {
 }
 
 func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
+	// Reset before unmarshalling new JSON data
+	g.TypeSlice = []string{}
+	g.TypeMap = make(map[string][]string)
+
 	data = bytes.TrimSpace(data)
 	if len(data) == 0 {
 		return nil
@@ -268,7 +272,7 @@ func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string,
 //	`map[string][]string{
 //			"google": []string{"AS12345", "AS123"},
 //			"apple":  []string{"AS67890"},
-//	}` for customized lists with specific ASNs, the output list names will be the keys of the map, e.g., `google` and `apple`,
+//	}` for customized lists with specific ASNs, the output list names will be the UPPERCASE keys of the map, e.g., `GOOGLE` and `APPLE`,
 //
 // or `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
 func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
