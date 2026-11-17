@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -219,33 +218,24 @@ type GeoLite2ASNCSVWantedList struct {
 
 func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
 	data = bytes.TrimSpace(data)
+	if len(data) == 0 {
+		return nil
+	}
+
+	var slice []string
+	var mapMap map[string][]string
 
 	switch {
-	case len(data) == 0:
-		return errors.New("empty JSON")
-
-	case bytes.Equal(data, []byte("null")):
-		*g = GeoLite2ASNCSVWantedList{}
+	case json.Unmarshal(data, &slice) == nil:
+		g.TypeSlice = slice
 		return nil
 
-	case data[0] == '[':
-		var want []string
-		if err := json.Unmarshal(data, &want); err != nil {
-			return err
-		}
-		*g = GeoLite2ASNCSVWantedList{TypeSlice: want}
-		return nil
-
-	case data[0] == '{':
-		var want map[string][]string
-		if err := json.Unmarshal(data, &want); err != nil {
-			return err
-		}
-		*g = GeoLite2ASNCSVWantedList{TypeMap: want}
+	case json.Unmarshal(data, &mapMap) == nil:
+		g.TypeMap = mapMap
 		return nil
 
 	default:
-		return errors.New("expected JSON array or object")
+		return fmt.Errorf("invalid JSON for `wantedList`: %s", string(data))
 	}
 }
 
@@ -269,15 +259,16 @@ func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string,
 
 // WithGeoLite2ASNCSVWantedList is an input option for specifying the wanted list of ASNs or customized lists with specific ASNs for the `maxmindGeoLite2ASNCSV` input convertor.
 // It accepts various types including int, string, []string, map[string][]string, and GeoLite2ASNCSVWantedList.
+// The output list name will be `AS` followed by the ASN number if no custom list name is specified, e.g., AS12345.
 //
 // For example:
-// integer `12345`, string `12345` and string `AS12345` for a single ASN,
-// string array or string slice `[]string{"AS12345", "AS67890"}` for multiple ASNs,
+// integer `12345`, string `12345` and string `AS12345` for a single ASN, the output list name will be `AS12345`;
+// string array or string slice `[]string{"AS12345", "AS67890"}` for multiple ASNs, the output list names will be `AS12345` and `AS67890`;
 //
 //	`map[string][]string{
 //			"google": []string{"AS12345", "AS123"},
 //			"apple":  []string{"AS67890"},
-//	}` for customized lists with specific ASNs,
+//	}` for customized lists with specific ASNs, the output list names will be the keys of the map, e.g., `google` and `apple`,
 //
 // or `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
 func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
