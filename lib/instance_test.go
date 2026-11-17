@@ -34,6 +34,7 @@ func TestInstanceInitConfig(t *testing.T) {
 	}{
 		{"local file", "  " + goodFile + "  ", false, 1, 1},
 		{"missing local file", filepath.Join(dir, "missing.json"), true, 0, 0},
+		{"remote http config", srv.URL + "/config", false, 1, 1},
 		{"remote http non-200", srv.URL + "/notfound", true, 0, 0},
 		{"remote HTTP invalid json", srv.URL + "/ok", true, 0, 0},
 		{"remote https unreachable", "HTTPS://127.0.0.1:0/x", true, 0, 0},
@@ -144,9 +145,38 @@ func TestInstanceRun(t *testing.T) {
 					}
 				}
 			}
+			if tt.wantErr == errIn {
+				for i, oc := range tt.outputs {
+					if oc.called != 0 {
+						t.Errorf("output %d should not be called after input fails", i)
+					}
+				}
+			}
 			if tt.wantErr == errOut && tt.outputs[1].called != 0 {
 				t.Error("second output should not be called after first fails")
 			}
 		})
+	}
+}
+
+func TestInstanceRunOrder(t *testing.T) {
+	out := &mockOutputConverter{}
+	var outCalledDuringInput []int
+	record := func(c Container) (Container, error) {
+		outCalledDuringInput = append(outCalledDuringInput, out.called)
+		return c, nil
+	}
+	inst, _ := NewInstance()
+	inst.AddInput(&mockInputConverter{fn: record})
+	inst.AddInput(&mockInputConverter{fn: record})
+	inst.AddOutput(out)
+	if err := inst.Run(); err != nil {
+		t.Fatal(err)
+	}
+	if len(outCalledDuringInput) != 2 || outCalledDuringInput[0] != 0 || outCalledDuringInput[1] != 0 {
+		t.Fatalf("inputs must all run before outputs, got %v", outCalledDuringInput)
+	}
+	if out.called != 1 {
+		t.Fatalf("output called %d times, want 1", out.called)
 	}
 }

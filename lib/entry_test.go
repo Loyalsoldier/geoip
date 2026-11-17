@@ -8,8 +8,6 @@ import (
 	"go4.org/netipx"
 )
 
-func ptr[T any](v T) *T { return new(v) }
-
 func TestNewEntry(t *testing.T) {
 	tests := []struct {
 		input string
@@ -85,7 +83,7 @@ func TestEntryProcessPrefix(t *testing.T) {
 		{"string slash comment", "// 1.1.1.1", "", "", ErrCommentLine},
 		{"string block comment", "/* 1.1.1.1 */", "", "", ErrCommentLine},
 		// *string
-		{"*string valid", ptr("::ffff:10.0.0.1/104"), "10.0.0.0/8", IPv4, nil},
+		{"*string valid", new("::ffff:10.0.0.1/104"), "10.0.0.0/8", IPv4, nil},
 		{"*string nil", (*string)(nil), "", "", ErrInvalidPrefixType},
 		// net.IP
 		{"net.IP ipv4 4-byte", net.IPv4(1, 2, 3, 4).To4(), "1.2.3.4/32", IPv4, nil},
@@ -94,7 +92,7 @@ func TestEntryProcessPrefix(t *testing.T) {
 		{"net.IP ipv6", net.ParseIP("2001:db8::1"), "2001:db8::1/128", IPv6, nil},
 		{"net.IP malformed length", net.IP{1, 2, 3}, "", "", ErrInvalidIP},
 		{"net.IP nil", net.IP(nil), "", "", ErrInvalidIP},
-		{"*net.IP valid", ptr(net.ParseIP("2001:db8::2")), "2001:db8::2/128", IPv6, nil},
+		{"*net.IP valid", new(net.ParseIP("2001:db8::2")), "2001:db8::2/128", IPv6, nil},
 		{"*net.IP nil", (*net.IP)(nil), "", "", ErrInvalidPrefixType},
 		// net.IPNet
 		{"net.IPNet ipv4", net.IPNet{IP: net.IP{1, 2, 3, 4}, Mask: net.CIDRMask(24, 32)}, "1.2.3.0/24", IPv4, nil},
@@ -128,7 +126,7 @@ func TestEntryProcessPrefix(t *testing.T) {
 		{"netip.Prefix mapped /95 too small", netip.PrefixFrom(mapped, 95), "", "", ErrInvalidPrefix},
 		{"netip.Prefix mapped invalid bits", netip.PrefixFrom(mapped, 129), "", "", ErrInvalidPrefix},
 		{"netip.Prefix zero", netip.Prefix{}, "", "", ErrInvalidIPType},
-		{"*netip.Prefix valid", ptr(netip.MustParsePrefix("::ffff:192.168.1.1/120")), "192.168.1.0/24", IPv4, nil},
+		{"*netip.Prefix valid", new(netip.MustParsePrefix("::ffff:192.168.1.1/120")), "192.168.1.0/24", IPv4, nil},
 		{"*netip.Prefix nil", (*netip.Prefix)(nil), "", "", ErrInvalidPrefixType},
 		// unsupported
 		{"unsupported int", 123, "", "", ErrInvalidPrefixType},

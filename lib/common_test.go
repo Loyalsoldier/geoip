@@ -13,6 +13,9 @@ func newTestServer(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/ok", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("hello"))
 	})
+	mux.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(validConfig))
+	})
 	mux.HandleFunc("/notfound", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})

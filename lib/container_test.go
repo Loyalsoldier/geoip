@@ -179,7 +179,9 @@ func TestContainerRemove(t *testing.T) {
 			c := NewContainer()
 			existing := newEntryWith(t, "test", tt.existing...)
 			_, _ = existing.MarshalText()
-			_ = c.Add(existing)
+			if err := c.Add(existing); err != nil {
+				t.Fatal(err)
+			}
 
 			name := "test"
 			if tt.removeName != "" {
