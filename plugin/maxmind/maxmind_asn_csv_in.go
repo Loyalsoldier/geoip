@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -281,7 +282,7 @@ func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]strin
 
 		switch v := any(want).(type) {
 		case int:
-			normalizeGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", v), wantList)
+			normalizeGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", uint(v)), wantList)
 
 		case string:
 			normalizeGeoLite2ASNCSVWantedList(v, wantList)
@@ -310,6 +311,11 @@ func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]strin
 
 		default:
 			return
+		}
+
+		for asn, lists := range wantList {
+			slices.Sort(lists)
+			wantList[asn] = slices.Compact(lists)
 		}
 
 		g.(*geolite2_asn_csv_in).Want = wantList
