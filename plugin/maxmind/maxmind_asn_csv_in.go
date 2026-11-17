@@ -213,30 +213,44 @@ func (g *geolite2_asn_csv_in) process(file string, entries map[string]*lib.Entry
 }
 
 type GeoLite2ASNCSVWantedList struct {
-	TypeSlice []string
-	TypeMap   map[string][]string
+	TypeSliceNum []uint
+	TypeSliceStr []string
+	TypeMapNum   map[string][]uint
+	TypeMapStr   map[string][]string
 }
 
 func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
 	// Reset before unmarshalling new JSON data
-	g.TypeSlice = []string{}
-	g.TypeMap = make(map[string][]string)
+	g.TypeSliceNum = []uint{}
+	g.TypeSliceStr = []string{}
+	g.TypeMapNum = make(map[string][]uint)
+	g.TypeMapStr = make(map[string][]string)
 
 	data = bytes.TrimSpace(data)
 	if len(data) == 0 {
 		return nil
 	}
 
-	var slice []string
-	var mapMap map[string][]string
+	var sliceNum []uint
+	var sliceStr []string
+	var mapNum map[string][]uint
+	var mapStr map[string][]string
 
 	switch {
-	case json.Unmarshal(data, &slice) == nil:
-		g.TypeSlice = slice
+	case json.Unmarshal(data, &sliceNum) == nil:
+		g.TypeSliceNum = sliceNum
 		return nil
 
-	case json.Unmarshal(data, &mapMap) == nil:
-		g.TypeMap = mapMap
+	case json.Unmarshal(data, &sliceStr) == nil:
+		g.TypeSliceStr = sliceStr
+		return nil
+
+	case json.Unmarshal(data, &mapNum) == nil:
+		g.TypeMapNum = mapNum
+		return nil
+
+	case json.Unmarshal(data, &mapStr) == nil:
+		g.TypeMapStr = mapStr
 		return nil
 
 	default:
@@ -244,7 +258,7 @@ func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
 	}
 }
 
-func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string, lists ...string) {
+func addGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string, lists ...string) {
 	asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
 	if asn == "" {
 		return
@@ -267,50 +281,71 @@ func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string,
 // The output list name will be `AS` followed by the ASN number if no custom list name is specified, e.g., AS12345.
 //
 // For example:
-// integer `12345`, string `12345` and string `AS12345` for a single ASN, the output list name will be `AS12345`;
-// string array or string slice `[]string{"AS12345", "AS67890"}` for multiple ASNs, the output list names will be `AS12345` and `AS67890`;
+// uint `12345`, string `12345` and string `AS12345` for a single ASN, the output list name will be `AS12345`;
+// uint array `[]uint{12345, 67890}`, string array `[]string{"AS12345", "AS67890"}` for multiple ASNs, the output list names will be `AS12345` and `AS67890`;
 //
-//	`map[string][]string{
-//			"google": []string{"AS12345", "AS123"},
-//			"apple":  []string{"AS67890"},
-//	}` for customized lists with specific ASNs, the output list names will be the UPPERCASE keys of the map, e.g., `GOOGLE` and `APPLE`,
+//	map[string][]uint{
+//		"google": []uint{12345, 123},
+//		"apple":  []uint{67890},
+//	} or
+//	map[string][]string{
+//		"google": []string{"AS12345", "AS123"},
+//		"apple":  []string{"AS67890"},
+//	} for customized lists with specific ASNs, the output list names will be the UPPERCASE keys of the map, e.g., `GOOGLE` and `APPLE`;
 //
-// or `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
-func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
+// `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
+func WithGeoLite2ASNCSVWantedList[T uint | []uint | string | []string | map[string][]uint | map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
 	return func(g lib.InputConverter) {
 		wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
 
 		switch v := any(want).(type) {
-		case int:
-			normalizeGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", uint(v)), wantList)
+		case uint:
+			addGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", v), wantList)
+
+		case []uint:
+			for _, asn := range v {
+				addGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", asn), wantList)
+			}
 
 		case string:
-			normalizeGeoLite2ASNCSVWantedList(v, wantList)
+			addGeoLite2ASNCSVWantedList(v, wantList)
 
 		case []string:
 			for _, asn := range v {
-				normalizeGeoLite2ASNCSVWantedList(asn, wantList)
+				addGeoLite2ASNCSVWantedList(asn, wantList)
+			}
+
+		case map[string][]uint:
+			for list, asnList := range v {
+				for _, asn := range asnList {
+					addGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", asn), wantList, list)
+				}
 			}
 
 		case map[string][]string:
 			for list, asnList := range v {
 				for _, asn := range asnList {
-					normalizeGeoLite2ASNCSVWantedList(asn, wantList, list)
+					addGeoLite2ASNCSVWantedList(asn, wantList, list)
 				}
 			}
 
 		case GeoLite2ASNCSVWantedList:
-			for _, asn := range v.TypeSlice {
-				normalizeGeoLite2ASNCSVWantedList(asn, wantList)
+			for _, asn := range v.TypeSliceNum {
+				addGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", asn), wantList)
 			}
-			for list, asnList := range v.TypeMap {
+			for _, asn := range v.TypeSliceStr {
+				addGeoLite2ASNCSVWantedList(asn, wantList)
+			}
+			for list, asnList := range v.TypeMapNum {
 				for _, asn := range asnList {
-					normalizeGeoLite2ASNCSVWantedList(asn, wantList, list)
+					addGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", asn), wantList, list)
 				}
 			}
-
-		default:
-			return
+			for list, asnList := range v.TypeMapStr {
+				for _, asn := range asnList {
+					addGeoLite2ASNCSVWantedList(asn, wantList, list)
+				}
+			}
 		}
 
 		for asn, lists := range wantList {
