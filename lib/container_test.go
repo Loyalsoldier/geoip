@@ -167,10 +167,12 @@ func TestContainerRemove(t *testing.T) {
 		{name: "prefix on entry missing builders", existing: []string{}, removing: []string{"1.1.1.1", "2001:db8::1"}, rCase: CaseRemovePrefix, want: []string{}},
 		{name: "prefix ignore ipv4 missing builder", existing: []string{}, removing: []string{"2001:db8::1"}, rCase: CaseRemovePrefix, opts: []IgnoreIPOption{IgnoreIPv4}, want: []string{}},
 		{name: "prefix ignore ipv6 missing builder", existing: []string{}, removing: []string{"1.1.1.1"}, rCase: CaseRemovePrefix, opts: []IgnoreIPOption{IgnoreIPv6}, want: []string{}},
-		{name: "prefix empty removing entry", existing: base, rCase: CaseRemovePrefix, want: []string{"192.168.0.0/23", "2001:db8::/32"}},
+		{name: "prefix empty removing entry", existing: base, removing: []string{}, rCase: CaseRemovePrefix, want: []string{"192.168.0.0/23", "2001:db8::/32"}},
 		{name: "entry", existing: base, rCase: CaseRemoveEntry, wantGone: true},
 		{name: "entry ignore ipv4", existing: base, rCase: CaseRemoveEntry, opts: []IgnoreIPOption{IgnoreIPv4}, want: []string{"192.168.0.0/23"}},
 		{name: "entry ignore ipv6", existing: base, rCase: CaseRemoveEntry, opts: []IgnoreIPOption{IgnoreIPv6}, want: []string{"2001:db8::/32"}},
+		{name: "entry ignore ipv4 with removing", existing: base, removing: []string{"192.168.1.0/24"}, rCase: CaseRemoveEntry, opts: []IgnoreIPOption{IgnoreIPv4}, want: []string{"192.168.0.0/23"}},
+		{name: "entry ignore ipv6 with removing", existing: base, removing: []string{"2001:db8:8000::/33"}, rCase: CaseRemoveEntry, opts: []IgnoreIPOption{IgnoreIPv6}, want: []string{"2001:db8::/32"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

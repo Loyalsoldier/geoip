@@ -8,7 +8,7 @@ import (
 	"go4.org/netipx"
 )
 
-func ptr[T any](v T) *T { return &v }
+func ptr[T any](v T) *T { return new(v) }
 
 func TestNewEntry(t *testing.T) {
 	tests := []struct {

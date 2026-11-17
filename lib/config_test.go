@@ -100,6 +100,7 @@ func TestCreateConfig(t *testing.T) {
 			wantErr bool
 		}{
 			{"known", "mockout", false},
+			{"known upper", "MOCKOUT", false},
 			{"unknown", "nope", true},
 			{"creator fails", "FAILOUT", true},
 		}
