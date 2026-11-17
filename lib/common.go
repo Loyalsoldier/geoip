@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,33 +41,6 @@ func GetIgnoreIPType(onlyIPType IPType) IgnoreIPOption {
 	case IPv6:
 		return IgnoreIPv4
 	}
-
-	return nil
-}
-
-type WantedListExtended struct {
-	TypeSlice []string
-	TypeMap   map[string][]string
-}
-
-func (w *WantedListExtended) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	slice := make([]string, 0)
-	mapMap := make(map[string][]string, 0)
-
-	err := json.Unmarshal(data, &slice)
-	if err != nil {
-		err2 := json.Unmarshal(data, &mapMap)
-		if err2 != nil {
-			return err2
-		}
-	}
-
-	w.TypeSlice = slice
-	w.TypeMap = mapMap
 
 	return nil
 }

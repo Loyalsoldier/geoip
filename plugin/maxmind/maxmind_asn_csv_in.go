@@ -1,8 +1,10 @@
 package maxmind
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -64,45 +66,12 @@ func NewGeoLite2ASNCSVIn(action lib.Action, opts ...lib.InputOption) (lib.InputC
 	return g, nil
 }
 
-func WithASNWantedList(want lib.WantedListExtended) lib.InputOption {
-	return func(g lib.InputConverter) {
-		wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
-
-		for list, asnList := range want.TypeMap {
-			list = strings.ToUpper(strings.TrimSpace(list))
-			if list == "" {
-				continue
-			}
-
-			for _, asn := range asnList {
-				asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
-				if asn == "" {
-					continue
-				}
-
-				wantList[asn] = append(wantList[asn], list)
-			}
-		}
-
-		for _, asn := range want.TypeSlice {
-			asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
-			if asn == "" {
-				continue
-			}
-
-			wantList[asn] = []string{"AS" + asn}
-		}
-
-		g.(*geolite2_asn_csv_in).Want = wantList
-	}
-}
-
 func NewGeoLite2ASNCSVInFromBytes(action lib.Action, data []byte) (lib.InputConverter, error) {
 	var tmp struct {
-		IPv4File   string                 `json:"ipv4"`
-		IPv6File   string                 `json:"ipv6"`
-		Want       lib.WantedListExtended `json:"wantedList"`
-		OnlyIPType lib.IPType             `json:"onlyIPType"`
+		IPv4File   string                   `json:"ipv4"`
+		IPv6File   string                   `json:"ipv6"`
+		Want       GeoLite2ASNCSVWantedList `json:"wantedList"`
+		OnlyIPType lib.IPType               `json:"onlyIPType"`
 	}
 
 	if len(data) > 0 {
@@ -115,7 +84,7 @@ func NewGeoLite2ASNCSVInFromBytes(action lib.Action, data []byte) (lib.InputConv
 		action,
 		WithIPv4File(tmp.IPv4File),
 		WithIPv6File(tmp.IPv6File),
-		WithASNWantedList(tmp.Want),
+		WithGeoLite2ASNCSVWantedList(tmp.Want),
 		WithInputOnlyIPType(tmp.OnlyIPType),
 	)
 }
@@ -241,4 +210,86 @@ func (g *geolite2_asn_csv_in) process(file string, entries map[string]*lib.Entry
 	}
 
 	return nil
+}
+
+type GeoLite2ASNCSVWantedList struct {
+	TypeSlice []string
+	TypeMap   map[string][]string
+}
+
+func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+
+	switch {
+	case len(data) == 0:
+		return errors.New("empty JSON")
+
+	case data[0] == '[':
+		return json.Unmarshal(data, &g.TypeSlice)
+
+	case data[0] == '{':
+		return json.Unmarshal(data, &g.TypeMap)
+
+	default:
+		return errors.New("expected JSON array or object")
+	}
+}
+
+func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string, lists ...string) {
+	asn = strings.TrimPrefix(strings.ToLower(strings.TrimSpace(asn)), "as")
+	if asn == "" {
+		return
+	}
+
+	if len(lists) > 0 {
+		for _, list := range lists {
+			list = strings.ToUpper(strings.TrimSpace(list))
+			if list != "" {
+				wantList[asn] = append(wantList[asn], list)
+			}
+		}
+	} else {
+		wantList[asn] = append(wantList[asn], "AS"+asn)
+	}
+}
+
+func WithGeoLite2ASNCSVWantedList[T ~int | ~string | ~[]string | ~map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
+	return func(g lib.InputConverter) {
+		wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
+
+		switch v := any(want).(type) {
+		case int:
+			normalizeGeoLite2ASNCSVWantedList(fmt.Sprintf("%d", v), wantList)
+
+		case string:
+			normalizeGeoLite2ASNCSVWantedList(v, wantList)
+
+		case []string:
+			for _, asn := range v {
+				normalizeGeoLite2ASNCSVWantedList(asn, wantList)
+			}
+
+		case map[string][]string:
+			for list, asnList := range v {
+				for _, asn := range asnList {
+					normalizeGeoLite2ASNCSVWantedList(asn, wantList, list)
+				}
+			}
+
+		case GeoLite2ASNCSVWantedList:
+			for _, asn := range v.TypeSlice {
+				normalizeGeoLite2ASNCSVWantedList(asn, wantList)
+			}
+			for list, asnList := range v.TypeMap {
+				for _, asn := range asnList {
+					normalizeGeoLite2ASNCSVWantedList(asn, wantList, list)
+				}
+			}
+
+		default:
+			return
+		}
+
+		g.(*geolite2_asn_csv_in).Want = wantList
+	}
 }
