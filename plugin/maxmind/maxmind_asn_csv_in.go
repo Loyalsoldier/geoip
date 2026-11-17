@@ -266,7 +266,7 @@ func normalizeGeoLite2ASNCSVWantedList(asn string, wantList map[string][]string,
 //	}` for customized lists with specific ASNs,
 //
 // or `GeoLite2ASNCSVWantedList` from parsing JSON configuration.
-func WithGeoLite2ASNCSVWantedList[T ~int | ~string | ~[]string | ~map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
+func WithGeoLite2ASNCSVWantedList[T int | string | []string | map[string][]string | GeoLite2ASNCSVWantedList](want T) lib.InputOption {
 	return func(g lib.InputConverter) {
 		wantList := make(map[string][]string) // map[asn][]listname or map[asn][]asn
 
