@@ -116,7 +116,9 @@ jobs:
         with:
           name: output
           path: |
-            ./output/*.{dat,mmdb,sha256sum}
+            ./output/*.dat
+            ./output/*.mmdb
+            ./output/*.sha256sum
             !./output/GeoLite2*
 
       - name: Git push assets to "release" branch
