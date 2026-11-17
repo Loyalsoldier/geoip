@@ -225,10 +225,20 @@ func (g *GeoLite2ASNCSVWantedList) UnmarshalJSON(data []byte) error {
 		return errors.New("empty JSON")
 
 	case data[0] == '[':
-		return json.Unmarshal(data, &g.TypeSlice)
+		var want []string
+		if err := json.Unmarshal(data, &want); err != nil {
+			return err
+		}
+		*g = GeoLite2ASNCSVWantedList{TypeSlice: want}
+		return nil
 
 	case data[0] == '{':
-		return json.Unmarshal(data, &g.TypeMap)
+		var want map[string][]string
+		if err := json.Unmarshal(data, &want); err != nil {
+			return err
+		}
+		*g = GeoLite2ASNCSVWantedList{TypeMap: want}
+		return nil
 
 	default:
 		return errors.New("expected JSON array or object")
