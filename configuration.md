@@ -574,7 +574,7 @@
 - **args**：（可选）
   - **onlyIPType**：（可选）只处理的 IP 地址类型，值为 `ipv4` 或 `ipv6`
 
-> `private` 默认添加或移除的 CIDR 地址，见 [private.go](https://github.com/Loyalsoldier/geoip/blob/HEAD/plugin/special/private.go#L16-L36)
+> `private` 默认添加或移除的 CIDR 地址，见 [private.go](https://github.com/Loyalsoldier/geoip/blob/HEAD/plugin/special/private.go#L22-L51)
 
 ```jsonc
 {
