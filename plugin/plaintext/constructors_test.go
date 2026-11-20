@@ -1,6 +1,9 @@
 package plaintext
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -54,8 +57,10 @@ func TestOutputConstructors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, fn := range []func() (lib.OutputConverter, error){
-				func() (lib.OutputConverter, error) { return tt.newFn(lib.ActionOutput, WithOutputDir("")) },
-				func() (lib.OutputConverter, error) { return tt.fromBytes(lib.ActionOutput, nil) },
+				func() (lib.OutputConverter, error) { return tt.newFn(lib.ActionOutput, WithOutputExtension(".list")) },
+				func() (lib.OutputConverter, error) {
+					return tt.fromBytes(lib.ActionOutput, []byte(`{"outputExtension":".list"}`))
+				},
 			} {
 				got, err := fn()
 				if err != nil {
@@ -64,33 +69,50 @@ func TestOutputConstructors(t *testing.T) {
 				if got.GetType() != tt.typ || got.GetDescription() != tt.desc || got.GetAction() != lib.ActionOutput {
 					t.Fatalf("unexpected converter: %+v", got)
 				}
-				if dir := got.(*text_out).OutputDir; dir != getDefaultOutputDir(tt.typ) {
+				o := got.(*text_out)
+				if dir := o.OutputDir; dir != getDefaultOutputDir(tt.typ) {
 					t.Fatalf("OutputDir = %q, want %q", dir, getDefaultOutputDir(tt.typ))
+				}
+				if o.OutputExt != ".list" {
+					t.Fatalf("OutputExt = %q, want .list", o.OutputExt)
 				}
 			}
 		})
 	}
 }
 
-// TestRegisteredConfigCreators exercises the config creators registered in init().
 func TestRegisteredConfigCreators(t *testing.T) {
-	types := []struct{ in, out string }{
-		{TypeTextIn, TypeTextOut},
-		{TypeJSONIn, TypeTextOut},
-		{TypeClashRuleSetClassicalIn, TypeClashRuleSetClassicalOut},
-		{TypeClashRuleSetIPCIDRIn, TypeClashRuleSetIPCIDROut},
-		{TypeSurgeRuleSetIn, TypeSurgeRuleSetOut},
+	tests := []struct{ in, out, source, want string }{
+		{"text", "text", "192.0.2.1\n", "192.0.2.1/32\n"},
+		{"json", "text", `{"cidrs":["192.0.2.1"]}`, "192.0.2.1/32\n"},
+		{"clashRuleSetClassical", "clashRuleSetClassical", "payload:\n  - IP-CIDR,192.0.2.1/32,no-resolve\n", "payload:\n  - IP-CIDR,192.0.2.1/32\n"},
+		{"clashRuleSet", "clashRuleSet", "payload:\n  - 192.0.2.1/32\n", "payload:\n  - '192.0.2.1/32'\n"},
+		{"surgeRuleSet", "surgeRuleSet", "IP-CIDR,192.0.2.1/32,no-resolve\n", "IP-CIDR,192.0.2.1/32\n"},
 	}
-	for _, tt := range types {
+	for _, tt := range tests {
 		t.Run(tt.in, func(t *testing.T) {
+			t.Chdir(t.TempDir())
+			writeTestFile(t, ".", "input", tt.source)
 			instance, err := lib.NewInstance()
 			if err != nil {
 				t.Fatal(err)
 			}
-			config := `{"input":[{"type":"` + tt.in + `","action":"add","args":{"name":"cn","uri":"a","jsonPath":["a"]}}],` +
-				`"output":[{"type":"` + tt.out + `","action":"output"}]}`
+			config := fmt.Sprintf(`{
+				"input":[{"type":%q,"action":"add","args":{"name":"sample","uri":"input","jsonPath":["cidrs"]}}],
+				"output":[{"type":%q,"args":{"outputDir":"out"}}]
+			}`, tt.in, tt.out)
 			if err := instance.InitConfigFromBytes([]byte(config)); err != nil {
 				t.Fatal(err)
+			}
+			if err := instance.Run(); err != nil {
+				t.Fatal(err)
+			}
+			got, err := os.ReadFile(filepath.Join("out", "sample.txt"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != tt.want {
+				t.Fatalf("output = %q, want %q", got, tt.want)
 			}
 		})
 	}
