@@ -1,9 +1,9 @@
 package plaintext
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -43,7 +43,7 @@ func TestNewTextOutFromBytes(t *testing.T) {
 			name: "full config",
 			typ:  TypeTextOut,
 			data: `{"outputDir":" out ","outputExtension":" .list ","wantedList":["cn"],"excludedList":["us"],"onlyIPType":"ipv6","addPrefixInLine":"p","addSuffixInLine":"s"}`,
-			want: text_out{OutputDir: "out", OutputExt: ".list", OnlyIPType: lib.IPv6, AddPrefixInLine: "p", AddSuffixInLine: "s"},
+			want: text_out{OutputDir: "out", OutputExt: ".list", Want: []string{"cn"}, Exclude: []string{"us"}, OnlyIPType: lib.IPv6, AddPrefixInLine: "p", AddSuffixInLine: "s"},
 		},
 		{name: "invalid json", typ: TypeTextOut, data: `{`, wantErr: true},
 	}
@@ -57,6 +57,7 @@ func TestNewTextOutFromBytes(t *testing.T) {
 			o := got.(*text_out)
 			if o.Type != tt.typ || o.Action != lib.ActionOutput || o.Description != "desc" ||
 				o.OutputDir != tt.want.OutputDir || o.OutputExt != tt.want.OutputExt || o.OnlyIPType != tt.want.OnlyIPType ||
+				!slices.Equal(o.Want, tt.want.Want) || !slices.Equal(o.Exclude, tt.want.Exclude) ||
 				o.AddPrefixInLine != tt.want.AddPrefixInLine || o.AddSuffixInLine != tt.want.AddSuffixInLine {
 				t.Fatalf("unexpected output converter: %+v", o)
 			}
@@ -78,6 +79,10 @@ func TestMarshalBytes(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	mapped := lib.NewEntry("mapped")
+	if err := mapped.AddPrefix("::ffff:192.0.2.0/120"); err != nil {
+		t.Fatal(err)
+	}
 
 	tests := []struct {
 		name    string
@@ -91,9 +96,11 @@ func TestMarshalBytes(t *testing.T) {
 		{name: "text only ipv4", out: text_out{Type: TypeTextOut, OnlyIPType: lib.IPv4}, entry: entry, want: "1.1.1.0/24\n"},
 		{name: "text only ipv6", out: text_out{Type: TypeTextOut, OnlyIPType: lib.IPv6}, entry: entry, want: "2001:db8::/32\n"},
 		{name: "clash classical", out: text_out{Type: TypeClashRuleSetClassicalOut}, entry: entry, want: "payload:\n  - IP-CIDR,1.1.1.0/24\n  - IP-CIDR6,2001:db8::/32\n"},
+		{name: "clash classical mapped IPv4", out: text_out{Type: TypeClashRuleSetClassicalOut}, entry: mapped, want: "payload:\n  - IP-CIDR,192.0.2.0/24\n"},
 		{name: "clash ipcidr", out: text_out{Type: TypeClashRuleSetIPCIDROut}, entry: entry, want: "payload:\n  - '1.1.1.0/24'\n  - '2001:db8::/32'\n"},
 		{name: "surge", out: text_out{Type: TypeSurgeRuleSetOut, AddSuffixInLine: ",no-resolve"}, entry: entry, want: "IP-CIDR,1.1.1.0/24,no-resolve\nIP-CIDR6,2001:db8::/32,no-resolve\n"},
 		{name: "surge no suffix", out: text_out{Type: TypeSurgeRuleSetOut}, entry: entry, want: "IP-CIDR,1.1.1.0/24\nIP-CIDR6,2001:db8::/32\n"},
+		{name: "surge mapped IPv4", out: text_out{Type: TypeSurgeRuleSetOut}, entry: mapped, want: "IP-CIDR,192.0.2.0/24\n"},
 		{name: "unsupported type", out: text_out{Type: "unknown"}, entry: entry, wantErr: true},
 		{name: "empty entry", out: text_out{Type: TypeTextOut}, entry: lib.NewEntry("empty"), wantErr: true},
 	}
@@ -103,32 +110,6 @@ func TestMarshalBytes(t *testing.T) {
 			assertErr(t, err, tt.wantErr)
 			if !tt.wantErr && string(got) != tt.want {
 				t.Fatalf("got %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMarshalBytesIPVersionDetection(t *testing.T) {
-	cidrs := []string{"1.1.1.0/24", "2001:db8::/32", "::ffff:1.1.1.0/120"}
-	tests := []struct {
-		name string
-		fn   func(*text_out, *bytes.Buffer, []string) error
-		out  text_out
-		want string
-	}{
-		{"clash classical", (*text_out).marshalBytesForClashRuleSetClassicalOut, text_out{},
-			"payload:\n  - IP-CIDR,1.1.1.0/24\n  - IP-CIDR6,2001:db8::/32\n  - IP-CIDR6,::ffff:1.1.1.0/120\n"},
-		{"surge", (*text_out).marshalBytesForSurgeRuleSetOut, text_out{AddSuffixInLine: ",no-resolve"},
-			"IP-CIDR,1.1.1.0/24,no-resolve\nIP-CIDR6,2001:db8::/32,no-resolve\nIP-CIDR6,::ffff:1.1.1.0/120,no-resolve\n"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			if err := tt.fn(&tt.out, &buf, cidrs); err != nil {
-				t.Fatal(err)
-			}
-			if buf.String() != tt.want {
-				t.Fatalf("got %q, want %q", buf.String(), tt.want)
 			}
 		})
 	}

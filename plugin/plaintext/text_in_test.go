@@ -1,6 +1,7 @@
 package plaintext
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,6 +11,22 @@ import (
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
+
+type failingAddContainer struct {
+	lib.Container
+	err error
+}
+
+func (c failingAddContainer) Add(*lib.Entry, ...lib.IgnoreIPOption) error { return c.err }
+
+func TestTextInInputAddError(t *testing.T) {
+	wantErr := errors.New("add failed")
+	in := &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "test", IPOrCIDR: []string{"192.0.2.1"}}
+	got, err := in.Input(failingAddContainer{Container: lib.NewContainer(), err: wantErr})
+	if got != nil || !errors.Is(err, wantErr) {
+		t.Fatalf("Input() = (%v, %v), want (nil, %v)", got, err, wantErr)
+	}
+}
 
 func writeTestFile(t *testing.T, dir, name, content string) string {
 	t.Helper()

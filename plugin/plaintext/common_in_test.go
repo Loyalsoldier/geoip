@@ -1,6 +1,7 @@
 package plaintext
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -63,7 +64,7 @@ func TestNewTextInFromBytes(t *testing.T) {
 				if len(in.Want) != 2 || !in.Want["CN"] || !in.Want["US"] {
 					t.Fatalf("unexpected want: %v", in.Want)
 				}
-				if len(in.JSONPath) != 1 || len(in.RemovePrefixesInLine) != 1 || len(in.RemoveSuffixesInLine) != 1 {
+				if !slices.Equal(in.JSONPath, []string{"p"}) || !slices.Equal(in.RemovePrefixesInLine, []string{"x"}) || !slices.Equal(in.RemoveSuffixesInLine, []string{"y"}) {
 					t.Fatalf("unexpected slices: %+v", in)
 				}
 			},
