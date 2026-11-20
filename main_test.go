@@ -109,7 +109,7 @@ func writeFile(t *testing.T, dir, name, content string) string {
 
 func nonEmptyLines(s string) []string {
 	var out []string
-	for _, l := range strings.Split(s, "\n") {
+	for l := range strings.SplitSeq(s, "\n") {
 		if l = strings.TrimSpace(l); l != "" {
 			out = append(out, l)
 		}
