@@ -59,16 +59,16 @@ func newContainerWith(t *testing.T, data map[string][]string) lib.Container {
 	return c
 }
 
-// entryCIDRs returns the CIDRs of the named entry, or nil if not found / empty.
+// entryCIDRs returns the CIDRs of an entry expected to be present.
 func entryCIDRs(t *testing.T, c lib.Container, name string) []string {
 	t.Helper()
 	entry, found := c.GetEntry(name)
 	if !found {
-		return nil
+		t.Fatalf("entry %q not found", name)
 	}
 	cidrs, err := entry.MarshalText()
 	if err != nil {
-		return nil
+		t.Fatalf("MarshalText(%q): %v", name, err)
 	}
 	return cidrs
 }
@@ -95,23 +95,22 @@ func entryNames(c lib.Container) []string {
 // captureStdout runs fn and returns what it wrote to os.Stdout.
 func captureStdout(t *testing.T, fn func()) string {
 	t.Helper()
-	r, w, err := os.Pipe()
+	f, err := os.CreateTemp(t.TempDir(), "stdout")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	orig := os.Stdout
-	os.Stdout = w
-	done := make(chan []byte)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- b
-	}()
+	os.Stdout = f
 	defer func() { os.Stdout = orig }()
 	fn()
-	w.Close()
-	os.Stdout = orig
-	out := <-done
-	r.Close()
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		t.Fatal(err)
+	}
+	out, err := io.ReadAll(f)
+	if err != nil {
+		t.Fatal(err)
+	}
 	return string(out)
 }
 
@@ -122,6 +121,7 @@ func withStdin(t *testing.T, content string) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { f.Close() })
 	if _, err := f.WriteString(content); err != nil {
 		t.Fatal(err)
 	}
@@ -130,8 +130,5 @@ func withStdin(t *testing.T, content string) {
 	}
 	orig := os.Stdin
 	os.Stdin = f
-	t.Cleanup(func() {
-		os.Stdin = orig
-		f.Close()
-	})
+	t.Cleanup(func() { os.Stdin = orig })
 }
