@@ -41,7 +41,7 @@ func writeTestFile(t *testing.T, dir, name, content string) string {
 }
 
 func TestTextInInput(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/ok.txt":
 			w.Write([]byte("1.1.1.0/24\n2001:db8::/32\n"))
@@ -50,8 +50,7 @@ func TestTextInInput(t *testing.T) {
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
-	}))
-	defer server.Close()
+	})
 
 	dir := t.TempDir()
 	localFile := writeTestFile(t, dir, "local.txt", "1.1.1.0/24\n")
@@ -78,11 +77,12 @@ func TestTextInInput(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		in        *text_in
-		container func() lib.Container
-		want      []wantEntry
-		wantErr   bool
+		name       string
+		in         *text_in
+		remotePath string
+		container  func() lib.Container
+		want       []wantEntry
+		wantErr    bool
 	}{
 		{
 			name: "input dir",
@@ -117,14 +117,15 @@ func TestTextInInput(t *testing.T) {
 		{name: "local file invalid content", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "test", URI: badFile}, wantErr: true},
 		{name: "local file not wanted", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "test", URI: localFile, Want: map[string]bool{"OTHER": true}}, wantErr: true},
 		{
-			name: "remote file",
-			in:   &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/ok.txt", OnlyIPType: lib.IPv4},
-			want: []wantEntry{{"REMOTE", []string{"1.1.1.0/24"}}},
+			name:       "remote file",
+			in:         &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", OnlyIPType: lib.IPv4},
+			remotePath: "/ok.txt",
+			want:       []wantEntry{{"REMOTE", []string{"1.1.1.0/24"}}},
 		},
-		{name: "remote file not wanted", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/ok.txt", Want: map[string]bool{"OTHER": true}}, wantErr: true},
-		{name: "remote file 404", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/404"}, wantErr: true},
-		{name: "remote file invalid content", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/bad.txt"}, wantErr: true},
-		{name: "remote file request error", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: "http://127.0.0.1:0/x"}, wantErr: true},
+		{name: "remote file not wanted", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", Want: map[string]bool{"OTHER": true}}, remotePath: "/ok.txt", wantErr: true},
+		{name: "remote file 404", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote"}, remotePath: "/404", wantErr: true},
+		{name: "remote file invalid content", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote"}, remotePath: "/bad.txt", wantErr: true},
+		{name: "remote file request error", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd, Name: "remote", URI: "http://[::1"}, wantErr: true},
 		{name: "missing arguments", in: &text_in{Type: TypeTextIn, Action: lib.ActionAdd}, wantErr: true},
 		{
 			name: "remove action",
@@ -143,6 +144,11 @@ func TestTextInInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.remotePath != "" {
+				server := httptest.NewServer(handler)
+				t.Cleanup(server.Close)
+				tt.in.URI = server.URL + tt.remotePath
+			}
 			container := lib.NewContainer()
 			if tt.container != nil {
 				container = tt.container()

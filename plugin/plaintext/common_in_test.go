@@ -1,9 +1,13 @@
 package plaintext
 
 import (
+	"bufio"
+	"errors"
+	"io"
 	"slices"
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/Loyalsoldier/geoip/lib"
 	"github.com/tidwall/gjson"
@@ -115,7 +119,6 @@ func TestScanFile(t *testing.T) {
 			want:     []string{"1.1.1.0/24", "10.0.0.1/32"},
 		},
 		{name: "text invalid", typ: TypeTextIn, input: "invalid\n", wantErr: true},
-		{name: "text scanner error", typ: TypeTextIn, input: strings.Repeat("a", 70000), wantErr: true},
 		{
 			name:  "clash ipcidr",
 			typ:   TypeClashRuleSetIPCIDRIn,
@@ -139,7 +142,6 @@ func TestScanFile(t *testing.T) {
 			want:  []string{"1.1.1.0/24", "2001:db8::/32"},
 		},
 		{name: "surge invalid cidr", typ: TypeSurgeRuleSetIn, input: "IP-CIDR,bad\n", wantErr: true},
-		{name: "surge scanner error", typ: TypeSurgeRuleSetIn, input: strings.Repeat("a", 70000), wantErr: true},
 		{
 			name:     "json",
 			typ:      TypeJSONIn,
@@ -147,7 +149,7 @@ func TestScanFile(t *testing.T) {
 			input:    `{"a":"1.1.1.1","b":[{"c":"2.2.2.0/24"},{"c":["2001:db8::/32"]}]}`,
 			want:     []string{"1.1.1.1/32", "2.2.2.0/24", "2001:db8::/32"},
 		},
-		{name: "json invalid", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{`, wantErr: true},
+		{name: "json invalid", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":"192.0.2.1"} trailing junk`, wantErr: true},
 		{name: "json path not exist", typ: TypeJSONIn, jsonPath: []string{"x"}, input: `{"a":"1.1.1.1"}`, wantErr: true},
 		{name: "json empty string", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":" "}`, wantErr: true},
 		{name: "json invalid cidr", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":"bad"}`, wantErr: true},
@@ -170,11 +172,25 @@ func TestScanFile(t *testing.T) {
 }
 
 func TestScanFileReadError(t *testing.T) {
-	for _, typ := range []string{TypeJSONIn, TypeClashRuleSetIPCIDRIn, TypeClashRuleSetClassicalIn} {
+	for _, typ := range []string{TypeTextIn, TypeSurgeRuleSetIn, TypeJSONIn, TypeClashRuleSetIPCIDRIn, TypeClashRuleSetClassicalIn} {
 		t.Run(typ, func(t *testing.T) {
 			in := &text_in{Type: typ, JSONPath: []string{"a"}}
-			if err := in.scanFile(errReader{}, lib.NewEntry("test")); err == nil {
-				t.Fatal("expected read error")
+			err := in.scanFile(iotest.ErrReader(io.ErrUnexpectedEOF), lib.NewEntry("test"))
+			if !errors.Is(err, io.ErrUnexpectedEOF) {
+				t.Fatalf("scanFile() error = %v, want %v", err, io.ErrUnexpectedEOF)
+			}
+		})
+	}
+}
+
+func TestScanFileOverlongLine(t *testing.T) {
+	line := strings.Repeat("#", bufio.MaxScanTokenSize+1)
+	for _, typ := range []string{TypeTextIn, TypeSurgeRuleSetIn} {
+		t.Run(typ, func(t *testing.T) {
+			in := &text_in{Type: typ}
+			err := in.scanFile(strings.NewReader(line), lib.NewEntry("test"))
+			if !errors.Is(err, bufio.ErrTooLong) {
+				t.Fatalf("scanFile() error = %v, want %v", err, bufio.ErrTooLong)
 			}
 		})
 	}

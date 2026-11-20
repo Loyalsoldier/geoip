@@ -1,16 +1,11 @@
 package plaintext
 
 import (
-	"errors"
 	"slices"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
 )
-
-type errReader struct{}
-
-func (errReader) Read([]byte) (int, error) { return 0, errors.New("read error") }
 
 // assertCIDRs compares both the length and exact content of two CIDR lists.
 func assertCIDRs(t *testing.T, got, want []string) {

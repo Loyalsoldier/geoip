@@ -69,11 +69,19 @@ func TestTextOutOutput(t *testing.T) {
 			t.Fatal(err)
 		}
 		files := map[string]string{"cn.txt": "1.0.1.0/24\n2001:db8::/32\n", "us.txt": "2.0.0.0/24\n"}
-		entries, _ := os.ReadDir(dir)
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if len(entries) != len(files) {
 			t.Fatalf("got %d files, want %d", len(entries), len(files))
 		}
-		for name, want := range files {
+		for _, entry := range entries {
+			name := entry.Name()
+			want, ok := files[name]
+			if !ok {
+				t.Fatalf("unexpected output filename %q", name)
+			}
 			got, err := os.ReadFile(filepath.Join(dir, name))
 			if err != nil || string(got) != want {
 				t.Fatalf("%s = %q, err = %v, want %q", name, got, err, want)
@@ -90,8 +98,7 @@ func TestTextOutOutput(t *testing.T) {
 
 	t.Run("write error", func(t *testing.T) {
 		dir := t.TempDir()
-		blocker := filepath.Join(dir, "file")
-		os.WriteFile(blocker, nil, 0644)
+		blocker := writeTestFile(t, dir, "file", "")
 		o := &text_out{Type: TypeTextOut, OutputDir: filepath.Join(blocker, "sub"), OutputExt: ".txt"}
 		if err := o.Output(container); err == nil {
 			t.Fatal("expected error")
