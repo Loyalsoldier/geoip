@@ -292,7 +292,11 @@ func TestMainCLI(t *testing.T) {
 	raw, _ := json.Marshal(config)
 	goodConfig := writeFile(t, dir, "config.json", string(raw))
 	badConfig := writeFile(t, dir, "bad.json", "{invalid")
-	runErrConfig := writeFile(t, dir, "runerr.json", `{"input":[{"type":"text","action":"add","args":{"name":"x","uri":"`+filepath.Join(dir, "missing.txt")+`"}}],"output":[{"type":"stdout","action":"output"}]}`)
+	missingURI, err := json.Marshal(filepath.Join(dir, "missing.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runErrConfig := writeFile(t, dir, "runerr.json", `{"input":[{"type":"text","action":"add","args":{"name":"x","uri":`+string(missingURI)+`}}],"output":[{"type":"stdout","action":"output"}]}`)
 	mmdbFile := writeFile(t, dir, "fake.mmdb", "not a mmdb")
 
 	tests := []struct {
