@@ -125,7 +125,7 @@ func TestScanFile(t *testing.T) {
 			input: "payload:\n  - '1.1.1.0/24'\n  - ''\n  - '2001:db8::/32'\n",
 			want:  []string{"1.1.1.0/24", "2001:db8::/32"},
 		},
-		{name: "clash ipcidr invalid cidr", typ: TypeClashRuleSetIPCIDRIn, input: "payload:\n  - 'bad'\n", wantErr: true},
+		{name: "clash ipcidr invalid cidr", typ: TypeClashRuleSetIPCIDRIn, input: "payload:\n  - '192.0.2.0/33'\n", wantErr: true},
 		{name: "clash ipcidr invalid yaml", typ: TypeClashRuleSetIPCIDRIn, input: "payload: [", wantErr: true},
 		{
 			name:  "clash classical",
@@ -133,7 +133,7 @@ func TestScanFile(t *testing.T) {
 			input: "payload:\n  - IP-CIDR,1.1.1.0/24\n  - IP-CIDR6,2001:db8::/32,no-resolve\n  - ''\n  - IP-CIDR, \n  - DOMAIN,example.com\n",
 			want:  []string{"1.1.1.0/24", "2001:db8::/32"},
 		},
-		{name: "clash classical invalid cidr", typ: TypeClashRuleSetClassicalIn, input: "payload:\n  - IP-CIDR,bad\n", wantErr: true},
+		{name: "clash classical invalid cidr", typ: TypeClashRuleSetClassicalIn, input: "payload:\n  - IP-CIDR,192.0.2.0/33\n", wantErr: true},
 		{name: "clash classical invalid yaml", typ: TypeClashRuleSetClassicalIn, input: "payload: [", wantErr: true},
 		{
 			name:  "surge",
@@ -141,7 +141,7 @@ func TestScanFile(t *testing.T) {
 			input: "# c\nIP-CIDR,1.1.1.0/24 // c\nIP-CIDR6,2001:db8::/32,no-resolve /* c\nIP-CIDR, \nDOMAIN,example.com\n\n",
 			want:  []string{"1.1.1.0/24", "2001:db8::/32"},
 		},
-		{name: "surge invalid cidr", typ: TypeSurgeRuleSetIn, input: "IP-CIDR,bad\n", wantErr: true},
+		{name: "surge invalid cidr", typ: TypeSurgeRuleSetIn, input: "IP-CIDR,192.0.2.0/33\n", wantErr: true},
 		{
 			name:     "json",
 			typ:      TypeJSONIn,
@@ -152,7 +152,7 @@ func TestScanFile(t *testing.T) {
 		{name: "json invalid", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":"192.0.2.1"} trailing junk`, wantErr: true},
 		{name: "json path not exist", typ: TypeJSONIn, jsonPath: []string{"x"}, input: `{"a":"1.1.1.1"}`, wantErr: true},
 		{name: "json empty string", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":" "}`, wantErr: true},
-		{name: "json invalid cidr", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":"bad"}`, wantErr: true},
+		{name: "json invalid cidr", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":"192.0.2.0/33"}`, wantErr: true},
 		{name: "json number value", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":1}`, wantErr: true},
 		{name: "json array with invalid item", typ: TypeJSONIn, jsonPath: []string{"a"}, input: `{"a":["1.1.1.1",1]}`, wantErr: true},
 		{name: "unsupported type", typ: "unknown", input: "1.1.1.1", wantErr: true},
