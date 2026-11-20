@@ -17,8 +17,13 @@ func TestNewTest(t *testing.T) {
 			if got.GetType() != typeTest || got.GetAction() != action || got.GetDescription() != descTest {
 				t.Fatalf("got %+v", got)
 			}
-			if _, err := newTest(action, nil, func(lib.InputConverter) {}); err != nil {
+			const desc = "custom description"
+			got, err = newTest(action, nil, func(c lib.InputConverter) { c.(*test).Description = desc })
+			if err != nil {
 				t.Fatal(err)
+			}
+			if got.GetDescription() != desc {
+				t.Fatalf("description = %q, want %q", got.GetDescription(), desc)
 			}
 		})
 	}
@@ -59,13 +64,13 @@ func TestTestInputErrors(t *testing.T) {
 		{"add error", lib.ActionAdd, &mockContainer{Container: lib.NewContainer(), addErr: errMock}, false, errMock},
 		{"remove error", lib.ActionRemove, &mockContainer{Container: lib.NewContainer(), removeErr: errMock}, false, errMock},
 		{"remove not found", lib.ActionRemove, lib.NewContainer(), false, nil},
-		{"invalid cidr", lib.ActionAdd, lib.NewContainer(), true, nil},
+		{"invalid cidr", lib.ActionAdd, lib.NewContainer(), true, lib.ErrInvalidCIDR},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.badCIDR {
 				orig := testCIDRs
-				testCIDRs = []string{"invalid"}
+				testCIDRs = []string{"10.0.0.0/33"}
 				t.Cleanup(func() { testCIDRs = orig })
 			}
 			conv, _ := newTest(tt.action)

@@ -144,11 +144,13 @@ func TestStdoutOutput(t *testing.T) {
 			if outErr != nil {
 				t.Fatal(outErr)
 			}
-			got := strings.Split(strings.TrimSuffix(out, "\n"), "\n")
-			if out == "" {
-				got = []string{}
+			want := strings.Join(tt.expect, "\n")
+			if len(tt.expect) > 0 {
+				want += "\n"
 			}
-			assertCIDRs(t, got, tt.expect)
+			if out != want {
+				t.Fatalf("output = %q, want %q", out, want)
+			}
 		})
 	}
 }

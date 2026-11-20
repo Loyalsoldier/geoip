@@ -123,13 +123,13 @@ func TestPrivateInputErrors(t *testing.T) {
 		{"add error", lib.ActionAdd, &mockContainer{Container: lib.NewContainer(), addErr: errMock}, false, errMock},
 		{"remove error", lib.ActionRemove, &mockContainer{Container: lib.NewContainer(), removeErr: errMock}, false, errMock},
 		{"remove entry not found", lib.ActionRemove, lib.NewContainer(), false, nil},
-		{"invalid cidr", lib.ActionAdd, lib.NewContainer(), true, nil},
+		{"invalid cidr", lib.ActionAdd, lib.NewContainer(), true, lib.ErrInvalidCIDR},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.badCIDR {
 				orig := privateCIDRs
-				privateCIDRs = []string{"invalid"}
+				privateCIDRs = []string{"10.0.0.0/33"}
 				t.Cleanup(func() { privateCIDRs = orig })
 			}
 			conv, _ := NewPrivate(tt.action)

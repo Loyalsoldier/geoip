@@ -3,6 +3,7 @@ package special
 import (
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -91,7 +92,6 @@ func TestLookupOutput(t *testing.T) {
 		{"not found cidr", "1.0.0.0/8", nil, "false\n", false},
 		{"invalid ip", "1.1.1.256", nil, "", true},
 		{"invalid cidr", "1.1.1.1/33", nil, "", true},
-		{"lookup error", "::ffff:1.0.0.0/64", nil, "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -105,6 +105,9 @@ func TestLookupOutput(t *testing.T) {
 			if (outErr != nil) != tt.wantErr {
 				t.Fatalf("err = %v, wantErr %v", outErr, tt.wantErr)
 			}
+			if tt.wantErr && !strings.Contains(outErr.Error(), "invalid IP or CIDR") {
+				t.Fatalf("expected lookup input validation error, got %v", outErr)
+			}
 			if out != tt.wantOut {
 				t.Fatalf("output = %q, want %q", out, tt.wantOut)
 			}
@@ -113,12 +116,25 @@ func TestLookupOutput(t *testing.T) {
 }
 
 func TestLookupOutputContainerError(t *testing.T) {
-	conv, err := NewLookup(lib.ActionOutput, WithLookupSearch("1.1.1.1"))
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name      string
+		search    string
+		container lib.Container
+		wantErr   error
+	}{
+		{"container failure", "1.1.1.1", &mockContainer{lookupErr: errMock}, errMock},
+		{"invalid mapped prefix", "::ffff:1.0.0.0/64", lib.NewContainer(), lib.ErrInvalidCIDR},
 	}
-	mc := &mockContainer{Container: lib.NewContainer(), lookupErr: errMock}
-	if err := conv.Output(mc); !errors.Is(err, errMock) {
-		t.Fatalf("err = %v, want mock error", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			conv, err := NewLookup(lib.ActionOutput, WithLookupSearch(tt.search))
+			if err != nil {
+				t.Fatal(err)
+			}
+			out := captureStdout(t, func() { err = conv.Output(tt.container) })
+			if !errors.Is(err, tt.wantErr) || out != "" {
+				t.Fatalf("got (%q, %v), want no output and %v", out, err, tt.wantErr)
+			}
+		})
 	}
 }
