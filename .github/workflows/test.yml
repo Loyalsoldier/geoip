@@ -9,7 +9,7 @@ on:
       - "LICENSE*"
       - "*.md"
 permissions:
-  contents: write
+  contents: read
 jobs:
   test:
     name: Test
