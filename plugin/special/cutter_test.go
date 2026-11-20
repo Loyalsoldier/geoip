@@ -3,6 +3,7 @@ package special
 import (
 	"errors"
 	"maps"
+	"slices"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -91,34 +92,29 @@ func TestCutterInput(t *testing.T) {
 		name      string
 		want      []string
 		onlyIP    lib.IPType
-		wantNames []string
 		wantCIDRs map[string][]string
 	}{
 		{
 			name:      "remove whole entry",
 			want:      []string{"cn"},
-			wantNames: []string{"JP", "US"},
-			wantCIDRs: map[string][]string{"US": {"8.8.8.0/24", "2400::/32"}, "JP": {"9.9.9.0/24"}},
+			wantCIDRs: map[string][]string{"JP": data["JP"], "US": data["US"]},
 		},
 		{
 			name:      "remove multiple entries",
 			want:      []string{"cn", "us", "notexist"},
-			wantNames: []string{"JP"},
-			wantCIDRs: map[string][]string{"JP": {"9.9.9.0/24"}},
+			wantCIDRs: map[string][]string{"JP": data["JP"]},
 		},
 		{
 			name:      "remove only ipv4",
 			want:      []string{"cn"},
 			onlyIP:    lib.IPv4,
-			wantNames: []string{"CN", "JP", "US"},
-			wantCIDRs: map[string][]string{"CN": {"2001:db8::/32"}, "US": {"8.8.8.0/24", "2400::/32"}},
+			wantCIDRs: map[string][]string{"CN": {"2001:db8::/32"}, "JP": data["JP"], "US": data["US"]},
 		},
 		{
 			name:      "remove only ipv6",
 			want:      []string{"cn"},
 			onlyIP:    lib.IPv6,
-			wantNames: []string{"CN", "JP", "US"},
-			wantCIDRs: map[string][]string{"CN": {"1.0.0.0/24"}, "JP": {"9.9.9.0/24"}},
+			wantCIDRs: map[string][]string{"CN": {"1.0.0.0/24"}, "JP": data["JP"], "US": data["US"]},
 		},
 	}
 	for _, tt := range tests {
@@ -131,7 +127,7 @@ func TestCutterInput(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assertCIDRs(t, entryNames(c), tt.wantNames)
+			assertCIDRs(t, entryNames(c), slices.Sorted(maps.Keys(tt.wantCIDRs)))
 			for name, want := range tt.wantCIDRs {
 				assertCIDRs(t, entryCIDRs(t, c, name), want)
 			}
