@@ -1,0 +1,34 @@
+name: Run tests
+on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - "assets/*"
+      - ".gitignore"
+      - "LICENSE*"
+      - "*.md"
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: ./go.mod
+          cache-dependency-path: ./go.sum
+
+      - name: Run tests
+        run: go test -v -cover -race ./...
