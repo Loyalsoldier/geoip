@@ -108,13 +108,29 @@ func TestMarshalBytes(t *testing.T) {
 	}
 }
 
-func TestMarshalBytesInvalidCIDR(t *testing.T) {
-	o := &text_out{}
-	if err := o.marshalBytesForClashRuleSetClassicalOut(new(bytes.Buffer), []string{"bad"}); err == nil {
-		t.Fatal("expected error for clash classical")
+func TestMarshalBytesIPVersionDetection(t *testing.T) {
+	cidrs := []string{"1.1.1.0/24", "2001:db8::/32", "::ffff:1.1.1.0/120"}
+	tests := []struct {
+		name string
+		fn   func(*text_out, *bytes.Buffer, []string) error
+		out  text_out
+		want string
+	}{
+		{"clash classical", (*text_out).marshalBytesForClashRuleSetClassicalOut, text_out{},
+			"payload:\n  - IP-CIDR,1.1.1.0/24\n  - IP-CIDR6,2001:db8::/32\n  - IP-CIDR6,::ffff:1.1.1.0/120\n"},
+		{"surge", (*text_out).marshalBytesForSurgeRuleSetOut, text_out{AddSuffixInLine: ",no-resolve"},
+			"IP-CIDR,1.1.1.0/24,no-resolve\nIP-CIDR6,2001:db8::/32,no-resolve\nIP-CIDR6,::ffff:1.1.1.0/120,no-resolve\n"},
 	}
-	if err := o.marshalBytesForSurgeRuleSetOut(new(bytes.Buffer), []string{"bad"}); err == nil {
-		t.Fatal("expected error for surge")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			if err := tt.fn(&tt.out, &buf, cidrs); err != nil {
+				t.Fatal(err)
+			}
+			if buf.String() != tt.want {
+				t.Fatalf("got %q, want %q", buf.String(), tt.want)
+			}
+		})
 	}
 }
 
