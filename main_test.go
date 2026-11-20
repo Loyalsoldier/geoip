@@ -246,8 +246,8 @@ func TestHelperFatal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res := runSubprocess(t, "", subprocessFuncEnv+"="+tt.name)
-			if res.exitCode == 0 {
-				t.Fatalf("expected non-zero exit code, stderr: %s", res.stderr)
+			if res.exitCode != 1 {
+				t.Fatalf("exit code = %d, want 1; stderr: %s", res.exitCode, res.stderr)
 			}
 			if !strings.Contains(res.stderr, tt.wantContain) {
 				t.Errorf("stderr = %q, want to contain %q", res.stderr, tt.wantContain)
@@ -291,7 +291,8 @@ func TestMainCLI(t *testing.T) {
 	}
 	raw, _ := json.Marshal(config)
 
-	missingURI, err := json.Marshal(filepath.Join(dir, "missing.txt"))
+	missingPath := filepath.Join(dir, "missing.txt")
+	missingURI, err := json.Marshal(missingPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,33 +303,33 @@ func TestMainCLI(t *testing.T) {
 	mmdbFile := writeFile(t, dir, "fake.mmdb", "not a mmdb")
 
 	tests := []struct {
-		name        string
-		args        []string
-		stdin       string
-		wantFail    bool
-		wantStdout  []string // exact non-empty stdout lines; nil means not checked
-		wantContain string   // substring expected in stdout+stderr
+		name           string
+		args           []string
+		stdin          string
+		wantStderr     string   // non-empty means exit code 1 and this diagnostic on stderr
+		wantStdout     []string // exact non-empty stdout lines; nil means not checked
+		stdoutContains []string // substrings expected in order
 	}{
 		// root
-		{name: "help", args: []string{"--help"}, wantContain: "geoip is a convenient tool"},
-		{name: "unknown command", args: []string{"nope"}, wantFail: true, wantContain: "unknown command"},
+		{name: "help", args: []string{"--help"}, stdoutContains: []string{"geoip is a convenient tool"}},
+		{name: "unknown command", args: []string{"nope"}, wantStderr: "unknown command"},
 
 		// list
-		{name: "list", args: []string{"list"}, wantContain: "All available input formats"},
+		{name: "list", args: []string{"list"}, stdoutContains: []string{"All available input formats"}},
 
 		// convert
 		{name: "convert", args: []string{"convert", "-c", goodConfig}, wantStdout: []string{"1.0.0.0/24", "2001:db8::/32"}},
-		{name: "convert bad config", args: []string{"convert", "-c", badConfig}, wantFail: true},
-		{name: "convert run error", args: []string{"convert", "-c", runErrConfig}, wantFail: true},
+		{name: "convert bad config", args: []string{"convert", "-c", badConfig}, wantStderr: "invalid character 'i'"},
+		{name: "convert run error", args: []string{"convert", "-c", runErrConfig}, wantStderr: "open " + missingPath},
 
 		// merge
 		{name: "merge all", args: []string{"merge"}, stdin: "1.0.0.0/25\n1.0.0.128/25\n2001:db8::/33\n2001:db8:8000::/33\n", wantStdout: []string{"1.0.0.0/24", "2001:db8::/32"}},
 		{name: "merge ipv4", args: []string{"merge", "-t", "ipv4"}, stdin: "1.0.0.0/25\n1.0.0.128/25\n2001:db8::/32\n", wantStdout: []string{"1.0.0.0/24"}},
 		{name: "merge ipv6", args: []string{"merge", "-t", " IPv6 "}, stdin: "1.0.0.0/24\n2001:db8::/33\n2001:db8:8000::/33\n", wantStdout: []string{"2001:db8::/32"}},
-		{name: "merge invalid type", args: []string{"merge", "-t", "ipv5"}, wantFail: true, wantContain: "invalid argument onlyiptype"},
+		{name: "merge invalid type", args: []string{"merge", "-t", "ipv5"}, wantStderr: "invalid argument onlyiptype"},
 		{name: "merge skips invalid lines", args: []string{"merge"}, stdin: "not-an-ip\n# comment\n1.0.0.1 // c\n", wantStdout: []string{"1.0.0.1/32"}},
 		{name: "merge empty input", args: []string{"merge"}, stdin: "", wantStdout: []string{}},
-		{name: "merge run error", args: []string{"merge"}, stdin: strings.Repeat("a", 70*1024), wantFail: true, wantContain: "token too long"},
+		{name: "merge run error", args: []string{"merge"}, stdin: strings.Repeat("a", 70*1024), wantStderr: "token too long"},
 
 		// lookup once mode
 		{name: "lookup uri found", args: []string{"lookup", "-f", "text", "-u", cnFile, "1.0.0.1"}, wantStdout: []string{"true"}},
@@ -337,12 +338,12 @@ func TestMainCLI(t *testing.T) {
 		{name: "lookup dir", args: []string{"lookup", "-f", "text", "-d", listDir, "1.0.0.1"}, wantStdout: []string{"cn,us"}},
 		{name: "lookup dir searchlist", args: []string{"lookup", "-f", "text", "-d", listDir, "-l", "us", "1.0.0.1"}, wantStdout: []string{"us"}},
 		{name: "lookup dir cidr", args: []string{"lookup", "-f", "text", "-d", listDir, "8.8.8.0/25"}, wantStdout: []string{"us"}},
-		{name: "lookup unsupported format", args: []string{"lookup", "-f", "foo", "-u", cnFile, "1.1.1.1"}, wantFail: true, wantContain: "unsupported input format"},
-		{name: "lookup dir disallowed", args: []string{"lookup", "-f", "maxmindMMDB", "-d", listDir, "1.1.1.1"}, wantFail: true, wantContain: "does not support"},
-		{name: "lookup empty uri", args: []string{"lookup", "-f", "maxmindMMDB", "-u", "", "1.1.1.1"}, wantFail: true, wantContain: "requires a non-empty"},
-		{name: "lookup run error", args: []string{"lookup", "-f", "maxmindMMDB", "-u", mmdbFile, "1.1.1.1"}, wantFail: true},
-		{name: "lookup missing format", args: []string{"lookup", "-u", cnFile}, wantFail: true},
-		{name: "lookup too many args", args: []string{"lookup", "-f", "text", "-u", cnFile, "a", "b"}, wantFail: true},
+		{name: "lookup unsupported format", args: []string{"lookup", "-f", "foo", "-u", cnFile, "1.1.1.1"}, wantStderr: "unsupported input format"},
+		{name: "lookup dir disallowed", args: []string{"lookup", "-f", "maxmindMMDB", "-d", listDir, "1.1.1.1"}, wantStderr: "does not support"},
+		{name: "lookup empty uri", args: []string{"lookup", "-f", "maxmindMMDB", "-u", "", "1.1.1.1"}, wantStderr: "requires a non-empty"},
+		{name: "lookup run error", args: []string{"lookup", "-f", "maxmindMMDB", "-u", mmdbFile, "1.1.1.1"}, wantStderr: "invalid MaxMind DB file"},
+		{name: "lookup missing format", args: []string{"lookup", "-u", cnFile}, wantStderr: `required flag(s) "format" not set`},
+		{name: "lookup too many args", args: []string{"lookup", "-f", "text", "-u", cnFile, "a", "b"}, wantStderr: "accepts between 0 and 1 arg(s), received 2"},
 
 		// lookup REPL mode
 		{name: "repl", args: []string{"lookup", "-f", "text", "-d", listDir}, stdin: "1.0.0.1\n\nabc\n8.8.8.8\n9.9.9.9\nexit\n1.0.0.1\n", wantStdout: []string{
@@ -354,15 +355,23 @@ func TestMainCLI(t *testing.T) {
 		{name: "repl eof", args: []string{"lookup", "-f", "text", "-u", cnFile}, stdin: "8.8.8.8", wantStdout: []string{
 			`Enter IP or CIDR (type "exit" to quit):`, ">> false", ">>",
 		}},
-		{name: "repl input error", args: []string{"lookup", "-f", "maxmindMMDB", "-u", mmdbFile}, wantFail: true},
-		{name: "repl scanner error", args: []string{"lookup", "-f", "text", "-u", cnFile}, stdin: strings.Repeat("a", 70*1024), wantFail: true, wantContain: "token too long"},
+		{name: "repl input error", args: []string{"lookup", "-f", "maxmindMMDB", "-u", mmdbFile}, wantStderr: "invalid MaxMind DB file"},
+		{name: "repl output error", args: []string{"lookup", "-f", "text", "-u", cnFile}, stdin: "::ffff:192.0.2.1/95\n", wantStderr: "[type lookup | action output] invalid CIDR"},
+		{name: "repl scanner error", args: []string{"lookup", "-f", "text", "-u", cnFile}, stdin: strings.Repeat("a", 70*1024), wantStderr: "token too long"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res := runMain(t, tt.stdin, tt.args...)
-			if failed := res.exitCode != 0; failed != tt.wantFail {
-				t.Fatalf("exit code = %d, wantFail %v\nstdout: %s\nstderr: %s", res.exitCode, tt.wantFail, res.stdout, res.stderr)
+			wantExit := 0
+			if tt.wantStderr != "" {
+				wantExit = 1
+				if !strings.Contains(res.stderr, tt.wantStderr) {
+					t.Errorf("stderr = %q, want to contain %q", res.stderr, tt.wantStderr)
+				}
+			}
+			if res.exitCode != wantExit {
+				t.Fatalf("exit code = %d, want %d\nstdout: %s\nstderr: %s", res.exitCode, wantExit, res.stdout, res.stderr)
 			}
 			if tt.wantStdout != nil {
 				got := nonEmptyLines(res.stdout)
@@ -373,8 +382,13 @@ func TestMainCLI(t *testing.T) {
 					t.Errorf("stdout lines = %q, want %q", got, tt.wantStdout)
 				}
 			}
-			if tt.wantContain != "" && !strings.Contains(res.stdout+res.stderr, tt.wantContain) {
-				t.Errorf("output does not contain %q\nstdout: %s\nstderr: %s", tt.wantContain, res.stdout, res.stderr)
+			rest := res.stdout
+			for _, want := range tt.stdoutContains {
+				_, after, ok := strings.Cut(rest, want)
+				if !ok {
+					t.Fatalf("stdout missing %q in expected order:\n%s", want, res.stdout)
+				}
+				rest = after
 			}
 		})
 	}
