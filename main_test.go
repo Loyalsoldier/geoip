@@ -315,7 +315,10 @@ func TestMainCLI(t *testing.T) {
 		{name: "unknown command", args: []string{"nope"}, wantStderr: "unknown command"},
 
 		// list
-		{name: "list", args: []string{"list"}, stdoutContains: []string{"All available input formats"}},
+		{name: "list", args: []string{"list"}, stdoutContains: []string{
+			"All available input formats:", "- stdin (",
+			"All available output formats:", "- stdout (",
+		}},
 
 		// convert
 		{name: "convert", args: []string{"convert", "-c", goodConfig}, wantStdout: []string{"1.0.0.0/24", "2001:db8::/32"}},
@@ -337,7 +340,8 @@ func TestMainCLI(t *testing.T) {
 		{name: "lookup invalid search", args: []string{"lookup", "-f", "text", "-u", cnFile, "abc"}, wantStdout: []string{"false"}},
 		{name: "lookup dir", args: []string{"lookup", "-f", "text", "-d", listDir, "1.0.0.1"}, wantStdout: []string{"cn,us"}},
 		{name: "lookup dir searchlist", args: []string{"lookup", "-f", "text", "-d", listDir, "-l", "us", "1.0.0.1"}, wantStdout: []string{"us"}},
-		{name: "lookup dir cidr", args: []string{"lookup", "-f", "text", "-d", listDir, "8.8.8.0/25"}, wantStdout: []string{"us"}},
+		// Both lists contain the first address; only us contains the whole prefix.
+		{name: "lookup dir cidr", args: []string{"lookup", "-f", "text", "-d", listDir, "1.0.0.0/23"}, wantStdout: []string{"us"}},
 		{name: "lookup unsupported format", args: []string{"lookup", "-f", "foo", "-u", cnFile, "1.1.1.1"}, wantStderr: "unsupported input format"},
 		{name: "lookup dir disallowed", args: []string{"lookup", "-f", "maxmindMMDB", "-d", listDir, "1.1.1.1"}, wantStderr: "does not support"},
 		{name: "lookup empty uri", args: []string{"lookup", "-f", "maxmindMMDB", "-u", "", "1.1.1.1"}, wantStderr: "requires a non-empty"},
