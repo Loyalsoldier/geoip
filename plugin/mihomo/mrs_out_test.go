@@ -1,6 +1,7 @@
 package mihomo
 
 import (
+	"bytes"
 	"errors"
 	"net/netip"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
+	"github.com/klauspost/compress/zstd"
 	"go4.org/netipx"
 )
 
@@ -279,7 +281,10 @@ func TestMRSOut_Output(t *testing.T) {
 				if err := (&mrs_in{}).parseMRS(content, entry); err != nil {
 					t.Fatalf("parse %s: %v", filename, err)
 				}
-				got, _ := entry.MarshalText()
+				got, err := entry.MarshalText()
+				if err != nil {
+					t.Fatal(err)
+				}
 				assertCIDRs(t, got, want)
 			}
 			for _, filename := range tt.wantAbsent {
@@ -309,9 +314,32 @@ func TestMRSRoundTrip(t *testing.T) {
 			if err := (&mrs_in{}).parseMRS(buildMRS(t, tt.cidrs...), entry); err != nil {
 				t.Fatal(err)
 			}
-			got, _ := entry.MarshalText()
+			got, err := entry.MarshalText()
+			if err != nil {
+				t.Fatal(err)
+			}
 			assertCIDRs(t, got, tt.want)
 		})
+	}
+}
+
+func TestMRSOut_WireFormat(t *testing.T) {
+	var buf bytes.Buffer
+	ipRange := netipx.RangeOfPrefix(netip.MustParsePrefix("1.0.0.0/24"))
+	if err := (&mrs_out{}).convertToMrs([]netipx.IPRange{ipRange}, &buf); err != nil {
+		t.Fatal(err)
+	}
+	dec, err := zstd.NewReader(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dec.Close()
+	got, err := dec.DecodeAll(buf.Bytes(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := validRaw().bytes(); !bytes.Equal(got, want) {
+		t.Fatalf("decompressed MRS = %x, want %x", got, want)
 	}
 }
 

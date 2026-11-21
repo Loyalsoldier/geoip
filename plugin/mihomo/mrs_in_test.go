@@ -103,7 +103,7 @@ func validRaw() rawMRS {
 	from := netip.MustParseAddr("1.0.0.0").As16()
 	to := netip.MustParseAddr("1.0.0.255").As16()
 	return rawMRS{
-		magic:      mrsMagicBytes[:],
+		magic:      []byte{'M', 'R', 'S', 1},
 		behavior:   []byte{1},
 		count:      i64(1),
 		extraLen:   i64(0),
@@ -372,15 +372,16 @@ func TestMRSIn_parseMRS(t *testing.T) {
 			wantErr: "EOF",
 		},
 		{
-			name: "invalid range yields no prefix",
+			name: "reversed range is skipped without losing the next range",
 			data: func(t *testing.T) []byte {
 				r := validRaw()
-				from := netip.MustParseAddr("1.0.0.255").As16()
-				to := netip.MustParseAddr("1.0.0.0").As16()
-				r.rules = append(from[:], to[:]...)
+				from := netip.MustParseAddr("2.0.0.255").As16()
+				to := netip.MustParseAddr("2.0.0.0").As16()
+				r.count, r.ruleLength = i64(2), i64(2)
+				r.rules = slices.Concat(from[:], to[:], r.rules)
 				return zstdBytes(t, r.bytes())
 			},
-			want: nil,
+			want: []string{"1.0.0.0/24"},
 		},
 	}
 
@@ -398,7 +399,10 @@ func TestMRSIn_parseMRS(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			got, _ := entry.MarshalText()
+			got, err := entry.MarshalText()
+			if err != nil {
+				t.Fatal(err)
+			}
 			assertCIDRs(t, got, tt.want)
 		})
 	}
@@ -438,7 +442,10 @@ func TestMRSIn_generateEntries(t *testing.T) {
 		if err := m.generateEntries("CN", bytes.NewReader(buildMRS(t, "2001:db8::/32")), entries); err != nil {
 			t.Fatal(err)
 		}
-		got, _ := entries["CN"].MarshalText()
+		got, err := entries["CN"].MarshalText()
+		if err != nil {
+			t.Fatal(err)
+		}
 		assertCIDRs(t, got, []string{"1.0.0.0/24", "2001:db8::/32"})
 	})
 }
@@ -452,7 +459,7 @@ func TestMRSIn_Input(t *testing.T) {
 	// valid input directory
 	validDir := filepath.Join(tmp, "valid")
 	writeFile(t, filepath.Join(validDir, "cn.mrs"), cnData)
-	writeFile(t, filepath.Join(validDir, "sub", "us.mrs"), usData)
+	writeFile(t, filepath.Join(validDir, "us.mrs"), usData)
 
 	// directory containing invalid filename
 	badNameDir := filepath.Join(tmp, "badname")
@@ -461,7 +468,7 @@ func TestMRSIn_Input(t *testing.T) {
 	// directory containing duplicated lists
 	dupDir := filepath.Join(tmp, "dup")
 	writeFile(t, filepath.Join(dupDir, "cn.mrs"), cnData)
-	writeFile(t, filepath.Join(dupDir, "sub", "cn.mrs"), cnData)
+	writeFile(t, filepath.Join(dupDir, "cn"), cnData)
 
 	// directory containing invalid data
 	badDataDir := filepath.Join(tmp, "baddata")
@@ -484,10 +491,6 @@ func TestMRSIn_Input(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-
-	closedServer := httptest.NewServer(http.NotFoundHandler())
-	closedURL := closedServer.URL
-	closedServer.Close()
 
 	tests := []struct {
 		name      string
@@ -547,8 +550,8 @@ func TestMRSIn_Input(t *testing.T) {
 		},
 		{name: "remote invalid data", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/invalid.mrs"}, wantErr: "magic"},
 		{name: "remote file 404", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/missing"}, wantErr: "http status code 404"},
-		{name: "remote connection error", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: closedURL + "/cn.mrs"}, wantErr: "connect"},
-		{name: "remote https connection error", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: strings.Replace(closedURL, "http://", "https://", 1)}, wantErr: "connect"},
+		{name: "remote invalid port", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: "http://127.0.0.1:65536/cn.mrs"}, wantErr: "invalid port"},
+		{name: "remote https invalid port", input: &mrs_in{Action: lib.ActionAdd, Name: "remote", URI: "https://127.0.0.1:65536/cn.mrs"}, wantErr: "invalid port"},
 		{name: "missing arguments", input: &mrs_in{Action: lib.ActionAdd}, wantErr: "config missing argument"},
 		{
 			name:    "no entry generated",
@@ -557,7 +560,7 @@ func TestMRSIn_Input(t *testing.T) {
 		},
 		{
 			name:  "remove prefix",
-			input: &mrs_in{Action: lib.ActionRemove, Name: "cn", URI: filepath.Join(validDir, "sub", "us.mrs")},
+			input: &mrs_in{Action: lib.ActionRemove, Name: "cn", URI: filepath.Join(validDir, "us.mrs")},
 			container: func(t *testing.T) lib.Container {
 				c := lib.NewContainer()
 				e := lib.NewEntry("CN")
