@@ -282,6 +282,7 @@ func TestSRSIn_Input(t *testing.T) {
 		name      string
 		input     *srs_in
 		container func(t *testing.T) lib.Container
+		wantErrIs error
 		wantErr   string
 		want      map[string][]string
 	}{
@@ -308,7 +309,7 @@ func TestSRSIn_Input(t *testing.T) {
 			input: &srs_in{Action: lib.ActionAdd, InputDir: hiddenDir},
 			want:  map[string][]string{".HIDDEN": {"1.0.0.0/24", "2001:db8::/32"}},
 		},
-		{name: "input dir not exist", input: &srs_in{Action: lib.ActionAdd, InputDir: filepath.Join(tmp, "nope")}, wantErr: "no such file"},
+		{name: "input dir not exist", input: &srs_in{Action: lib.ActionAdd, InputDir: filepath.Join(tmp, "nope")}, wantErrIs: os.ErrNotExist},
 		{name: "invalid filename", input: &srs_in{Action: lib.ActionAdd, InputDir: badNameDir}, wantErr: "cannot be entry name"},
 		{name: "duplicated list", input: &srs_in{Action: lib.ActionAdd, InputDir: dupDir}, wantErr: "found duplicated list"},
 		{name: "invalid data", input: &srs_in{Action: lib.ActionAdd, InputDir: badDataDir}, wantErr: "invalid"},
@@ -322,7 +323,7 @@ func TestSRSIn_Input(t *testing.T) {
 			input: &srs_in{Action: lib.ActionAdd, Name: "test", URI: cnFile, OnlyIPType: lib.IPv4},
 			want:  map[string][]string{"TEST": {"1.0.0.0/24"}},
 		},
-		{name: "local file not exist", input: &srs_in{Action: lib.ActionAdd, Name: "test", URI: filepath.Join(tmp, "nope.srs")}, wantErr: "no such file"},
+		{name: "local file not exist", input: &srs_in{Action: lib.ActionAdd, Name: "test", URI: filepath.Join(tmp, "nope.srs")}, wantErrIs: os.ErrNotExist},
 		{
 			name:  "remote file",
 			input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/cn.srs"},
@@ -365,7 +366,7 @@ func TestSRSIn_Input(t *testing.T) {
 			}},
 		},
 		{name: "remove from missing entry", input: &srs_in{Action: lib.ActionRemove, Name: "cn", URI: cnFile}, wantErr: "not found"},
-		{name: "unknown action", input: &srs_in{Action: lib.Action("unknown"), Name: "cn", URI: cnFile}, wantErr: lib.ErrUnknownAction.Error()},
+		{name: "unknown action", input: &srs_in{Action: lib.Action("unknown"), Name: "cn", URI: cnFile}, wantErrIs: lib.ErrUnknownAction},
 		{
 			name:  "container add error",
 			input: &srs_in{Action: lib.ActionAdd, Name: "cn", URI: cnFile},
@@ -394,6 +395,12 @@ func TestSRSIn_Input(t *testing.T) {
 				c = lib.NewContainer()
 			}
 			got, err := tt.input.Input(c)
+			if tt.wantErrIs != nil {
+				if !errors.Is(err, tt.wantErrIs) {
+					t.Fatalf("Input() error = %v, want %v", err, tt.wantErrIs)
+				}
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)
