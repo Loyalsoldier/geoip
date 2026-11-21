@@ -1,6 +1,7 @@
 package v2ray
 
 import (
+	"errors"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -241,6 +242,8 @@ func TestGeoIPDatOut_Output(t *testing.T) {
 		out        func(dir string) *geoip_dat_out
 		setup      func(t *testing.T, dir string)
 		wantErr    string
+		wantErrOp  string
+		wantPath   string
 		wantFiles  map[string]datFile
 		wantAbsent []string
 	}{
@@ -302,7 +305,8 @@ func TestGeoIPDatOut_Output(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			wantErr: "not a directory",
+			wantErrOp: "mkdir",
+			wantPath:  "file",
 		},
 		{
 			name: "one file per list output path is a directory",
@@ -314,7 +318,8 @@ func TestGeoIPDatOut_Output(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			wantErr: "is a directory",
+			wantErrOp: "open",
+			wantPath:  "cn.dat",
 		},
 	}
 
@@ -327,6 +332,13 @@ func TestGeoIPDatOut_Output(t *testing.T) {
 			g := tt.out(dir)
 			g.Type, g.Action = TypeGeoIPDatOut, lib.ActionOutput
 			err := g.Output(newTestContainer(t, data))
+			if tt.wantErrOp != "" {
+				path := filepath.Join(dir, tt.wantPath)
+				if pe, ok := errors.AsType[*os.PathError](err); !ok || pe.Op != tt.wantErrOp || pe.Path != path {
+					t.Fatalf("Output() error = %v, want %s error for %s", err, tt.wantErrOp, path)
+				}
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)

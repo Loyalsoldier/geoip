@@ -345,6 +345,7 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 		name      string
 		input     *geoip_dat_in
 		container func(t *testing.T) lib.Container
+		wantErrIs error
 		wantErr   string
 		want      map[string][]string
 	}{
@@ -371,7 +372,7 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 			input: &geoip_dat_in{Action: lib.ActionAdd, URI: strings.Replace(server.URL, "http://", "HTTP://", 1) + "/geoip.dat", Want: map[string]bool{"US": true}},
 			want:  map[string][]string{"US": {"8.8.8.0/24"}},
 		},
-		{name: "local file not exist", input: &geoip_dat_in{Action: lib.ActionAdd, URI: filepath.Join(tmp, "nope.dat")}, wantErr: "no such file"},
+		{name: "local file not exist", input: &geoip_dat_in{Action: lib.ActionAdd, URI: filepath.Join(tmp, "nope.dat")}, wantErrIs: os.ErrNotExist},
 		{name: "local invalid data", input: &geoip_dat_in{Action: lib.ActionAdd, URI: invalidFile}, wantErr: "cannot parse"},
 		{name: "remote invalid data", input: &geoip_dat_in{Action: lib.ActionAdd, URI: server.URL + "/invalid.dat"}, wantErr: "cannot parse"},
 		{name: "remote 404", input: &geoip_dat_in{Action: lib.ActionAdd, URI: server.URL + "/missing"}, wantErr: "http status code 404"},
@@ -391,7 +392,7 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 			want:      map[string][]string{"CN": {"1.0.0.0/23", "2001:db9::/32"}},
 		},
 		{name: "remove missing entry", input: &geoip_dat_in{Action: lib.ActionRemove, URI: datFile}, wantErr: "not found"},
-		{name: "unknown action", input: &geoip_dat_in{Action: lib.Action("unknown"), URI: datFile}, wantErr: lib.ErrUnknownAction.Error()},
+		{name: "unknown action", input: &geoip_dat_in{Action: lib.Action("unknown"), URI: datFile}, wantErrIs: lib.ErrUnknownAction},
 		{
 			name:  "container add error",
 			input: &geoip_dat_in{Action: lib.ActionAdd, URI: datFile},
@@ -420,6 +421,12 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 				c = lib.NewContainer()
 			}
 			got, err := tt.input.Input(c)
+			if tt.wantErrIs != nil {
+				if !errors.Is(err, tt.wantErrIs) {
+					t.Fatalf("Input() error = %v, want %v", err, tt.wantErrIs)
+				}
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)

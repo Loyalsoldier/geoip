@@ -2,6 +2,7 @@ package singbox
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -191,6 +192,8 @@ func TestSRSOut_Output(t *testing.T) {
 		out        func(dir string) *srs_out
 		setup      func(t *testing.T, dir string)
 		wantErr    string
+		wantErrOp  string
+		wantPath   string
 		wantFiles  map[string][]string
 		wantAbsent []string
 	}{
@@ -225,7 +228,8 @@ func TestSRSOut_Output(t *testing.T) {
 			setup: func(t *testing.T, dir string) {
 				writeFile(t, filepath.Join(dir, "file"), []byte("x"))
 			},
-			wantErr: "not a directory",
+			wantErrOp: "mkdir",
+			wantPath:  "file",
 		},
 		{
 			name: "output file path is a directory",
@@ -235,7 +239,8 @@ func TestSRSOut_Output(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			wantErr: "is a directory",
+			wantErrOp: "open",
+			wantPath:  "cn.srs",
 		},
 	}
 
@@ -248,6 +253,13 @@ func TestSRSOut_Output(t *testing.T) {
 			m := tt.out(dir)
 			m.Type, m.Action = TypeSRSOut, lib.ActionOutput
 			err := m.Output(newTestContainer(t, data))
+			if tt.wantErrOp != "" {
+				path := filepath.Join(dir, tt.wantPath)
+				if pe, ok := errors.AsType[*os.PathError](err); !ok || pe.Op != tt.wantErrOp || pe.Path != path {
+					t.Fatalf("Output() error = %v, want %s error for %s", err, tt.wantErrOp, path)
+				}
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)
