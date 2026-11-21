@@ -323,10 +323,6 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 	}))
 	defer server.Close()
 
-	closedServer := httptest.NewServer(http.NotFoundHandler())
-	closedURL := closedServer.URL
-	closedServer.Close()
-
 	newCNContainer := func(t *testing.T) lib.Container {
 		c := lib.NewContainer()
 		e := lib.NewEntry("CN")
@@ -376,8 +372,8 @@ func TestGeoIPDatIn_Input(t *testing.T) {
 		{name: "local invalid data", input: &geoip_dat_in{Action: lib.ActionAdd, URI: invalidFile}, wantErr: "cannot parse"},
 		{name: "remote invalid data", input: &geoip_dat_in{Action: lib.ActionAdd, URI: server.URL + "/invalid.dat"}, wantErr: "cannot parse"},
 		{name: "remote 404", input: &geoip_dat_in{Action: lib.ActionAdd, URI: server.URL + "/missing"}, wantErr: "http status code 404"},
-		{name: "remote connection error", input: &geoip_dat_in{Action: lib.ActionAdd, URI: closedURL}, wantErr: "connect"},
-		{name: "remote https connection error", input: &geoip_dat_in{Action: lib.ActionAdd, URI: strings.Replace(closedURL, "http://", "https://", 1)}, wantErr: "connect"},
+		{name: "remote invalid port", input: &geoip_dat_in{Action: lib.ActionAdd, URI: "http://127.0.0.1:65536/geoip.dat"}, wantErr: "invalid port"},
+		{name: "remote https invalid port", input: &geoip_dat_in{Action: lib.ActionAdd, URI: "https://127.0.0.1:65536/geoip.dat"}, wantErr: "invalid port"},
 		{name: "no entry generated", input: &geoip_dat_in{Action: lib.ActionAdd, URI: datFile, Want: map[string]bool{"XX": true}}, wantErr: "no entry is generated"},
 		{
 			name:      "remove prefix",

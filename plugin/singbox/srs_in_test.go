@@ -227,7 +227,10 @@ func TestSRSIn_generateEntries(t *testing.T) {
 		if err := m.generateEntries("CN", bytes.NewReader(buildSRS(t, "2001:db8::/32")), entries); err != nil {
 			t.Fatal(err)
 		}
-		got, _ := entries["CN"].MarshalText()
+		got, err := entries["CN"].MarshalText()
+		if err != nil {
+			t.Fatal(err)
+		}
 		assertCIDRs(t, got, []string{"1.0.0.0/24", "2001:db8::/32"})
 	})
 }
@@ -241,7 +244,7 @@ func TestSRSIn_Input(t *testing.T) {
 	// valid input directory
 	validDir := filepath.Join(tmp, "valid")
 	writeFile(t, filepath.Join(validDir, "cn.srs"), cnData)
-	writeFile(t, filepath.Join(validDir, "sub", "us.srs"), usData)
+	writeFile(t, filepath.Join(validDir, "us.srs"), usData)
 
 	// directory containing invalid filename
 	badNameDir := filepath.Join(tmp, "badname")
@@ -250,7 +253,7 @@ func TestSRSIn_Input(t *testing.T) {
 	// directory containing duplicated lists
 	dupDir := filepath.Join(tmp, "dup")
 	writeFile(t, filepath.Join(dupDir, "cn.srs"), cnData)
-	writeFile(t, filepath.Join(dupDir, "sub", "cn.srs"), cnData)
+	writeFile(t, filepath.Join(dupDir, "cn"), cnData)
 
 	// directory containing invalid data
 	badDataDir := filepath.Join(tmp, "baddata")
@@ -273,10 +276,6 @@ func TestSRSIn_Input(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-
-	closedServer := httptest.NewServer(http.NotFoundHandler())
-	closedURL := closedServer.URL
-	closedServer.Close()
 
 	tests := []struct {
 		name      string
@@ -336,8 +335,8 @@ func TestSRSIn_Input(t *testing.T) {
 		},
 		{name: "remote invalid data", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/invalid.srs"}, wantErr: "invalid"},
 		{name: "remote file 404", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/missing"}, wantErr: "http status code 404"},
-		{name: "remote connection error", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: closedURL + "/cn.srs"}, wantErr: "connect"},
-		{name: "remote https connection error", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: strings.Replace(closedURL, "http://", "https://", 1)}, wantErr: "connect"},
+		{name: "remote invalid port", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: "http://127.0.0.1:65536/cn.srs"}, wantErr: "invalid port"},
+		{name: "remote https invalid port", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: "https://127.0.0.1:65536/cn.srs"}, wantErr: "invalid port"},
 		{name: "missing arguments", input: &srs_in{Action: lib.ActionAdd}, wantErr: "config missing argument"},
 		{
 			name:    "no entry generated",
@@ -346,7 +345,7 @@ func TestSRSIn_Input(t *testing.T) {
 		},
 		{
 			name:  "remove prefix",
-			input: &srs_in{Action: lib.ActionRemove, Name: "cn", URI: filepath.Join(validDir, "sub", "us.srs")},
+			input: &srs_in{Action: lib.ActionRemove, Name: "cn", URI: filepath.Join(validDir, "us.srs")},
 			container: func(t *testing.T) lib.Container {
 				c := lib.NewContainer()
 				e := lib.NewEntry("CN")
