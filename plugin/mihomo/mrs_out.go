@@ -229,7 +229,11 @@ func (m *mrs_out) convertToMrs(ipRanges []netipx.IPRange, w io.Writer) (err erro
 	if err != nil {
 		return err
 	}
-	defer encoder.Close()
+	defer func() {
+		if closeErr := encoder.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 
 	// header
 	_, err = encoder.Write(mrsMagicBytes[:])

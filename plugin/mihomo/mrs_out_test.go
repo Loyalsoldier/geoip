@@ -315,19 +315,26 @@ func TestMRSRoundTrip(t *testing.T) {
 	}
 }
 
-type errWriter struct{}
+type errWriter struct{ err error }
 
-func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
+func (w errWriter) Write([]byte) (int, error) { return 0, w.err }
 
 func TestMRSOut_convertToMrsWriteError(t *testing.T) {
-	// enough ranges to force the zstd encoder to flush to the failing writer
-	ranges := make([]netipx.IPRange, 0, 100000)
 	addr := netip.MustParseAddr("2001:db8::")
-	for i := 0; i < 100000; i++ {
-		ranges = append(ranges, netipx.IPRangeFrom(addr, addr))
-		addr = addr.Next().Next()
-	}
-	if err := (&mrs_out{}).convertToMrs(ranges, errWriter{}); err == nil {
-		t.Fatal("expected write error")
+	ipRange := netipx.IPRangeFrom(addr, addr)
+	wantErr := errors.New("write error")
+	for _, tt := range []struct {
+		name  string
+		count int
+	}{
+		{"buffered until close", 1},
+		{"multiple blocks", 100000},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ranges := slices.Repeat([]netipx.IPRange{ipRange}, tt.count)
+			if err := (&mrs_out{}).convertToMrs(ranges, errWriter{wantErr}); !errors.Is(err, wantErr) {
+				t.Fatalf("convertToMrs() error = %v, want %v", err, wantErr)
+			}
+		})
 	}
 }
