@@ -311,7 +311,7 @@ func TestSRSIn_Input(t *testing.T) {
 		{name: "input dir not exist", input: &srs_in{Action: lib.ActionAdd, InputDir: filepath.Join(tmp, "nope")}, wantErrIs: os.ErrNotExist},
 		{name: "invalid filename", input: &srs_in{Action: lib.ActionAdd, InputDir: badNameDir}, wantErr: "cannot be entry name"},
 		{name: "duplicated list", input: &srs_in{Action: lib.ActionAdd, InputDir: dupDir}, wantErr: "found duplicated list"},
-		{name: "invalid data", input: &srs_in{Action: lib.ActionAdd, InputDir: badDataDir}, wantErr: "invalid"},
+		{name: "invalid data", input: &srs_in{Action: lib.ActionAdd, InputDir: badDataDir}, wantErr: "invalid sing-box rule-set file"},
 		{
 			name:  "local file",
 			input: &srs_in{Action: lib.ActionAdd, Name: "test", URI: cnFile},
@@ -333,7 +333,7 @@ func TestSRSIn_Input(t *testing.T) {
 			input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: strings.Replace(server.URL, "http://", "HTTP://", 1) + "/cn.srs"},
 			want:  map[string][]string{"REMOTE": {"1.0.0.0/24", "2001:db8::/32"}},
 		},
-		{name: "remote invalid data", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/invalid.srs"}, wantErr: "invalid"},
+		{name: "remote invalid data", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/invalid.srs"}, wantErr: "invalid sing-box rule-set file"},
 		{name: "remote file 404", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: server.URL + "/missing"}, wantErr: "http status code 404"},
 		{name: "remote invalid port", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: "http://127.0.0.1:65536/cn.srs"}, wantErr: "invalid port"},
 		{name: "remote https invalid port", input: &srs_in{Action: lib.ActionAdd, Name: "remote", URI: "https://127.0.0.1:65536/cn.srs"}, wantErr: "invalid port"},

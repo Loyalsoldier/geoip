@@ -179,12 +179,12 @@ func TestNewGeoIPDatInFromBytes(t *testing.T) {
 
 func TestGeoIPDatIn_generateEntries(t *testing.T) {
 	tests := []struct {
-		name    string
-		want    map[string]bool
-		data    func(t *testing.T) []byte
-		reader  func(t *testing.T) *bytes.Reader
-		wantErr string
-		expect  map[string][]string
+		name      string
+		want      map[string]bool
+		data      func(t *testing.T) []byte
+		wantErrIs error
+		wantErr   string
+		expect    map[string][]string
 	}{
 		{
 			name: "ipv4 and ipv6",
@@ -253,7 +253,7 @@ func TestGeoIPDatIn_generateEntries(t *testing.T) {
 			data: func(t *testing.T) []byte {
 				return buildDat(t, &GeoIP{CountryCode: "cn", Cidr: []*CIDR{{Ip: []byte{1, 2, 3, 4}, Prefix: 33}}})
 			},
-			wantErr: "invalid",
+			wantErrIs: lib.ErrInvalidPrefix,
 		},
 	}
 
@@ -262,6 +262,12 @@ func TestGeoIPDatIn_generateEntries(t *testing.T) {
 			g := &geoip_dat_in{Want: tt.want}
 			entries := make(map[string]*lib.Entry)
 			err := g.generateEntries(bytes.NewReader(tt.data(t)), entries)
+			if tt.wantErrIs != nil {
+				if !errors.Is(err, tt.wantErrIs) {
+					t.Fatalf("generateEntries() error = %v, want %v", err, tt.wantErrIs)
+				}
+				return
+			}
 			if tt.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("expected error containing %q, got %v", tt.wantErr, err)
