@@ -150,12 +150,13 @@ func (t *text_in) walkLocalFile(path, name string, entries map[string]*lib.Entry
 		return fmt.Errorf("found duplicated list %s", entryName)
 	}
 
-	entry := lib.NewEntry(entryName)
 	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
+
+	entry := lib.NewEntry(entryName)
 	if err := t.scanFile(file, entry); err != nil {
 		return err
 	}
