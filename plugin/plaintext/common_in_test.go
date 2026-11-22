@@ -73,11 +73,16 @@ func TestNewTextInFromBytes(t *testing.T) {
 				}
 			},
 		},
-		{name: "inputDir", typ: TypeTextIn, data: `{"inputDir":" ./dir "}`, check: func(t *testing.T, in *text_in) {
-			if in.InputDir != "./dir" {
-				t.Fatalf("InputDir = %q", in.InputDir)
-			}
-		}},
+		{
+			name: "inputDir",
+			typ:  TypeTextIn,
+			data: `{"inputDir":" ./dir "}`,
+			check: func(t *testing.T, in *text_in) {
+				if in.InputDir != "./dir" {
+					t.Fatalf("InputDir = %q", in.InputDir)
+				}
+			},
+		},
 		{name: "invalid json", typ: TypeTextIn, data: `{`, wantErr: true},
 		{name: "empty data", typ: TypeTextIn, data: ``, wantErr: true},
 	}
@@ -104,11 +109,10 @@ func TestScanFile(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name: "text",
-			typ:  TypeTextIn,
-			input: "# comment\n1.1.1.1 # c\n2.2.2.0/24 // c\n3.3.3.3 /* c\n\n" +
-				"2001:DB8::/32\n",
-			want: []string{"1.1.1.1/32", "2.2.2.0/24", "3.3.3.3/32", "2001:db8::/32"},
+			name:  "text",
+			typ:   TypeTextIn,
+			input: "# comment\n1.1.1.1 # c\n2.2.2.0/24 // c\n3.3.3.3 /* c\n\n2001:DB8::/32\n",
+			want:  []string{"1.1.1.1/32", "2.2.2.0/24", "3.3.3.3/32", "2001:db8::/32"},
 		},
 		{
 			name:     "text remove prefixes and suffixes",

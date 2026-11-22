@@ -14,7 +14,8 @@ func TestInputConstructors(t *testing.T) {
 	data := []byte(`{"name":"cn","uri":"a.txt","jsonPath":["a"]}`)
 	tests := []struct {
 		name      string
-		typ, desc string
+		typ       string
+		desc      string
 		newFn     func(lib.Action, ...lib.InputOption) (lib.InputConverter, error)
 		fromBytes func(lib.Action, []byte) (lib.InputConverter, error)
 	}{
@@ -45,7 +46,8 @@ func TestInputConstructors(t *testing.T) {
 func TestOutputConstructors(t *testing.T) {
 	tests := []struct {
 		name      string
-		typ, desc string
+		typ       string
+		desc      string
 		newFn     func(lib.Action, ...lib.OutputOption) (lib.OutputConverter, error)
 		fromBytes func(lib.Action, []byte) (lib.OutputConverter, error)
 	}{
