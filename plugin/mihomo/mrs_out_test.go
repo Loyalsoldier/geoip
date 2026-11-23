@@ -2,6 +2,7 @@ package mihomo
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"net/netip"
 	"os"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/Loyalsoldier/geoip/lib"
 	"github.com/klauspost/compress/zstd"
+	mihomoP "github.com/metacubex/mihomo/constant/provider"
+	mihomoProvider "github.com/metacubex/mihomo/rules/provider"
 	"go4.org/netipx"
 )
 
@@ -365,4 +368,90 @@ func TestMRSOut_convertToMrsWriteError(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMRSOut_CompareWithOfficialMRS(t *testing.T) {
+	tests := []struct {
+		name  string
+		cidrs []string
+	}{
+		{"ipv4", []string{"1.0.0.0/24", "8.8.8.8/32", "10.0.0.0/8", "192.168.0.0/16"}},
+		{"ipv6", []string{"2001:db8::/32", "240e::/20", "::1/128"}},
+		{"mixed", []string{"1.1.1.1/32", "1.1.1.2/31", "172.16.0.0/12", "2400:3200::/32", "fe80::/10"}},
+		{"adjacent", []string{"1.0.0.0/24", "1.0.1.0/24", "1.0.2.0/23", "2001:db8::/33", "2001:db8:8000::/33"}},
+		{"overlapping", []string{"10.0.0.0/8", "10.1.0.0/16", "10.1.2.3/32", "2001:db8::/32", "2001:db8:1::/48"}},
+		{"full", []string{"0.0.0.0/0", "::/0"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := lib.NewEntry(tt.name)
+			for _, cidr := range tt.cidrs {
+				if err := entry.AddPrefix(cidr); err != nil {
+					t.Fatalf("AddPrefix(%s): %v", cidr, err)
+				}
+			}
+
+			ipRanges, err := entry.MarshalIPRange()
+			if err != nil {
+				t.Fatalf("MarshalIPRange: %v", err)
+			}
+			m := &mrs_out{}
+			var ours bytes.Buffer
+			if err := m.convertToMrs(ipRanges, &ours); err != nil {
+				t.Fatalf("convertToMrs: %v", err)
+			}
+
+			// Generate the official edition the same way as meta-rules-converter:
+			// plain text CIDR list -> provider.ConvertToMrs with IPCIDR behavior.
+			cidrList, err := entry.MarshalText()
+			if err != nil {
+				t.Fatalf("MarshalText: %v", err)
+			}
+			var official bytes.Buffer
+			if err := mihomoProvider.ConvertToMrs([]byte(strings.Join(cidrList, "\n")), mihomoP.IPCIDR, mihomoP.TextRule, &official); err != nil {
+				t.Fatalf("official ConvertToMrs: %v", err)
+			}
+
+			oursRaw := decompressZstd(t, ours.Bytes())
+			officialRaw := decompressZstd(t, official.Bytes())
+
+			// Layout: magic(4) + behavior(1) + count(int64, 8) + rest.
+			// The count field is informational only: mihomo stores the number of
+			// input rule lines, while this project stores the number of merged
+			// IP ranges. Everything else must be identical.
+			const countStart, countEnd = 5, 13
+			if len(oursRaw) < countEnd || len(officialRaw) < countEnd {
+				t.Fatalf("MRS data too short: ours=%d official=%d", len(oursRaw), len(officialRaw))
+			}
+			if !bytes.Equal(oursRaw[:countStart], officialRaw[:countStart]) {
+				t.Fatalf("header mismatch: ours=%x official=%x", oursRaw[:countStart], officialRaw[:countStart])
+			}
+			if got := binary.BigEndian.Uint64(oursRaw[countStart:countEnd]); got != uint64(len(ipRanges)) {
+				t.Errorf("count = %d, want %d", got, len(ipRanges))
+			}
+			if !bytes.Equal(oursRaw[countEnd:], officialRaw[countEnd:]) {
+				t.Fatalf("MRS payload mismatch:\nours:     %x\nofficial: %x", oursRaw[countEnd:], officialRaw[countEnd:])
+			}
+
+			// When the counts coincide, the compressed files must be byte-identical.
+			if bytes.Equal(oursRaw, officialRaw) && !bytes.Equal(ours.Bytes(), official.Bytes()) {
+				t.Errorf("compressed MRS bytes mismatch")
+			}
+		})
+	}
+}
+
+func decompressZstd(t *testing.T, data []byte) []byte {
+	t.Helper()
+	dec, err := zstd.NewReader(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("zstd.NewReader: %v", err)
+	}
+	defer dec.Close()
+	var out bytes.Buffer
+	if _, err := out.ReadFrom(dec); err != nil {
+		t.Fatalf("zstd decode: %v", err)
+	}
+	return out.Bytes()
 }
