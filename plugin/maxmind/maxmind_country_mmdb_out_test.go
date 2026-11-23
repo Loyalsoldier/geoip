@@ -14,13 +14,19 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
-func assertOutputMMDB(t *testing.T, path string, wantCIDRs map[string][]string, wantRecords map[string]map[string]any) {
+func assertOutputMMDB(t *testing.T, path, wantDBType string, wantCIDRs map[string][]string, wantRecords map[string]map[string]any) {
 	t.Helper()
 	db, err := maxminddb.Open(path)
 	if err != nil {
 		t.Fatalf("maxminddb.Open() error = %v", err)
 	}
 	defer db.Close()
+	if err := db.Verify(); err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	if got := db.Metadata.DatabaseType; got != wantDBType {
+		t.Errorf("database type = %q, want %q", got, wantDBType)
+	}
 
 	cidrs := make(map[string][]string)
 	for network := range db.Networks() {
@@ -97,11 +103,13 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		name       string
 		g          *geolite2_country_mmdb_out
 		data       map[string][]string
+		wantType   string
 		wantCIDRs  map[string][]string
 		wantRecord map[string]map[string]any
 	}{
 		{
 			name:      "GeoLite2 without source",
+			wantType:  "GeoLite2-Country",
 			g:         &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut},
 			data:      data,
 			wantCIDRs: data,
@@ -113,6 +121,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:      "DBIP without source, only IPv6",
+			wantType:  "DBIP-Country-Lite",
 			g:         &geolite2_country_mmdb_out{Type: TypeDBIPCountryMMDBOut, OnlyIPType: lib.IPv6, Want: []string{"CN", "US"}},
 			data:      data,
 			wantCIDRs: map[string][]string{"CN": {"2001:da8::/32"}, "US": {"2600::/16"}},
@@ -123,6 +132,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:      "IPInfo without source",
+			wantType:  "IPInfo-Lite",
 			g:         &geolite2_country_mmdb_out{Type: TypeIPInfoCountryMMDBOut, Want: []string{"JP"}},
 			data:      data,
 			wantCIDRs: map[string][]string{"JP": {"1.0.16.0/24"}},
@@ -132,6 +142,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:      "GeoLite2 with source",
+			wantType:  "GeoLite2-Country",
 			g:         &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: countrySrc},
 			data:      data,
 			wantCIDRs: data,
@@ -157,6 +168,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:      "DBIP with source",
+			wantType:  "DBIP-Country-Lite",
 			g:         &geolite2_country_mmdb_out{Type: TypeDBIPCountryMMDBOut, SourceMMDBURI: countrySrc},
 			data:      dbipData,
 			wantCIDRs: dbipData,
@@ -172,6 +184,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:      "IPInfo with source",
+			wantType:  "IPInfo-Lite",
 			g:         &geolite2_country_mmdb_out{Type: TypeIPInfoCountryMMDBOut, SourceMMDBURI: ipinfoSrc},
 			data:      data,
 			wantCIDRs: data,
@@ -190,7 +203,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 			if err := tt.g.Output(newContainerWith(t, tt.data)); err != nil {
 				t.Fatalf("Output() error = %v", err)
 			}
-			assertOutputMMDB(t, filepath.Join(tt.g.OutputDir, tt.g.OutputName), tt.wantCIDRs, tt.wantRecord)
+			assertOutputMMDB(t, filepath.Join(tt.g.OutputDir, tt.g.OutputName), tt.wantType, tt.wantCIDRs, tt.wantRecord)
 		})
 	}
 }
