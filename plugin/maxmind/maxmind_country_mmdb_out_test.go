@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -224,12 +226,13 @@ func TestGeoLite2CountryMMDBOut_OutputErrors(t *testing.T) {
 	fileAsDir := writeTempFile(t, "file", []byte("x"))
 
 	tests := []struct {
-		name string
-		g    *geolite2_country_mmdb_out
+		name      string
+		g         *geolite2_country_mmdb_out
+		wantErrIs error
 	}{
-		{name: "Extra info error", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: "/non/existent"}},
+		{name: "Extra info error", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: filepath.Join(t.TempDir(), "missing.mmdb")}, wantErrIs: fs.ErrNotExist},
 		{name: "Marshal error with no prefix", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, OnlyIPType: lib.IPv4}},
-		{name: "Unsupported type", g: &geolite2_country_mmdb_out{Type: "unknown"}},
+		{name: "Unsupported type", g: &geolite2_country_mmdb_out{Type: "unknown"}, wantErrIs: lib.ErrNotSupportedFormat},
 		{name: "Output dir is a file", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, OutputDir: fileAsDir}},
 		{name: "Output name is a dir", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, OutputName: "."}},
 	}
@@ -242,7 +245,10 @@ func TestGeoLite2CountryMMDBOut_OutputErrors(t *testing.T) {
 			if tt.g.OutputName == "" {
 				tt.g.OutputName = "out.mmdb"
 			}
-			if err := tt.g.Output(newContainerWith(t, data)); err == nil {
+			err := tt.g.Output(newContainerWith(t, data))
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+			} else if err == nil {
 				t.Errorf("Output() expected error, got nil")
 			}
 		})
@@ -254,6 +260,7 @@ func TestGeoLite2CountryMMDBOut_MarshalDataUnsupportedTypeWithSource(t *testing.
 	if err != nil {
 		t.Fatalf("mmdbwriter.New() error = %v", err)
 	}
+
 	entry := lib.NewEntry("CN")
 	if err := entry.AddPrefix("1.0.1.0/24"); err != nil {
 		t.Fatalf("AddPrefix() error = %v", err)
@@ -261,5 +268,18 @@ func TestGeoLite2CountryMMDBOut_MarshalDataUnsupportedTypeWithSource(t *testing.
 	g := &geolite2_country_mmdb_out{Type: "unknown", SourceMMDBURI: "src.mmdb"}
 	if err := g.marshalData(writer, entry, nil); err != lib.ErrNotSupportedFormat {
 		t.Errorf("marshalData() error = %v, want %v", err, lib.ErrNotSupportedFormat)
+	}
+}
+
+func TestGeoLite2CountryMMDBOut_AliasedNetwork(t *testing.T) {
+	// MMDB aliases 6to4 addresses to its IPv4 tree; they cannot be inserted independently.
+	g := &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, OutputDir: t.TempDir(), OutputName: "out.mmdb"}
+	err := g.Output(newContainerWith(t, map[string][]string{"CN": {"2002:c000:0200::/48"}}))
+	var aliasErr *mmdbwriter.AliasedNetworkError
+	if !errors.As(err, &aliasErr) {
+		t.Fatalf("Output() error = %v, want AliasedNetworkError", err)
+	}
+	if _, err := os.Stat(filepath.Join(g.OutputDir, g.OutputName)); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("output file should not exist after insertion fails, stat error = %v", err)
 	}
 }

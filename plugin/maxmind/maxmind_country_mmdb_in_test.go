@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"io/fs"
+	"path/filepath"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -22,8 +24,15 @@ func TestGeoLite2CountryMMDBIn_Getters(t *testing.T) {
 
 func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 	countryDB := buildMMDB(t, "GeoLite2-Country", 24, []mmdbRecord{
-		{"1.0.1.0/24", countryRecord("country", " cn ")},
-		{"1.0.2.0/23", countryRecord("registered_country", "cn")},
+		{"1.0.1.0/24", mmdbtype.Map{
+			"country":             mmdbtype.Map{"iso_code": mmdbtype.String(" cn ")},
+			"registered_country":  mmdbtype.Map{"iso_code": mmdbtype.String("DE")},
+			"represented_country": mmdbtype.Map{"iso_code": mmdbtype.String("JP")},
+		}},
+		{"1.0.2.0/23", mmdbtype.Map{
+			"registered_country":  mmdbtype.Map{"iso_code": mmdbtype.String("cn")},
+			"represented_country": mmdbtype.Map{"iso_code": mmdbtype.String("JP")},
+		}},
 		{"8.8.8.0/24", countryRecord("represented_country", "us")},
 		{"9.9.9.0/24", mmdbtype.Map{"continent": mmdbtype.Map{"code": mmdbtype.String("EU")}}},
 		{"2001:da8::/32", countryRecord("country", "CN")},
@@ -46,6 +55,8 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 	badCountryFile := writeTempFile(t, "bad.mmdb", badCountryDB)
 	badIPInfoFile := writeTempFile(t, "badipinfo.mmdb", badIPInfoDB)
 	garbageFile := writeTempFile(t, "garbage.mmdb", []byte("not a mmdb"))
+	// A database with records but no database type opens successfully and fails Verify.
+	invalidMetadata := writeTempFile(t, "invalid-metadata.mmdb", buildMMDB(t, "", 24, countrySourceRecords()))
 	srv := newFileServer(t, map[string][]byte{"/country.mmdb": countryDB})
 
 	allCountry := map[string][]string{
@@ -59,6 +70,7 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 		container lib.Container
 		want      map[string][]string
 		wantErr   bool
+		wantErrIs error
 	}{
 		{name: "GeoLite2 add all", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: countryFile}, want: allCountry},
 		{name: "DBIP add all", g: &geolite2_country_mmdb_in{Type: TypeDBIPCountryMMDBIn, Action: lib.ActionAdd, URI: countryFile}, want: allCountry},
@@ -90,12 +102,14 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 			container: lib.NewContainer(),
 			wantErr:   true,
 		},
-		{name: "Unknown action", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: "unknown", URI: countryFile}, wantErr: true},
-		{name: "Unsupported type", g: &geolite2_country_mmdb_in{Type: "unknown", Action: lib.ActionAdd, URI: countryFile}, wantErr: true},
+		{name: "Container add error", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: countryFile}, container: rejectingContainer{}, wantErrIs: errAdd},
+		{name: "Unknown action", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: "unknown", URI: countryFile}, wantErrIs: lib.ErrUnknownAction},
+		{name: "Unsupported type", g: &geolite2_country_mmdb_in{Type: "unknown", Action: lib.ActionAdd, URI: countryFile}, wantErrIs: lib.ErrNotSupportedFormat},
 		{name: "No entry generated", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: countryFile, Want: map[string]bool{"JP": true}}, wantErr: true},
-		{name: "File not found", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: "/non/existent"}, wantErr: true},
+		{name: "File not found", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: filepath.Join(t.TempDir(), "missing.mmdb")}, wantErrIs: fs.ErrNotExist},
 		{name: "Remote 404", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: srv.URL + "/missing"}, wantErr: true},
 		{name: "Invalid MMDB", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: garbageFile}, wantErr: true},
+		{name: "Invalid metadata", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: invalidMetadata}, wantErr: true},
 		{name: "Country decode error", g: &geolite2_country_mmdb_in{Type: TypeGeoLite2CountryMMDBIn, Action: lib.ActionAdd, URI: badCountryFile}, wantErr: true},
 		{name: "IPInfo decode error", g: &geolite2_country_mmdb_in{Type: TypeIPInfoCountryMMDBIn, Action: lib.ActionAdd, URI: badIPInfoFile}, wantErr: true},
 	}
@@ -106,6 +120,10 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 				c = lib.NewContainer()
 			}
 			got, err := tt.g.Input(c)
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+				return
+			}
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("error = %v, wantErr %v", err, tt.wantErr)
 			}

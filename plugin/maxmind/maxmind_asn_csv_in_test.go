@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"io/fs"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -185,8 +187,8 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 
 	invalidRecord := writeTempFile(t, "invalid.csv", []byte("network\n1.0.0.0/24\n"))
 	inconsistent := writeTempFile(t, "inconsistent.csv", []byte("a,b,c\n1.0.0.0/24,1\n"))
-	badCIDR := writeTempFile(t, "badcidr.csv", []byte("a,b\nbad,1\n"))
-	badCIDRWant := writeTempFile(t, "badcidrwant.csv", []byte("a,b\nbad,13335\n"))
+	badCIDR := writeTempFile(t, "badcidr.csv", []byte("a,b\n1.0.0.0/33,13335\n"))
+	missing := filepath.Join(t.TempDir(), "missing.csv")
 
 	tests := []struct {
 		name      string
@@ -194,6 +196,7 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 		container lib.Container
 		want      map[string][]string
 		wantErr   bool
+		wantErrIs error
 	}{
 		{
 			name: "Add all ASNs",
@@ -236,15 +239,16 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 			container: lib.NewContainer(),
 			wantErr:   true,
 		},
-		{name: "Unknown action", g: &geolite2_asn_csv_in{Action: "unknown", IPv4File: v4}, wantErr: true},
+		{name: "Container add error", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: v4}, container: rejectingContainer{}, wantErrIs: errAdd},
+		{name: "Unknown action", g: &geolite2_asn_csv_in{Action: "unknown", IPv4File: v4}, wantErrIs: lib.ErrUnknownAction},
 		{name: "No entry generated", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: v4, Want: map[string][]string{"1": {"X"}}}, wantErr: true},
-		{name: "IPv4 file not found", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: "/non/existent"}, wantErr: true},
-		{name: "IPv6 file not found", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv6File: "/non/existent"}, wantErr: true},
+		{name: "IPv4 file not found", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: missing}, wantErrIs: fs.ErrNotExist},
+		{name: "IPv6 file not found", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv6File: missing}, wantErrIs: fs.ErrNotExist},
 		{name: "Remote file 404", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: srv.URL + "/missing.csv"}, wantErr: true},
 		{name: "Invalid record", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: invalidRecord}, wantErr: true},
 		{name: "Inconsistent fields", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: inconsistent}, wantErr: true},
-		{name: "Invalid CIDR", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: badCIDR}, wantErr: true},
-		{name: "Invalid CIDR with wanted list", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: badCIDRWant, Want: map[string][]string{"13335": {"X"}}}, wantErr: true},
+		{name: "Invalid CIDR", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: badCIDR}, wantErrIs: lib.ErrInvalidCIDR},
+		{name: "Invalid CIDR with wanted list", g: &geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: badCIDR, Want: map[string][]string{"13335": {"X"}}}, wantErrIs: lib.ErrInvalidCIDR},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -253,6 +257,10 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 				c = lib.NewContainer()
 			}
 			got, err := tt.g.Input(c)
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+				return
+			}
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("error = %v, wantErr %v", err, tt.wantErr)
 			}

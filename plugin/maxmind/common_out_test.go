@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"io/fs"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -241,6 +243,7 @@ func TestGetExtraInfo(t *testing.T) {
 		{"1.0.1.0/24", mmdbtype.Map{"country_code": mmdbtype.Map{}}},
 	}))
 	garbageFile := writeTempFile(t, "garbage.mmdb", []byte("garbage"))
+	invalidMetadata := writeTempFile(t, "invalid-metadata.mmdb", buildMMDB(t, "", 24, countrySourceRecords()))
 	srv := newFileServer(t, map[string][]byte{"/country.mmdb": countrySrc})
 
 	geoliteWant := map[string]any{
@@ -272,21 +275,23 @@ func TestGetExtraInfo(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		g       *geolite2_country_mmdb_out
-		want    map[string]any
-		wantErr bool
+		name      string
+		g         *geolite2_country_mmdb_out
+		want      map[string]any
+		wantErr   bool
+		wantErrIs error
 	}{
 		{name: "Empty URI", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: "  "}},
 		{name: "GeoLite2", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: countryFile}, want: geoliteWant},
 		{name: "GeoLite2 remote", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: srv.URL + "/country.mmdb"}, want: geoliteWant},
 		{name: "DBIP", g: &geolite2_country_mmdb_out{Type: TypeDBIPCountryMMDBOut, SourceMMDBURI: countryFile}, want: dbipWant},
 		{name: "IPInfo", g: &geolite2_country_mmdb_out{Type: TypeIPInfoCountryMMDBOut, SourceMMDBURI: ipinfoFile}, want: ipinfoWant},
-		{name: "Unsupported type", g: &geolite2_country_mmdb_out{Type: "unknown", SourceMMDBURI: countryFile}, wantErr: true},
+		{name: "Unsupported type", g: &geolite2_country_mmdb_out{Type: "unknown", SourceMMDBURI: countryFile}, wantErrIs: lib.ErrNotSupportedFormat},
 		{name: "No extra info", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: emptyFile}, wantErr: true},
-		{name: "File not found", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: "/non/existent"}, wantErr: true},
+		{name: "File not found", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: filepath.Join(t.TempDir(), "missing.mmdb")}, wantErrIs: fs.ErrNotExist},
 		{name: "Remote 404", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: srv.URL + "/missing"}, wantErr: true},
 		{name: "Invalid MMDB", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: garbageFile}, wantErr: true},
+		{name: "Invalid metadata", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: invalidMetadata}, wantErr: true},
 		{name: "GeoLite2 decode error", g: &geolite2_country_mmdb_out{Type: TypeGeoLite2CountryMMDBOut, SourceMMDBURI: badCountryFile}, wantErr: true},
 		{name: "DBIP decode error", g: &geolite2_country_mmdb_out{Type: TypeDBIPCountryMMDBOut, SourceMMDBURI: badCountryFile}, wantErr: true},
 		{name: "IPInfo decode error", g: &geolite2_country_mmdb_out{Type: TypeIPInfoCountryMMDBOut, SourceMMDBURI: badIPInfoFile}, wantErr: true},
@@ -294,6 +299,10 @@ func TestGetExtraInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.g.GetExtraInfo()
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+				return
+			}
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("error = %v, wantErr %v", err, tt.wantErr)
 			}

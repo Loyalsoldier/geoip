@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"bytes"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -44,22 +46,11 @@ func buildMMDB(t *testing.T, dbType string, recordSize int, records []mmdbRecord
 		}
 	}
 
-	path := filepath.Join(t.TempDir(), "tmp.mmdb")
-	f, err := os.Create(path)
-	if err != nil {
-		t.Fatalf("os.Create() error = %v", err)
-	}
-	if _, err := writer.WriteTo(f); err != nil {
-		f.Close()
+	var buf bytes.Buffer
+	if _, err := writer.WriteTo(&buf); err != nil {
 		t.Fatalf("writer.WriteTo() error = %v", err)
 	}
-	f.Close()
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("os.ReadFile() error = %v", err)
-	}
-	return content
+	return buf.Bytes()
 }
 
 // writeTempFile writes content to a file in a fresh temp dir and returns its path.
@@ -87,16 +78,27 @@ func newFileServer(t *testing.T, files map[string][]byte) *httptest.Server {
 	return srv
 }
 
-// containerCIDRs returns a map of entry name to its sorted CIDR list.
+var errAdd = errors.New("test container rejected entry")
+
+type rejectingContainer struct{ lib.Container }
+
+func (rejectingContainer) Add(*lib.Entry, ...lib.IgnoreIPOption) error { return errAdd }
+
+func assertErrorIs(t *testing.T, got, want error) {
+	t.Helper()
+	if !errors.Is(got, want) {
+		t.Fatalf("error = %v, want %v", got, want)
+	}
+}
+
+// containerCIDRs returns the prefixes in each entry's MarshalText order.
 func containerCIDRs(t *testing.T, c lib.Container) map[string][]string {
 	t.Helper()
 	result := make(map[string][]string)
 	for entry := range c.Loop() {
 		cidrs, err := entry.MarshalText()
 		if err != nil {
-			// Entries may become empty after removal
-			result[entry.GetName()] = []string{}
-			continue
+			t.Fatalf("MarshalText(%s): %v", entry.GetName(), err)
 		}
 		result[entry.GetName()] = cidrs
 	}

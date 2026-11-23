@@ -1,6 +1,8 @@
 package maxmind
 
 import (
+	"io/fs"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -98,8 +100,8 @@ const countryCodeCSV = `geoname_id,locale_code,continent_code,continent_name,cou
 `
 
 const countryIPv4CSV = `network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider
-1.0.1.0/24,1814991,1814991,,0,0
-1.0.2.0/23,6255148,1814991,,0,0
+1.0.1.0/24,1814991,6252001,6252001,0,0
+1.0.2.0/23,6255148,1814991,6252001,0,0
 8.8.8.0/24,,,6252001,0,0
 9.9.9.0/24,,,,0,0
 `
@@ -121,7 +123,8 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 	ccInconsistent := writeTempFile(t, "ccinc.csv", []byte("a,b,c,d,e\n1,2\n"))
 	ipShort := writeTempFile(t, "ipshort.csv", []byte("a,b,c\n1.0.0.0/24,1814991,1\n"))
 	ipInconsistent := writeTempFile(t, "ipinc.csv", []byte("a,b,c,d\n1.0.0.0/24\n"))
-	ipBadCIDR := writeTempFile(t, "ipbad.csv", []byte("a,b,c,d\nbad,1814991,,\n"))
+	ipBadCIDR := writeTempFile(t, "ipbad.csv", []byte("a,b,c,d\n1.0.1.0/33,1814991,,\n"))
+	missing := filepath.Join(t.TempDir(), "missing.csv")
 
 	tests := []struct {
 		name      string
@@ -129,6 +132,7 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 		container lib.Container
 		want      map[string][]string
 		wantErr   bool
+		wantErrIs error
 	}{
 		{
 			name: "Add all",
@@ -165,20 +169,21 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 			container: lib.NewContainer(),
 			wantErr:   true,
 		},
-		{name: "Unknown action", g: &geolite2_country_csv_in{Action: "unknown", CountryCodeFile: cc, IPv4File: v4}, wantErr: true},
+		{name: "Container add error", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: v4}, container: rejectingContainer{}, wantErrIs: errAdd},
+		{name: "Unknown action", g: &geolite2_country_csv_in{Action: "unknown", CountryCodeFile: cc, IPv4File: v4}, wantErrIs: lib.ErrUnknownAction},
 		{name: "No entry generated", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: v4, Want: map[string]bool{"JP": true}}, wantErr: true},
-		{name: "Country code file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: "/non/existent", IPv4File: v4}, wantErr: true},
+		{name: "Country code file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: missing, IPv4File: v4}, wantErrIs: fs.ErrNotExist},
 		{name: "Remote country code file 404", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: srv.URL + "/missing", IPv4File: v4}, wantErr: true},
 		{name: "Empty country code file", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: emptyFile, IPv4File: v4}, wantErr: true},
 		{name: "Short country code record", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: ccShort, IPv4File: v4}, wantErr: true},
 		{name: "No country code data", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: ccNoData, IPv4File: v4}, wantErr: true},
 		{name: "Inconsistent country code file", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: ccInconsistent, IPv4File: v4}, wantErr: true},
-		{name: "IPv4 file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: "/non/existent"}, wantErr: true},
-		{name: "IPv6 file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv6File: "/non/existent"}, wantErr: true},
+		{name: "IPv4 file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: missing}, wantErrIs: fs.ErrNotExist},
+		{name: "IPv6 file not found", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv6File: missing}, wantErrIs: fs.ErrNotExist},
 		{name: "Remote IP file 404", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: srv.URL + "/missing"}, wantErr: true},
 		{name: "Short IP record", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: ipShort}, wantErr: true},
 		{name: "Inconsistent IP file", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: ipInconsistent}, wantErr: true},
-		{name: "Invalid CIDR", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: ipBadCIDR}, wantErr: true},
+		{name: "Invalid CIDR", g: &geolite2_country_csv_in{Action: lib.ActionAdd, CountryCodeFile: cc, IPv4File: ipBadCIDR}, wantErrIs: lib.ErrInvalidCIDR},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -187,6 +192,10 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 				c = lib.NewContainer()
 			}
 			got, err := tt.g.Input(c)
+			if tt.wantErrIs != nil {
+				assertErrorIs(t, err, tt.wantErrIs)
+				return
+			}
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("error = %v, wantErr %v", err, tt.wantErr)
 			}
