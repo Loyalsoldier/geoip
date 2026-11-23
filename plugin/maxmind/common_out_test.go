@@ -151,7 +151,7 @@ func TestDBIPHasData(t *testing.T) {
 	}{
 		{"Zero", dbipCountry{}, false},
 		{"Continent", dbipCountry{Continent: dbipContinent{Names: names}}, true},
-		{"Represented country", dbipCountry{RepresentedCountry: dbipRepresentedCountry{Names: names}}, true},
+		{"Represented country", dbipCountry{RepresentedCountry: dbipRepresentedCountry{Type: "military"}}, true},
 		{"Country", dbipCountry{Country: dbipCountryRecord{Names: names}}, true},
 		{"Registered country", dbipCountry{RegisteredCountry: dbipCountryRecord{Names: names}}, true},
 		{"Traits", dbipCountry{Traits: geoip2.CountryTraits{IsAnycast: true}}, true},
@@ -215,6 +215,17 @@ func ipinfoSourceRecords() []mmdbRecord {
 	}
 }
 
+func wantGeoNames(prefix string) geoip2.Names {
+	return geoip2.Names{
+		German: prefix + "-de", English: prefix + "-en", Spanish: prefix + "-es", French: prefix + "-fr",
+		Japanese: prefix + "-ja", BrazilianPortuguese: prefix + "-pt-BR", Russian: prefix + "-ru", SimplifiedChinese: prefix + "-zh-CN",
+	}
+}
+
+func wantDBIPNames(prefix string) dbipLanguageNames {
+	return dbipLanguageNames{dbipStandardNames: dbipStandardNames(wantGeoNames(prefix)), Persian: prefix + "-fa", Korean: prefix + "-ko"}
+}
+
 func TestGetExtraInfo(t *testing.T) {
 	countrySrc := buildMMDB(t, "GeoLite2-Country", 24, countrySourceRecords())
 	ipinfoSrc := buildMMDB(t, "IPInfo-Lite", 32, ipinfoSourceRecords())
@@ -234,41 +245,26 @@ func TestGetExtraInfo(t *testing.T) {
 
 	geoliteWant := map[string]any{
 		"CN": geoip2.Country{
-			Continent: geoip2.Continent{Code: "AS", GeoNameID: 6255147, Names: geoip2.Names{
-				German: "Asia-de", English: "Asia-en", Spanish: "Asia-es", French: "Asia-fr", Japanese: "Asia-ja",
-				BrazilianPortuguese: "Asia-pt-BR", Russian: "Asia-ru", SimplifiedChinese: "Asia-zh-CN",
-			}},
-			Country: geoip2.CountryRecord{ISOCode: "cn", GeoNameID: 1814991, Names: geoip2.Names{
-				German: "China-de", English: "China-en", Spanish: "China-es", French: "China-fr", Japanese: "China-ja",
-				BrazilianPortuguese: "China-pt-BR", Russian: "China-ru", SimplifiedChinese: "China-zh-CN",
-			}},
+			Continent: geoip2.Continent{Code: "AS", GeoNameID: 6255147, Names: wantGeoNames("Asia")},
+			Country:   geoip2.CountryRecord{ISOCode: "cn", GeoNameID: 1814991, Names: wantGeoNames("China")},
 		},
 		"DE": geoip2.Country{
-			Country: geoip2.CountryRecord{ISOCode: "de", GeoNameID: 2921044, IsInEuropeanUnion: true, Names: geoip2.Names{
-				German: "Germany-de", English: "Germany-en", Spanish: "Germany-es", French: "Germany-fr", Japanese: "Germany-ja",
-				BrazilianPortuguese: "Germany-pt-BR", Russian: "Germany-ru", SimplifiedChinese: "Germany-zh-CN",
-			}},
+			Country: geoip2.CountryRecord{ISOCode: "de", GeoNameID: 2921044, IsInEuropeanUnion: true, Names: wantGeoNames("Germany")},
 		},
 		"US": geoip2.Country{
-			Country: geoip2.CountryRecord{ISOCode: "us", GeoNameID: 6252001, Names: geoip2.Names{
-				German: "US-de", English: "US-en", Spanish: "US-es", French: "US-fr", Japanese: "US-ja",
-				BrazilianPortuguese: "US-pt-BR", Russian: "US-ru", SimplifiedChinese: "US-zh-CN",
-			}},
+			Country: geoip2.CountryRecord{ISOCode: "us", GeoNameID: 6252001, Names: wantGeoNames("US")},
 		},
 	}
-	// Only non-name fields are checked for DB-IP: the embedded geoip2 structs
-	// currently capture the "names" map during decoding, so the outer
-	// dbipLanguageNames fields are not populated.
 	dbipWant := map[string]any{
 		"CN": dbipCountry{
-			Continent: dbipContinent{Continent: geoip2.Continent{Code: "AS", GeoNameID: 6255147}},
-			Country:   dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "cn", GeoNameID: 1814991}},
+			Continent: dbipContinent{Code: "AS", GeoNameID: 6255147, Names: wantDBIPNames("Asia")},
+			Country:   dbipCountryRecord{ISOCode: "cn", GeoNameID: 1814991, Names: wantDBIPNames("China")},
 		},
 		"DE": dbipCountry{
-			Country: dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "de", GeoNameID: 2921044, IsInEuropeanUnion: true}},
+			Country: dbipCountryRecord{ISOCode: "de", GeoNameID: 2921044, IsInEuropeanUnion: true, Names: wantDBIPNames("Germany")},
 		},
 		"US": dbipCountry{
-			Country: dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "us", GeoNameID: 6252001}},
+			Country: dbipCountryRecord{ISOCode: "us", GeoNameID: 6252001, Names: wantDBIPNames("US")},
 		},
 	}
 	ipinfoWant := map[string]any{
@@ -304,25 +300,9 @@ func TestGetExtraInfo(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
-			if len(got) != len(tt.want) {
-				t.Fatalf("len = %d, want %d; got %+v", len(got), len(tt.want), got)
-			}
-			for k, v := range tt.want {
-				if d, ok := got[k].(dbipCountry); ok {
-					got[k] = stripDBIPNames(d)
-				}
-				if !reflect.DeepEqual(got[k], v) {
-					t.Errorf("[%s] got %+v, want %+v", k, got[k], v)
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetExtraInfo() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
-}
-
-func stripDBIPNames(d dbipCountry) dbipCountry {
-	d.Continent.Names = dbipLanguageNames{}
-	d.Continent.Continent.Names = geoip2.Names{}
-	d.Country.Names = dbipLanguageNames{}
-	d.Country.CountryRecord.Names = geoip2.Names{}
-	return d
 }

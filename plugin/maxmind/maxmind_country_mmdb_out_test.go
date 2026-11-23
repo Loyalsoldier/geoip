@@ -12,8 +12,7 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
-// readOutputMMDB reads an MMDB file and returns, per list name, the sorted CIDRs and the decoded record.
-func readOutputMMDB(t *testing.T, path string) (map[string][]string, map[string]map[string]any) {
+func assertOutputMMDB(t *testing.T, path string, wantCIDRs map[string][]string, wantRecords map[string]map[string]any) {
 	t.Helper()
 	db, err := maxminddb.Open(path)
 	if err != nil {
@@ -22,25 +21,22 @@ func readOutputMMDB(t *testing.T, path string) (map[string][]string, map[string]
 	defer db.Close()
 
 	cidrs := make(map[string][]string)
-	records := make(map[string]map[string]any)
 	for network := range db.Networks() {
 		var record map[string]any
 		if err := network.Decode(&record); err != nil {
 			t.Fatalf("Decode() error = %v", err)
 		}
-		var name string
+		name, _ := record["country_code"].(string)
 		if country, ok := record["country"].(map[string]any); ok {
-			name = country["iso_code"].(string)
-		} else {
-			name = record["country_code"].(string)
+			name, _ = country["iso_code"].(string)
 		}
-		cidrs[name] = append(cidrs[name], network.Prefix().String())
-		records[name] = record
+		prefix := network.Prefix().String()
+		if want, ok := wantRecords[name]; !ok || !reflect.DeepEqual(record, want) {
+			t.Errorf("record for %s (%q) = %v, want %v", prefix, name, record, want)
+		}
+		cidrs[name] = append(cidrs[name], prefix)
 	}
-	for name := range cidrs {
-		slices.Sort(cidrs[name])
-	}
-	return cidrs, records
+	assertCIDRs(t, sortedCIDRs(cidrs), sortedCIDRs(wantCIDRs))
 }
 
 func sortedCIDRs(m map[string][]string) map[string][]string {
@@ -91,6 +87,10 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 	countrySrc := writeTempFile(t, "country.mmdb", buildMMDB(t, "GeoLite2-Country", 24, countrySourceRecords()))
 	ipinfoSrc := writeTempFile(t, "ipinfo.mmdb", buildMMDB(t, "IPInfo-Lite", 32, ipinfoSourceRecords()))
 
+	dbipData := map[string][]string{
+		"CN": data["CN"], "US": data["US"], "JP": data["JP"], "DE": {"1.0.4.0/24"},
+	}
+
 	tests := []struct {
 		name       string
 		g          *geolite2_country_mmdb_out
@@ -105,6 +105,8 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 			wantCIDRs: data,
 			wantRecord: map[string]map[string]any{
 				"CN": {"country": map[string]any{"iso_code": "CN"}},
+				"US": {"country": map[string]any{"iso_code": "US"}},
+				"JP": {"country": map[string]any{"iso_code": "JP"}},
 			},
 		},
 		{
@@ -113,6 +115,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 			data:      data,
 			wantCIDRs: map[string][]string{"CN": {"2001:da8::/32"}, "US": {"2600::/16"}},
 			wantRecord: map[string]map[string]any{
+				"CN": {"country": map[string]any{"iso_code": "CN"}},
 				"US": {"country": map[string]any{"iso_code": "US"}},
 			},
 		},
@@ -134,17 +137,17 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 				"CN": {
 					"continent": map[string]any{
 						"code": "AS", "geoname_id": uint64(6255147),
-						"names": map[string]any{"de": "Asia-de", "en": "Asia-en", "es": "Asia-es", "fr": "Asia-fr", "ja": "Asia-ja", "pt-BR": "Asia-pt-BR", "ru": "Asia-ru", "zh-CN": "Asia-zh-CN"},
+						"names": wantNames("Asia", false),
 					},
 					"country": map[string]any{
 						"iso_code": "CN", "geoname_id": uint64(1814991), "is_in_european_union": false,
-						"names": map[string]any{"de": "China-de", "en": "China-en", "es": "China-es", "fr": "China-fr", "ja": "China-ja", "pt-BR": "China-pt-BR", "ru": "China-ru", "zh-CN": "China-zh-CN"},
+						"names": wantNames("China", false),
 					},
 				},
 				"US": {
 					"country": map[string]any{
 						"iso_code": "US", "geoname_id": uint64(6252001), "is_in_european_union": false,
-						"names": map[string]any{"de": "US-de", "en": "US-en", "es": "US-es", "fr": "US-fr", "ja": "US-ja", "pt-BR": "US-pt-BR", "ru": "US-ru", "zh-CN": "US-zh-CN"},
+						"names": wantNames("US", false),
 					},
 				},
 				"JP": {"country": map[string]any{"iso_code": "JP"}},
@@ -153,9 +156,15 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		{
 			name:      "DBIP with source",
 			g:         &geolite2_country_mmdb_out{Type: TypeDBIPCountryMMDBOut, SourceMMDBURI: countrySrc},
-			data:      data,
-			wantCIDRs: data,
+			data:      dbipData,
+			wantCIDRs: dbipData,
 			wantRecord: map[string]map[string]any{
+				"CN": {
+					"continent": map[string]any{"code": "AS", "geoname_id": uint64(6255147), "names": wantNames("Asia", true)},
+					"country":   map[string]any{"iso_code": "CN", "geoname_id": uint64(1814991), "is_in_european_union": false, "names": wantNames("China", true)},
+				},
+				"DE": {"country": map[string]any{"iso_code": "DE", "geoname_id": uint64(2921044), "is_in_european_union": true, "names": wantNames("Germany", true)}},
+				"US": {"country": map[string]any{"iso_code": "US", "geoname_id": uint64(6252001), "is_in_european_union": false, "names": wantNames("US", true)}},
 				"JP": {"country": map[string]any{"iso_code": "JP"}},
 			},
 		},
@@ -167,6 +176,7 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 			wantRecord: map[string]map[string]any{
 				"CN": {"as_domain": "", "as_name": "", "asn": "", "continent": "Asia", "continent_code": "AS", "country": "China", "country_code": "CN"},
 				"US": {"country_code": "US"},
+				"JP": {"country_code": "JP"},
 			},
 		},
 	}
@@ -178,45 +188,21 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 			if err := tt.g.Output(newContainerWith(t, tt.data)); err != nil {
 				t.Fatalf("Output() error = %v", err)
 			}
-			gotCIDRs, gotRecords := readOutputMMDB(t, filepath.Join(tt.g.OutputDir, tt.g.OutputName))
-			assertCIDRs(t, gotCIDRs, sortedCIDRs(tt.wantCIDRs))
-			for name, want := range tt.wantRecord {
-				if !reflect.DeepEqual(gotRecords[name], want) {
-					t.Errorf("record[%s] = %v, want %v", name, gotRecords[name], want)
-				}
-			}
+			assertOutputMMDB(t, filepath.Join(tt.g.OutputDir, tt.g.OutputName), tt.wantCIDRs, tt.wantRecord)
 		})
 	}
 }
 
-func TestGeoLite2CountryMMDBOut_OutputDBIPWithSourceContinent(t *testing.T) {
-	src := writeTempFile(t, "country.mmdb", buildMMDB(t, "DBIP-Country-Lite", 24, countrySourceRecords()))
-	g := &geolite2_country_mmdb_out{
-		Type: TypeDBIPCountryMMDBOut, Action: lib.ActionOutput, SourceMMDBURI: src,
-		OutputDir: t.TempDir(), OutputName: "out.mmdb",
+func wantNames(prefix string, dbip bool) map[string]any {
+	names := map[string]any{}
+	for _, lang := range []string{"de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"} {
+		names[lang] = prefix + "-" + lang
 	}
-	if err := g.Output(newContainerWith(t, map[string][]string{"CN": {"1.0.1.0/24"}, "DE": {"1.0.3.0/24"}})); err != nil {
-		t.Fatalf("Output() error = %v", err)
+	if dbip {
+		names["fa"] = prefix + "-fa"
+		names["ko"] = prefix + "-ko"
 	}
-	gotCIDRs, gotRecords := readOutputMMDB(t, filepath.Join(g.OutputDir, g.OutputName))
-	assertCIDRs(t, gotCIDRs, map[string][]string{"CN": {"1.0.1.0/24"}, "DE": {"1.0.3.0/24"}})
-
-	cn := gotRecords["CN"]
-	continent := cn["continent"].(map[string]any)
-	if continent["code"] != "AS" || continent["geoname_id"] != uint64(6255147) {
-		t.Errorf("CN continent = %v", continent)
-	}
-	country := cn["country"].(map[string]any)
-	if country["iso_code"] != "CN" || country["geoname_id"] != uint64(1814991) {
-		t.Errorf("CN country = %v", country)
-	}
-	if _, ok := gotRecords["DE"]["continent"]; ok {
-		t.Errorf("DE should not have continent: %v", gotRecords["DE"])
-	}
-	de := gotRecords["DE"]["country"].(map[string]any)
-	if de["iso_code"] != "DE" || de["is_in_european_union"] != true {
-		t.Errorf("DE country = %v", de)
-	}
+	return names
 }
 
 func TestGeoLite2CountryMMDBOut_OutputNoWrite(t *testing.T) {
