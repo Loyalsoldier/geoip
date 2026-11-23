@@ -54,33 +54,71 @@ func TestNewGeoLite2ASNCSVIn(t *testing.T) {
 	}
 }
 
-func TestWithASNWantedList(t *testing.T) {
+func TestWithGeoLite2ASNCSVWantedList(t *testing.T) {
 	tests := []struct {
 		name string
-		want lib.WantedListExtended
-		exp  map[string][]string
+		opt  lib.InputOption
+		want map[string][]string
 	}{
-		{"Empty", lib.WantedListExtended{}, map[string][]string{}},
+		{"Empty", WithGeoLite2ASNCSVWantedList(GeoLite2ASNCSVWantedList{}), map[string][]string{}},
+		{"Number", WithGeoLite2ASNCSVWantedList(uint(13335)), map[string][]string{"13335": {"AS13335"}}},
+		{"String", WithGeoLite2ASNCSVWantedList(" as2519 "), map[string][]string{"2519": {"AS2519"}}},
+		{"Number slice", WithGeoLite2ASNCSVWantedList([]uint{13335, 2519}), map[string][]string{"13335": {"AS13335"}, "2519": {"AS2519"}}},
 		{
-			name: "Slice",
-			want: lib.WantedListExtended{TypeSlice: []string{"AS13335", " as2519 ", "", "as", "15169"}},
-			exp:  map[string][]string{"13335": {"AS13335"}, "2519": {"AS2519"}, "15169": {"AS15169"}},
+			name: "String slice",
+			opt:  WithGeoLite2ASNCSVWantedList([]string{"AS13335", " as2519 ", "", "as", "15169"}),
+			want: map[string][]string{"13335": {"AS13335"}, "2519": {"AS2519"}, "15169": {"AS15169"}},
 		},
 		{
-			name: "Map",
-			want: lib.WantedListExtended{TypeMap: map[string][]string{
+			name: "Number map sorts and deduplicates list names",
+			opt:  WithGeoLite2ASNCSVWantedList(map[string][]uint{" cloud ": {13335, 13335}, "cf": {13335}}),
+			want: map[string][]string{"13335": {"CF", "CLOUD"}},
+		},
+		{
+			name: "String map",
+			opt: WithGeoLite2ASNCSVWantedList(map[string][]string{
 				"cloud": {"AS13335", " ", "as"},
 				" ":     {"AS1"},
-			}},
-			exp: map[string][]string{"13335": {"CLOUD"}},
+			}),
+			want: map[string][]string{"13335": {"CLOUD"}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &geolite2_asn_csv_in{}
-			WithASNWantedList(tt.want)(g)
-			if !reflect.DeepEqual(g.Want, tt.exp) {
-				t.Errorf("Want = %v, want %v", g.Want, tt.exp)
+			tt.opt(g)
+			if !reflect.DeepEqual(g.Want, tt.want) {
+				t.Errorf("Want = %v, want %v", g.Want, tt.want)
+			}
+		})
+	}
+}
+
+func TestGeoLite2ASNCSVWantedList_UnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name string
+		data string
+		want map[string][]string
+	}{
+		{"Blank", "  ", map[string][]string{}},
+		{"Number slice", `[13335, 2519]`, map[string][]string{"13335": {"AS13335"}, "2519": {"AS2519"}}},
+		{"String slice", `["AS13335", " as2519 "]`, map[string][]string{"13335": {"AS13335"}, "2519": {"AS2519"}}},
+		{"Number map", `{"cloud":[13335, 2519]}`, map[string][]string{"13335": {"CLOUD"}, "2519": {"CLOUD"}}},
+		{"String map", `{"cloud":["as13335", "2519"]}`, map[string][]string{"13335": {"CLOUD"}, "2519": {"CLOUD"}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			list := GeoLite2ASNCSVWantedList{
+				TypeSliceNum: []uint{1}, TypeSliceStr: []string{"AS2"},
+				TypeMapNum: map[string][]uint{"old": {3}}, TypeMapStr: map[string][]string{"old": {"AS4"}},
+			}
+			if err := list.UnmarshalJSON([]byte(tt.data)); err != nil {
+				t.Fatal(err)
+			}
+			g := &geolite2_asn_csv_in{}
+			WithGeoLite2ASNCSVWantedList(list)(g)
+			if !reflect.DeepEqual(g.Want, tt.want) {
+				t.Errorf("Want = %v, want %v", g.Want, tt.want)
 			}
 		})
 	}
@@ -111,6 +149,7 @@ func TestNewGeoLite2ASNCSVInFromBytes(t *testing.T) {
 			},
 		},
 		{name: "Invalid JSON", data: []byte(`[`), wantErr: true},
+		{name: "Mixed wanted list types", data: []byte(`{"wantedList":[13335,"AS2519"]}`), wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
