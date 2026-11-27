@@ -217,6 +217,7 @@ func ipinfoSourceFixture(t *testing.T) []byte {
 			"country": mmdbtype.String("China"), "country_code": mmdbtype.String("cn"),
 		}},
 		mmdbRecord{"1.0.1.0/24", mmdbtype.Map{"country_code": mmdbtype.String("CN"), "country": mmdbtype.String("Other")}},
+		mmdbRecord{"2.0.0.0/24", mmdbtype.Map{"country_code": mmdbtype.String(" "), "asn": mmdbtype.String("AS2")}},
 	)
 }
 
@@ -224,6 +225,7 @@ func TestGetExtraInfo(t *testing.T) {
 	dir := t.TempDir()
 	maxmindSrc := writeFile(t, dir, "maxmind.mmdb", maxmindSourceFixture(t))
 	ipinfoSrc := writeFile(t, dir, "ipinfo.mmdb", ipinfoSourceFixture(t))
+	asnOnly := writeFile(t, dir, "asn.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"asn": mmdbtype.String("AS1")}}))
 	emptySrc := writeFile(t, dir, "empty.mmdb", buildMMDB(t))
 	garbage := writeFile(t, dir, "garbage.mmdb", []byte("garbage"))
 	badCountry := writeFile(t, dir, "badcountry.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country": mmdbtype.String("x")}}))
@@ -243,6 +245,7 @@ func TestGetExtraInfo(t *testing.T) {
 		{name: "maxmind remote", iType: TypeGeoLite2CountryMMDBOut, src: srv.URL + "/maxmind.mmdb", wantKeys: []string{"CN", "DE", "US"}},
 		{name: "dbip", iType: TypeDBIPCountryMMDBOut, src: maxmindSrc, wantKeys: []string{"CN", "DE", "US"}},
 		{name: "ipinfo", iType: TypeIPInfoCountryMMDBOut, src: ipinfoSrc, wantKeys: []string{"CN"}},
+		{name: "ipinfo without countries", iType: TypeIPInfoCountryMMDBOut, src: asnOnly, wantErr: true},
 		{name: "missing file", iType: TypeGeoLite2CountryMMDBOut, src: dir + "/none", wantErr: true},
 		{name: "remote 404", iType: TypeGeoLite2CountryMMDBOut, src: srv.URL + "/none", wantErr: true},
 		{name: "garbage", iType: TypeGeoLite2CountryMMDBOut, src: garbage, wantErr: true},
