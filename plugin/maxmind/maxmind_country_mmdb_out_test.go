@@ -103,9 +103,9 @@ func TestHasData(t *testing.T) {
 	}{
 		{"zero", dbipCountry{}, false},
 		{"continent", dbipCountry{Continent: dbipContinent{Names: dbipLanguageNames{Persian: "x"}}}, true},
-		{"represented", dbipCountry{RepresentedCountry: dbipRepresentedCountry{Names: dbipLanguageNames{Korean: "x"}}}, true},
-		{"country", dbipCountry{Country: dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "CN"}}}, true},
-		{"registered", dbipCountry{RegisteredCountry: dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "CN"}}}, true},
+		{"represented", dbipCountry{RepresentedCountry: dbipRepresentedCountry{Type: "military"}}, true},
+		{"country", dbipCountry{Country: dbipCountryRecord{ISOCode: "CN"}}, true},
+		{"registered", dbipCountry{RegisteredCountry: dbipCountryRecord{ISOCode: "CN"}}, true},
 		{"traits", dbipCountry{Traits: geoip2.CountryTraits{IsAnycast: true}}, true},
 	}
 	for _, tt := range tests {
@@ -190,7 +190,10 @@ func readMMDB(t *testing.T, file, iType string) map[string][]string {
 
 func maxmindSourceFixture(t *testing.T) []byte {
 	names := func(en string) mmdbtype.Map {
-		return mmdbtype.Map{"en": mmdbtype.String(en), "zh-CN": mmdbtype.String(en + "-zh"), "fa": mmdbtype.String(en + "-fa")}
+		return mmdbtype.Map{
+			"en": mmdbtype.String(en), "zh-CN": mmdbtype.String(en + "-zh"),
+			"fa": mmdbtype.String(en + "-fa"), "ko": mmdbtype.String(en + "-ko"),
+		}
 	}
 	return buildMMDB(t,
 		mmdbRecord{"1.0.0.0/24", mmdbtype.Map{
@@ -414,7 +417,7 @@ func TestMMDBOut_OutputExtraInfoContent(t *testing.T) {
 	srcDir := t.TempDir()
 	maxmindSrc := writeFile(t, srcDir, "maxmind.mmdb", maxmindSourceFixture(t))
 	ipinfoSrc := writeFile(t, srcDir, "ipinfo.mmdb", ipinfoSourceFixture(t))
-	c := newTestContainer(t, map[string][]string{"CN": {"1.0.0.0/24"}, "DE": {"3.0.0.0/24"}})
+	c := newTestContainer(t, map[string][]string{"CN": {"1.0.0.0/24"}, "US": {"2.0.0.0/24"}, "DE": {"3.0.0.0/24"}})
 
 	t.Run("maxmind", func(t *testing.T) {
 		dir := t.TempDir()
@@ -442,10 +445,40 @@ func TestMMDBOut_OutputExtraInfoContent(t *testing.T) {
 		db, err := maxminddb.Open(filepath.Join(dir, "o.mmdb"))
 		assertErr(t, err, false)
 		defer db.Close()
-		var r dbipCountry
-		assertErr(t, db.Lookup(mustAddr("1.0.0.1")).Decode(&r), false)
-		if r.Continent.Code != "AS" || r.Country.ISOCode != "CN" || r.Country.GeoNameID != 2 {
-			t.Errorf("CN = %+v", r)
+		checkNames := func(t *testing.T, result maxminddb.Result, field, english string) {
+			t.Helper()
+			var names map[string]string
+			assertErr(t, result.DecodePath(&names, field, "names"), false)
+			for lang, want := range map[string]string{"en": english, "zh-CN": english + "-zh", "fa": english + "-fa", "ko": english + "-ko"} {
+				if got := names[lang]; got != want {
+					t.Errorf("%s.names[%q] = %q, want %q", field, lang, got, want)
+				}
+			}
+		}
+		for _, tt := range []struct {
+			sourceField, ip, code, name string
+			geonameID                   uint
+			inEU                        bool
+		}{
+			{"country", "1.0.0.1", "CN", "China", 2, false},
+			{"registered_country", "2.0.0.1", "US", "United States", 0, false},
+			{"represented_country", "3.0.0.1", "DE", "Germany", 0, true},
+		} {
+			t.Run(tt.sourceField, func(t *testing.T) {
+				result := db.Lookup(mustAddr(tt.ip))
+				var r geoip2.Country
+				assertErr(t, result.Decode(&r), false)
+				if r.Country.ISOCode != tt.code || r.Country.GeoNameID != tt.geonameID || r.Country.IsInEuropeanUnion != tt.inEU {
+					t.Errorf("country = %+v", r.Country)
+				}
+				checkNames(t, result, "country", tt.name)
+				if tt.code == "CN" {
+					if r.Continent.Code != "AS" || r.Continent.GeoNameID != 1 {
+						t.Errorf("continent = %+v", r.Continent)
+					}
+					checkNames(t, result, "continent", "Asia")
+				}
+			})
 		}
 	})
 
@@ -473,7 +506,7 @@ func TestDBIPLanguageNamesHasData(t *testing.T) {
 	}{
 		{"zero", dbipLanguageNames{}, false},
 		{"persian", dbipLanguageNames{Persian: "x"}, true},
-		{"english", dbipLanguageNames{Names: geoip2.Names{English: "x"}}, true},
+		{"english", dbipLanguageNames{dbipBaseNames: dbipBaseNames{English: "x"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

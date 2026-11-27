@@ -39,9 +39,12 @@ type ipInfoLite struct {
 	CountryCode   string `maxminddb:"country_code"`
 }
 
-// Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
+// Reuse the GeoIP field tags without inheriting its MMDB decoder, which
+// would skip DB-IP's additional languages.
+type dbipBaseNames geoip2.Names
+
 type dbipLanguageNames struct {
-	geoip2.Names
+	dbipBaseNames
 
 	// Persian localized name
 	Persian string `json:"fa,omitzero" maxminddb:"fa,maxsize:1024"`
@@ -55,9 +58,9 @@ func (d dbipLanguageNames) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipContinent struct {
-	geoip2.Continent
-
-	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
+	Names     dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
+	Code      string            `json:"code,omitzero" maxminddb:"code,maxsize:16"`
+	GeoNameID uint              `json:"geoname_id,omitzero" maxminddb:"geoname_id"`
 }
 
 func (d dbipContinent) HasData() bool {
@@ -66,9 +69,10 @@ func (d dbipContinent) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipCountryRecord struct {
-	geoip2.CountryRecord
-
-	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
+	Names             dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
+	ISOCode           string            `json:"iso_code,omitzero" maxminddb:"iso_code,maxsize:16"`
+	GeoNameID         uint              `json:"geoname_id,omitzero" maxminddb:"geoname_id"`
+	IsInEuropeanUnion bool              `json:"is_in_european_union,omitzero" maxminddb:"is_in_european_union"`
 }
 
 func (d dbipCountryRecord) HasData() bool {
@@ -77,9 +81,8 @@ func (d dbipCountryRecord) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipRepresentedCountry struct {
-	geoip2.RepresentedCountry
-
-	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
+	dbipCountryRecord
+	Type string `json:"type,omitzero" maxminddb:"type,maxsize:128"`
 }
 
 func (d dbipRepresentedCountry) HasData() bool {
@@ -319,14 +322,7 @@ func (g *geolite2_country_mmdb_out) GetExtraInfo() (map[string]any, error) {
 				if _, found := infoList[countryCode]; !found {
 					infoList[countryCode] = dbipCountry{
 						Continent: record.Continent,
-						Country: dbipCountryRecord{
-							CountryRecord: geoip2.CountryRecord{
-								ISOCode:           record.RepresentedCountry.ISOCode,
-								GeoNameID:         record.RepresentedCountry.GeoNameID,
-								IsInEuropeanUnion: record.RepresentedCountry.IsInEuropeanUnion,
-							},
-							Names: record.RepresentedCountry.Names,
-						},
+						Country:   record.RepresentedCountry.dbipCountryRecord,
 					}
 				}
 			}
