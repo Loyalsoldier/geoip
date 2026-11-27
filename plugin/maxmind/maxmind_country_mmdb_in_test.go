@@ -9,9 +9,16 @@ import (
 
 func geoliteFixture(t *testing.T) []byte {
 	return buildMMDB(t,
-		mmdbRecord{"1.0.0.0/24", countryRec("country", "cn")},
+		mmdbRecord{"1.0.0.0/24", mmdbtype.Map{
+			"country":             mmdbtype.Map{"iso_code": mmdbtype.String("cn")},
+			"registered_country":  mmdbtype.Map{"iso_code": mmdbtype.String("us")},
+			"represented_country": mmdbtype.Map{"iso_code": mmdbtype.String("jp")},
+		}},
 		mmdbRecord{"1.0.1.0/24", countryRec("country", "CN")},
-		mmdbRecord{"2.0.0.0/24", countryRec("registered_country", "us")},
+		mmdbRecord{"2.0.0.0/24", mmdbtype.Map{
+			"registered_country":  mmdbtype.Map{"iso_code": mmdbtype.String("us")},
+			"represented_country": mmdbtype.Map{"iso_code": mmdbtype.String("jp")},
+		}},
 		mmdbRecord{"3.0.0.0/24", countryRec("represented_country", "jp")},
 		mmdbRecord{"4.0.0.0/24", mmdbtype.Map{"continent": mmdbtype.Map{"code": mmdbtype.String("AS")}}},
 		mmdbRecord{"2001:db8::/32", countryRec("country", "CN")},
@@ -31,8 +38,9 @@ func TestMMDBIn_Input(t *testing.T) {
 	dir := t.TempDir()
 	geoFile := writeFile(t, dir, "geo.mmdb", geoliteFixture(t))
 	ipinfoFile := writeFile(t, dir, "ipinfo.mmdb", ipinfoFixture(t))
-	badDecodeFile := writeFile(t, dir, "bad.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country": mmdbtype.String("x")}}))
-	badIPInfoFile := writeFile(t, dir, "badipinfo.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country_code": mmdbtype.Map{}}}))
+	badDecodeFile := writeFile(t, dir, "bad.mmdb", badCountryMMDB(t))
+	badIPInfoFile := writeFile(t, dir, "badipinfo.mmdb", badIPInfoMMDB(t))
+	badMetadata := writeFile(t, dir, "metadata.mmdb", unverifiedMMDB(t))
 	emptyFile := writeFile(t, dir, "empty.mmdb", buildMMDB(t))
 	garbageFile := writeFile(t, dir, "garbage.mmdb", []byte("not a mmdb"))
 	srv := newServer(t, map[string][]byte{"/geo.mmdb": geoliteFixture(t)})
@@ -88,6 +96,7 @@ func TestMMDBIn_Input(t *testing.T) {
 		{name: "file not exist", iType: TypeGeoLite2CountryMMDBIn, uri: dir + "/none.mmdb", action: lib.ActionAdd, wantErr: true},
 		{name: "remote 404", iType: TypeGeoLite2CountryMMDBIn, uri: srv.URL + "/none", action: lib.ActionAdd, wantErr: true},
 		{name: "garbage", iType: TypeGeoLite2CountryMMDBIn, uri: garbageFile, action: lib.ActionAdd, wantErr: true},
+		{name: "invalid metadata", iType: TypeGeoLite2CountryMMDBIn, uri: badMetadata, action: lib.ActionAdd, wantErr: true},
 		{name: "empty db", iType: TypeGeoLite2CountryMMDBIn, uri: emptyFile, action: lib.ActionAdd, wantErr: true},
 		{name: "no wanted entry", iType: TypeGeoLite2CountryMMDBIn, uri: geoFile, action: lib.ActionAdd, want: []string{"XX"}, wantErr: true},
 		{name: "decode error", iType: TypeGeoLite2CountryMMDBIn, uri: badDecodeFile, action: lib.ActionAdd, wantErr: true},

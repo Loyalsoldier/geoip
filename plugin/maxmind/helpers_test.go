@@ -80,8 +80,13 @@ type mmdbRecord struct {
 
 func buildMMDB(t *testing.T, records ...mmdbRecord) []byte {
 	t.Helper()
+	return buildMMDBWithType(t, "test", records...)
+}
+
+func buildMMDBWithType(t *testing.T, databaseType string, records ...mmdbRecord) []byte {
+	t.Helper()
 	w, err := mmdbwriter.New(mmdbwriter.Options{
-		DatabaseType:            "test",
+		DatabaseType:            databaseType,
 		Description:             map[string]string{"en": "test"},
 		RecordSize:              24,
 		IncludeReservedNetworks: true,
@@ -107,6 +112,30 @@ func buildMMDB(t *testing.T, records ...mmdbRecord) []byte {
 
 func countryRec(field, code string) mmdbtype.Map {
 	return mmdbtype.Map{mmdbtype.String(field): mmdbtype.Map{"iso_code": mmdbtype.String(code)}}
+}
+
+// Keep a valid record so that silently skipping the invalid record cannot
+// pass a decode-error test by producing an empty result.
+func badCountryMMDB(t *testing.T) []byte {
+	t.Helper()
+	return buildMMDB(t,
+		mmdbRecord{"1.0.0.0/24", countryRec("country", "CN")},
+		mmdbRecord{"2.0.0.0/24", mmdbtype.Map{"country": mmdbtype.String("x")}},
+	)
+}
+
+func badIPInfoMMDB(t *testing.T) []byte {
+	t.Helper()
+	return buildMMDB(t,
+		mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country_code": mmdbtype.String("CN")}},
+		mmdbRecord{"2.0.0.0/24", mmdbtype.Map{"country_code": mmdbtype.Map{}}},
+	)
+}
+
+func unverifiedMMDB(t *testing.T) []byte {
+	t.Helper()
+	// The records are readable, but Verify rejects an empty database_type.
+	return buildMMDBWithType(t, "", mmdbRecord{"1.0.0.0/24", countryRec("country", "CN")})
 }
 
 func newServer(t *testing.T, files map[string][]byte) *httptest.Server {

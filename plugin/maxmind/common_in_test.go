@@ -1,6 +1,7 @@
 package maxmind
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -56,13 +57,8 @@ func TestNewMMDBIn(t *testing.T) {
 			if g.URI != tt.wantURI {
 				t.Errorf("URI = %q, want %q", g.URI, tt.wantURI)
 			}
-			if len(g.Want) != len(tt.wantWant) {
+			if !maps.Equal(g.Want, tt.wantWant) {
 				t.Errorf("Want = %v, want %v", g.Want, tt.wantWant)
-			}
-			for k := range tt.wantWant {
-				if !g.Want[k] {
-					t.Errorf("Want missing %s", k)
-				}
 			}
 			if g.OnlyIPType != tt.wantOnly {
 				t.Errorf("OnlyIPType = %q, want %q", g.OnlyIPType, tt.wantOnly)
@@ -82,12 +78,14 @@ func TestNewMMDBInFromBytes(t *testing.T) {
 		newFn   func(lib.Action, []byte) (lib.InputConverter, error)
 		data    string
 		wantURI string
+		want    map[string]bool
+		only    lib.IPType
 		wantErr bool
 	}{
-		{"maxmind empty", NewGeoLite2CountryMMDBInFromBytes, "", defaultGeoLite2CountryMMDBFile, false},
-		{"dbip uri", NewDBIPCountryMMDBInFromBytes, `{"uri":"d.mmdb","wantedList":["cn"],"onlyIPType":"ipv6"}`, "d.mmdb", false},
-		{"ipinfo empty object", NewIPInfoCountryMMDBInFromBytes, `{}`, defaultIPInfoCountryMMDBFile, false},
-		{"invalid json", NewGeoLite2CountryMMDBInFromBytes, `{`, "", true},
+		{"maxmind empty", NewGeoLite2CountryMMDBInFromBytes, "", defaultGeoLite2CountryMMDBFile, nil, "", false},
+		{"dbip uri", NewDBIPCountryMMDBInFromBytes, `{"uri":"d.mmdb","wantedList":["cn"],"onlyIPType":"ipv6"}`, "d.mmdb", map[string]bool{"CN": true}, lib.IPv6, false},
+		{"ipinfo empty object", NewIPInfoCountryMMDBInFromBytes, `{}`, defaultIPInfoCountryMMDBFile, nil, "", false},
+		{"invalid json", NewGeoLite2CountryMMDBInFromBytes, `{`, "", nil, "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,8 +94,9 @@ func TestNewMMDBInFromBytes(t *testing.T) {
 			if tt.wantErr {
 				return
 			}
-			if got := conv.(*geolite2_country_mmdb_in).URI; got != tt.wantURI {
-				t.Errorf("URI = %q, want %q", got, tt.wantURI)
+			g := conv.(*geolite2_country_mmdb_in)
+			if g.URI != tt.wantURI || !maps.Equal(g.Want, tt.want) || g.OnlyIPType != tt.only {
+				t.Errorf("got URI %q, wanted list %v, IP type %q; want %q, %v, %q", g.URI, g.Want, g.OnlyIPType, tt.wantURI, tt.want, tt.only)
 			}
 		})
 	}

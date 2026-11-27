@@ -1,6 +1,7 @@
 package maxmind
 
 import (
+	"maps"
 	"testing"
 
 	"github.com/Loyalsoldier/geoip/lib"
@@ -15,8 +16,8 @@ const (
 ,en,AS,Asia,KR,Korea,0
 `
 	testCountryIPv4CSV = `network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider
-1.0.0.0/24,1814991,1814991,,0,0
-1.0.1.0/24,6255147,1814991,,0,0
+1.0.0.0/24,1814991,6252001,1861060,0,0
+1.0.1.0/24,6255147,1814991,1861060,0,0
 2.0.0.0/24,,,6252001,0,0
 3.0.0.0/24,1861060,,,0,0
 4.0.0.0/24,6255147,,,0,0
@@ -55,13 +56,8 @@ func TestNewGeoLite2CountryCSVIn(t *testing.T) {
 			if g.CountryCodeFile != tt.wantCC || g.IPv4File != tt.wantV4 || g.IPv6File != tt.wantV6 || g.OnlyIPType != tt.wantOnly {
 				t.Errorf("got %+v", g)
 			}
-			if len(g.Want) != len(tt.wantWant) {
+			if !maps.Equal(g.Want, tt.wantWant) {
 				t.Errorf("Want = %v, want %v", g.Want, tt.wantWant)
-			}
-			for k := range tt.wantWant {
-				if !g.Want[k] {
-					t.Errorf("Want missing %s", k)
-				}
 			}
 		})
 	}
@@ -74,11 +70,13 @@ func TestNewGeoLite2CountryCSVInFromBytes(t *testing.T) {
 		wantCC  string
 		wantV4  string
 		wantV6  string
+		want    map[string]bool
+		only    lib.IPType
 		wantErr bool
 	}{
-		{"empty", "", defaultGeoLite2CountryCodeFile, defaultGeoLite2CountryIPv4File, defaultGeoLite2CountryIPv6File, false},
-		{"custom", `{"country":"cc.csv","ipv4":"v4.csv","ipv6":"v6.csv","wantedList":["cn"],"onlyIPType":"ipv4"}`, "cc.csv", "v4.csv", "v6.csv", false},
-		{"invalid", `[`, "", "", "", true},
+		{"empty", "", defaultGeoLite2CountryCodeFile, defaultGeoLite2CountryIPv4File, defaultGeoLite2CountryIPv6File, nil, "", false},
+		{"custom", `{"country":"cc.csv","ipv4":"v4.csv","ipv6":"v6.csv","wantedList":["cn"],"onlyIPType":"ipv4"}`, "cc.csv", "v4.csv", "v6.csv", map[string]bool{"CN": true}, lib.IPv4, false},
+		{"invalid", `[`, "", "", "", nil, "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -90,6 +88,9 @@ func TestNewGeoLite2CountryCSVInFromBytes(t *testing.T) {
 			g := conv.(*geolite2_country_csv_in)
 			if g.CountryCodeFile != tt.wantCC || g.IPv4File != tt.wantV4 || g.IPv6File != tt.wantV6 {
 				t.Errorf("got %+v", g)
+			}
+			if !maps.Equal(g.Want, tt.want) || g.OnlyIPType != tt.only {
+				t.Errorf("got wanted list %v, IP type %q; want %v, %q", g.Want, g.OnlyIPType, tt.want, tt.only)
 			}
 		})
 	}

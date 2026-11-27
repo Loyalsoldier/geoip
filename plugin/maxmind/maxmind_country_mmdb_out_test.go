@@ -228,8 +228,9 @@ func TestGetExtraInfo(t *testing.T) {
 	asnOnly := writeFile(t, dir, "asn.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"asn": mmdbtype.String("AS1")}}))
 	emptySrc := writeFile(t, dir, "empty.mmdb", buildMMDB(t))
 	garbage := writeFile(t, dir, "garbage.mmdb", []byte("garbage"))
-	badCountry := writeFile(t, dir, "badcountry.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country": mmdbtype.String("x")}}))
-	badIPInfo := writeFile(t, dir, "badipinfo.mmdb", buildMMDB(t, mmdbRecord{"1.0.0.0/24", mmdbtype.Map{"country_code": mmdbtype.Map{}}}))
+	badCountry := writeFile(t, dir, "badcountry.mmdb", badCountryMMDB(t))
+	badIPInfo := writeFile(t, dir, "badipinfo.mmdb", badIPInfoMMDB(t))
+	badMetadata := writeFile(t, dir, "metadata.mmdb", unverifiedMMDB(t))
 	srv := newServer(t, map[string][]byte{"/maxmind.mmdb": maxmindSourceFixture(t)})
 
 	tests := []struct {
@@ -249,6 +250,7 @@ func TestGetExtraInfo(t *testing.T) {
 		{name: "missing file", iType: TypeGeoLite2CountryMMDBOut, src: dir + "/none", wantErr: true},
 		{name: "remote 404", iType: TypeGeoLite2CountryMMDBOut, src: srv.URL + "/none", wantErr: true},
 		{name: "garbage", iType: TypeGeoLite2CountryMMDBOut, src: garbage, wantErr: true},
+		{name: "invalid metadata", iType: TypeGeoLite2CountryMMDBOut, src: badMetadata, wantErr: true},
 		{name: "empty", iType: TypeGeoLite2CountryMMDBOut, src: emptySrc, wantErr: true},
 		{name: "unsupported type", iType: "unknown", src: maxmindSrc, wantErr: true},
 		{name: "maxmind decode error", iType: TypeGeoLite2CountryMMDBOut, src: badCountry, wantErr: true},
@@ -322,12 +324,13 @@ func TestMMDBOut_Output(t *testing.T) {
 	ipinfoSrc := writeFile(t, srcDir, "ipinfo.mmdb", ipinfoSourceFixture(t))
 	fileAsDir := writeFile(t, srcDir, "file", []byte("x"))
 
-	data := map[string][]string{
+	defaultData := map[string][]string{
 		"CN": {"1.0.0.0/24", "2001:db8::/32"},
 		"US": {"2.0.0.0/24"},
 		"DE": {"3.0.0.0/24"},
 		"JP": {"5.0.0.0/24"},
 	}
+	overlap := map[string][]string{"CN": {"1.0.0.0/24"}, "US": {"1.0.0.0/24", "2.0.0.0/24"}}
 
 	tests := []struct {
 		name       string
@@ -340,6 +343,7 @@ func TestMMDBOut_Output(t *testing.T) {
 		outputName string
 		wantErr    bool
 		wantFile   bool
+		data       map[string][]string
 		expect     map[string][]string
 	}{
 		{
@@ -367,9 +371,14 @@ func TestMMDBOut_Output(t *testing.T) {
 			expect: map[string][]string{"CN": {"1.0.0.0/24", "2001:db8::/32"}, "JP": {"5.0.0.0/24"}},
 		},
 		{
-			name: "overwrite", iType: TypeGeoLite2CountryMMDBOut, overwrite: []string{"cn"}, want: []string{"US", "CN"}, wantFile: true,
-			expect: map[string][]string{"CN": {"1.0.0.0/24", "2001:db8::/32"}, "US": {"2.0.0.0/24"}},
+			name: "overwrite wins shared prefix", iType: TypeGeoLite2CountryMMDBOut, data: overlap, overwrite: []string{"cn"}, wantFile: true,
+			expect: map[string][]string{"CN": {"1.0.0.0/24"}, "US": {"2.0.0.0/24"}},
 		},
+		{
+			name: "wanted order overrides overwrite", iType: TypeGeoLite2CountryMMDBOut, data: overlap, overwrite: []string{"cn"}, want: []string{"CN", "US"}, wantFile: true,
+			expect: map[string][]string{"US": {"1.0.0.0/24", "2.0.0.0/24"}},
+		},
+		{name: "insert into aliased network", iType: TypeGeoLite2CountryMMDBOut, data: map[string][]string{"CN": {"2002:100::/24"}}, wantErr: true},
 		{name: "wanted not found", iType: TypeGeoLite2CountryMMDBOut, want: []string{"XX"}, wantFile: false},
 		{name: "unsupported type no source", iType: "unknown", wantErr: true},
 		{name: "unsupported type with source", iType: "unknown", src: maxmindSrc, wantErr: true},
@@ -392,6 +401,10 @@ func TestMMDBOut_Output(t *testing.T) {
 			g := &geolite2_country_mmdb_out{
 				Type: tt.iType, Action: lib.ActionOutput, OutputDir: outDir, OutputName: name,
 				Want: tt.want, Overwrite: tt.overwrite, OnlyIPType: tt.only, SourceMMDBURI: tt.src,
+			}
+			data := tt.data
+			if data == nil {
+				data = defaultData
 			}
 			err := g.Output(newTestContainer(t, data))
 			assertErr(t, err, tt.wantErr)
