@@ -39,9 +39,18 @@ type ipInfoLite struct {
 	CountryCode   string `maxminddb:"country_code"`
 }
 
+// Embed the GeoIP2 fields without inheriting their MMDB unmarshal methods.
+// Those methods decode only the base schema and skip the extended DB-IP names.
+type (
+	geoNamesFields              geoip2.Names
+	geoContinentFields          geoip2.Continent
+	geoCountryFields            geoip2.CountryRecord
+	geoRepresentedCountryFields geoip2.RepresentedCountry
+)
+
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipLanguageNames struct {
-	geoip2.Names
+	geoNamesFields
 
 	// Persian localized name
 	Persian string `json:"fa,omitzero" maxminddb:"fa,maxsize:1024"`
@@ -55,7 +64,7 @@ func (d dbipLanguageNames) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipContinent struct {
-	geoip2.Continent
+	geoContinentFields
 
 	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
 }
@@ -66,7 +75,7 @@ func (d dbipContinent) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipCountryRecord struct {
-	geoip2.CountryRecord
+	geoCountryFields
 
 	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
 }
@@ -77,7 +86,7 @@ func (d dbipCountryRecord) HasData() bool {
 
 // Reference: https://github.com/oschwald/geoip2-golang/blob/v2.5.0/models.go
 type dbipRepresentedCountry struct {
-	geoip2.RepresentedCountry
+	geoRepresentedCountryFields
 
 	Names dbipLanguageNames `json:"names,omitzero" maxminddb:"names"`
 }
@@ -320,7 +329,7 @@ func (g *geolite2_country_mmdb_out) GetExtraInfo() (map[string]any, error) {
 					infoList[countryCode] = dbipCountry{
 						Continent: record.Continent,
 						Country: dbipCountryRecord{
-							CountryRecord: geoip2.CountryRecord{
+							geoCountryFields: geoCountryFields{
 								ISOCode:           record.RepresentedCountry.ISOCode,
 								GeoNameID:         record.RepresentedCountry.GeoNameID,
 								IsInEuropeanUnion: record.RepresentedCountry.IsInEuropeanUnion,
