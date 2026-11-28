@@ -13,7 +13,7 @@ import (
 
 func TestEnrichedCountryOutput(t *testing.T) {
 	c := containerWith(t, map[string][]string{
-		"DE": {"192.0.2.0/25", "2001:db8::/32"}, "JP": {"192.0.2.128/25"}, "KR": {"198.51.100.0/24"}, "ZZ": {"203.0.113.0/24"},
+		"DE": {"192.0.2.0/25", "2001:db8::/32"}, "JP": {"192.0.2.128/25"}, "FR": {"198.51.100.0/24"}, "ZZ": {"203.0.113.0/24"},
 	})
 	for _, tt := range []struct {
 		typ       string
@@ -37,15 +37,15 @@ func TestEnrichedCountryOutput(t *testing.T) {
 				}
 			}
 			europe := mmdbtype.Map{"code": mmdbtype.String("EU"), "geoname_id": mmdbtype.Uint32(10), "names": names("Europe")}
-			de, jp, kr := country("DE", 1, true), country("JP", 2, false), country("KR", 3, false)
+			de, jp, fr := country("DE", 1, true), country("JP", 2, false), country("FR", 3, true)
 			sourceDE := maps.Clone(de)
 			sourceDE["iso_code"] = mmdbtype.String(" de ")
-			representedKR := maps.Clone(kr)
-			representedKR["type"] = mmdbtype.String("military")
+			representedFR := maps.Clone(fr)
+			representedFR["type"] = mmdbtype.String("military")
 			source := mmdbFixture(t, "Country", map[string]mmdbtype.DataType{
 				"192.0.2.1/32": mmdbtype.Map{"country": sourceDE, "registered_country": countryCode("ZZ"), "continent": europe},
 				"192.0.2.2/32": mmdbtype.Map{"registered_country": jp, "represented_country": countryCode("ZZ")},
-				"192.0.2.3/32": mmdbtype.Map{"represented_country": representedKR},
+				"192.0.2.3/32": mmdbtype.Map{"represented_country": representedFR},
 				"192.0.2.4/32": mmdbtype.Map{"country": countryCode("DE")}, // first record supplies the extra info
 			})
 			g := geolite2_country_mmdb_out{
@@ -57,7 +57,7 @@ func TestEnrichedCountryOutput(t *testing.T) {
 			}
 			assertDatabaseRecords(t, openOutput(t, &g), map[string]mmdbtype.Map{
 				"192.0.2.0/25": {"country": de, "continent": europe}, "192.0.2.128/25": {"country": jp},
-				"198.51.100.0/24": {"country": kr}, "203.0.113.0/24": {"country": countryCode("ZZ")},
+				"198.51.100.0/24": {"country": fr}, "203.0.113.0/24": {"country": countryCode("ZZ")},
 			})
 		})
 	}
@@ -119,7 +119,8 @@ func TestExtraInfoUnavailable(t *testing.T) {
 func TestDBIPHasData(t *testing.T) {
 	names := dbipLanguageNames{Persian: "name-fa"}
 	continent := dbipContinent{Names: names}
-	country := dbipCountryRecord{geoCountryFields: geoCountryFields{ISOCode: "DE"}}
+	country := dbipCountryRecord{}
+	country.ISOCode = "DE"
 	represented := dbipRepresentedCountry{Names: dbipLanguageNames{Korean: "name-ko"}}
 	for _, tt := range []struct {
 		name string

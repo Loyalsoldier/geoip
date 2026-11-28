@@ -27,14 +27,20 @@ func TestMMDBInputConstructors(t *testing.T) {
 	blankURI := WithURI("  ")
 	for _, tt := range tests {
 		t.Run(tt.typ, func(t *testing.T) {
-			in, err := tt.new(lib.ActionRemove, nil, blankURI)
-			if err != nil {
-				t.Fatal(err)
+			for name, opts := range map[string][]lib.InputOption{
+				"defaults": nil, "reset to defaults": {nil, WithURI("custom.mmdb"), blankURI},
+			} {
+				t.Run(name, func(t *testing.T) {
+					in, err := tt.new(lib.ActionRemove, opts...)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if in.GetType() != tt.typ || in.GetDescription() != tt.desc || in.GetAction() != lib.ActionRemove || in.(*geolite2_country_mmdb_in).URI != tt.defaultURI {
+						t.Fatalf("unexpected defaults: %+v", in)
+					}
+				})
 			}
-			if in.GetType() != tt.typ || in.GetDescription() != tt.desc || in.GetAction() != lib.ActionRemove || in.(*geolite2_country_mmdb_in).URI != tt.defaultURI {
-				t.Fatalf("unexpected defaults: %+v", in)
-			}
-			in, err = tt.fromJSON(lib.ActionAdd, []byte(`{"uri":" local.mmdb ","wantedList":[" de ","DE"," "],"onlyIPType":"ipv6"}`))
+			in, err := tt.fromJSON(lib.ActionAdd, []byte(`{"uri":" local.mmdb ","wantedList":[" de ","DE"," "],"onlyIPType":"ipv6"}`))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -66,21 +72,27 @@ func TestMMDBOutputConstructors(t *testing.T) {
 	blankDir := WithOutputDir(" ")
 	for _, tt := range tests {
 		t.Run(tt.typ, func(t *testing.T) {
-			out, err := tt.new(lib.ActionOutput, nil, blankDir, WithOutputName(" "))
-			if err != nil {
-				t.Fatal(err)
+			for name, opts := range map[string][]lib.OutputOption{
+				"defaults": nil, "reset to defaults": {nil, WithOutputName("custom.mmdb"), WithOutputDir("custom"), blankDir, WithOutputName(" ")},
+			} {
+				t.Run(name, func(t *testing.T) {
+					out, err := tt.new(lib.ActionOutput, opts...)
+					if err != nil {
+						t.Fatal(err)
+					}
+					g := out.(*geolite2_country_mmdb_out)
+					if out.GetType() != tt.typ || out.GetDescription() != tt.desc || out.GetAction() != lib.ActionOutput || g.OutputDir != filepath.Join("output", tt.subdir) || g.OutputName != "Country.mmdb" {
+						t.Fatalf("unexpected defaults: %+v", out)
+					}
+				})
 			}
-			g := out.(*geolite2_country_mmdb_out)
-			if out.GetType() != tt.typ || out.GetDescription() != tt.desc || out.GetAction() != lib.ActionOutput || g.OutputDir != filepath.Join("output", tt.subdir) || g.OutputName != "Country.mmdb" {
-				t.Fatalf("unexpected defaults: %+v", out)
-			}
-			out, err = tt.fromJSON(lib.ActionOutput, []byte(`{
+			out, err := tt.fromJSON(lib.ActionOutput, []byte(`{
 				"outputName":" result.mmdb ", "outputDir":" custom ", "sourceMMDBURI":" source ",
 				"wantedList":["DE","JP"], "overwriteList":["JP"], "excludedList":["US"], "onlyIPType":"ipv4"}`))
 			if err != nil {
 				t.Fatal(err)
 			}
-			g = out.(*geolite2_country_mmdb_out)
+			g := out.(*geolite2_country_mmdb_out)
 			if g.Type != tt.typ || g.OutputName != "result.mmdb" || g.OutputDir != "custom" || g.SourceMMDBURI != "source" || g.OnlyIPType != lib.IPv4 ||
 				!slices.Equal(g.Want, []string{"DE", "JP"}) || !slices.Equal(g.Overwrite, []string{"JP"}) || !slices.Equal(g.Exclude, []string{"US"}) {
 				t.Errorf("unexpected JSON configuration: %+v", g)
