@@ -19,11 +19,6 @@ import (
 	"go4.org/netipx"
 )
 
-// dbipNamesIssue tells why enriching DB-IP databases with localized names
-// can't be verified yet.
-const dbipNamesIssue = "known issue: the localized names of a DB-IP source MMDB are not decoded, " +
-	"as the unmarshalers promoted from the embedded geoip2 types leave the Names fields of the dbip types unset"
-
 // isoCodeRecord returns the data that GeoLite2 and DB-IP databases hold for
 // the networks of a list without extra info.
 func isoCodeRecord(list string) mmdbtype.Map {
@@ -66,9 +61,16 @@ func geoLite2Names(place string) geoip2.Names {
 // DB-IP databases, in the form of extra info.
 func dbipNames(place string) dbipLanguageNames {
 	return dbipLanguageNames{
-		Names:   geoLite2Names(place),
-		Persian: place + " (fa)",
-		Korean:  place + " (ko)",
+		German:              place + " (de)",
+		English:             place + " (en)",
+		Spanish:             place + " (es)",
+		Persian:             place + " (fa)",
+		French:              place + " (fr)",
+		Japanese:            place + " (ja)",
+		Korean:              place + " (ko)",
+		BrazilianPortuguese: place + " (pt-BR)",
+		Russian:             place + " (ru)",
+		SimplifiedChinese:   place + " (zh-CN)",
 	}
 }
 
@@ -121,14 +123,8 @@ func TestGeoLite2CountryMMDBOut_marshalData(t *testing.T) {
 	// Extra info of each format, as GetExtraInfo provides it.
 	geoLite2Country := geoip2.CountryRecord{ISOCode: "DE", GeoNameID: 2921044, IsInEuropeanUnion: true, Names: geoLite2Names("Germany")}
 	geoLite2Continent := geoip2.Continent{Code: "EU", GeoNameID: 6255148, Names: geoLite2Names("Europe")}
-	dbipCountryInfo := dbipCountryRecord{
-		CountryRecord: geoip2.CountryRecord{ISOCode: "DE", GeoNameID: 2921044, IsInEuropeanUnion: true},
-		Names:         dbipNames("Germany"),
-	}
-	dbipContinentInfo := dbipContinent{
-		Continent: geoip2.Continent{Code: "EU", GeoNameID: 6255148},
-		Names:     dbipNames("Europe"),
-	}
+	dbipCountryInfo := dbipCountryRecord{ISOCode: "DE", GeoNameID: 2921044, IsInEuropeanUnion: true, Names: dbipNames("Germany")}
+	dbipContinentInfo := dbipContinent{Code: "EU", GeoNameID: 6255148, Names: dbipNames("Europe")}
 	ipinfoInfo := ipInfoLite{Continent: "Europe", ContinentCode: "EU", Country: "Germany", CountryCode: "DE"}
 
 	// The data that the extra info above is expected to be turned into.
@@ -580,8 +576,6 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 
 	tests := []struct {
 		name string
-		// skip tells why the test case can't pass for the time being.
-		skip string
 		// out is the output to run. Its output directory defaults to a new one
 		// and its output name to Country.mmdb.
 		out geolite2_country_mmdb_out
@@ -678,7 +672,6 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 		{
 			name:   "dbip enriched with localized names",
-			skip:   dbipNamesIssue,
 			out:    geolite2_country_mmdb_out{Type: dbip},
 			source: newSourcePlaces(localized(dbipLanguages)).source(),
 			lists:  enrichedLists,
@@ -752,10 +745,6 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.skip != "" {
-				t.Skip(tt.skip)
-			}
-
 			g := tt.out
 			g.Action = lib.ActionOutput
 			if g.OutputDir == "" {

@@ -36,20 +36,20 @@ func TestDBIPHasData(t *testing.T) {
 		want bool
 	}{
 		{"empty names", dbipLanguageNames{}, false},
-		{"names in a geolite2 language", dbipLanguageNames{Names: geoip2.Names{English: "China"}}, true},
+		{"names in a geolite2 language", dbipLanguageNames{English: "China"}, true},
 		{"names in persian", dbipLanguageNames{Persian: "چین"}, true},
 		{"names in korean", dbipLanguageNames{Korean: "중국"}, true},
 
 		{"empty continent", dbipContinent{}, false},
-		{"continent with code", dbipContinent{Continent: geoip2.Continent{Code: "AS"}}, true},
+		{"continent with code", dbipContinent{Code: "AS"}, true},
 		{"continent with names", dbipContinent{Names: names}, true},
 
 		{"empty country record", dbipCountryRecord{}, false},
-		{"country record with iso code", dbipCountryRecord{CountryRecord: geoip2.CountryRecord{ISOCode: "CN"}}, true},
+		{"country record with iso code", dbipCountryRecord{ISOCode: "CN"}, true},
 		{"country record with names", dbipCountryRecord{Names: names}, true},
 
 		{"empty represented country", dbipRepresentedCountry{}, false},
-		{"represented country with type", dbipRepresentedCountry{RepresentedCountry: geoip2.RepresentedCountry{Type: "military"}}, true},
+		{"represented country with type", dbipRepresentedCountry{Type: "military"}, true},
 		{"represented country with names", dbipRepresentedCountry{Names: names}, true},
 
 		{"empty country", dbipCountry{}, false},
@@ -253,6 +253,11 @@ func TestGeoLite2CountryMMDBOut_GetExtraInfo(t *testing.T) {
 	countrylessFile := writeTestFile(t, dir, "countryless.mmdb", buildMMDB(t,
 		mmdbRecord{"1.0.1.0/24", mmdbtype.Map{"continent": continentData("AS", 6255147, nil)}},
 	))
+	codelessFile := writeTestFile(t, dir, "codeless.mmdb", buildMMDB(t,
+		mmdbRecord{"1.0.1.0/24", ipinfoData(ipinfoPlace("AS", "Asia", "", "China"), "AS4134")},
+		mmdbRecord{"1.0.2.0/23", ipinfoData(ipinfoPlace("AS", "Asia", " ", "China"), "AS4837")},
+		mmdbRecord{"8.8.8.0/24", mmdbtype.Map{"asn": mmdbtype.String("AS15169")}},
+	))
 	corruptedFile := writeTestFile(t, dir, "corrupted.mmdb", corruptMMDB(t, countryMMDB))
 	invalidFile := writeTestFile(t, dir, "invalid.mmdb", []byte("not an mmdb database"))
 
@@ -292,6 +297,7 @@ func TestGeoLite2CountryMMDBOut_GetExtraInfo(t *testing.T) {
 		{name: "source without networks", typ: TypeGeoLite2CountryMMDBOut, uri: emptyFile, wantErr: errContains("no extra info found in the source MMDB file: " + emptyFile)},
 		{name: "geolite2 source without countries", typ: TypeGeoLite2CountryMMDBOut, uri: countrylessFile, wantErr: errContains("no extra info found")},
 		{name: "dbip source without countries", typ: TypeDBIPCountryMMDBOut, uri: countrylessFile, wantErr: errContains("no extra info found")},
+		{name: "ipinfo source without country codes", typ: TypeIPInfoCountryMMDBOut, uri: codelessFile, wantErr: errContains("no extra info found")},
 	}
 
 	for _, tt := range tests {
