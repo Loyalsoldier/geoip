@@ -114,3 +114,26 @@ func (failingContainer) Add(*lib.Entry, ...lib.IgnoreIPOption) error { return er
 func (failingContainer) Remove(*lib.Entry, lib.CaseRemove, ...lib.IgnoreIPOption) error {
 	return errContainer
 }
+
+func testInputActionErrors(t *testing.T, newInput func(lib.Action) (lib.InputConverter, error)) {
+	t.Helper()
+	for _, tt := range []struct {
+		action lib.Action
+		want   error
+	}{
+		{lib.ActionAdd, errContainer},
+		{lib.ActionRemove, errContainer},
+		{"unknown", lib.ErrUnknownAction},
+	} {
+		t.Run(string(tt.action), func(t *testing.T) {
+			in, err := newInput(tt.action)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := in.Input(failingContainer{lib.NewContainer()})
+			if got != nil || !errors.Is(err, tt.want) {
+				t.Errorf("Input = (%v, %v), want nil and %v", got, err, tt.want)
+			}
+		})
+	}
+}
