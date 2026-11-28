@@ -167,7 +167,7 @@ func TestMMDBOutputConstructors(t *testing.T) {
 
 // TestRegisteredConverters converts the default files of each input format
 // into the default file of an output format, as a configuration file that
-// only names the formats does.
+// names no file does.
 func TestRegisteredConverters(t *testing.T) {
 	countryMMDB := buildMMDB(t, countryMMDBRecords(geoLite2Languages)...)
 	ipinfoMMDB := buildMMDB(t, ipinfoMMDBRecords()...)
@@ -187,8 +187,10 @@ func TestRegisteredConverters(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		input  string
+		name  string
+		input string
+		// args are the arguments of the input, if any.
+		args   string
 		output string
 		// files are the default files of the input, by path.
 		files map[string][]byte
@@ -222,6 +224,22 @@ func TestRegisteredConverters(t *testing.T) {
 				{"1.0.4.0/22", isoCodeRecord("AS38803")},
 				{"1.1.1.0/24", isoCodeRecord("AS13335")},
 				{"8.8.8.0/24", isoCodeRecord("AS15169")},
+				{"2001:4860::/32", isoCodeRecord("AS15169")},
+				{"2606:4700::/32", isoCodeRecord("AS13335")},
+			},
+		},
+		{
+			// AS38803 has no IPv6 network, so that there is no list of it.
+			name:   "ipv6 of geolite2 asn csv to geolite2 mmdb",
+			input:  TypeGeoLite2ASNCSVIn,
+			args:   `{"onlyIPType": "ipv6"}`,
+			output: TypeGeoLite2CountryMMDBOut,
+			files: map[string][]byte{
+				defaultGeoLite2ASNCSVIPv4File: []byte(asnIPv4CSV),
+				defaultGeoLite2ASNCSVIPv6File: []byte(asnIPv6CSV),
+			},
+			outputDir: defaultMaxmindOutputDir,
+			want: []mmdbRecord{
 				{"2001:4860::/32", isoCodeRecord("AS15169")},
 				{"2606:4700::/32", isoCodeRecord("AS13335")},
 			},
@@ -264,7 +282,11 @@ func TestRegisteredConverters(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			config := fmt.Sprintf(`{"input": [{"type": %q, "action": "add"}], "output": [{"type": %q}]}`, tt.input, tt.output)
+			args := tt.args
+			if args == "" {
+				args = "{}"
+			}
+			config := fmt.Sprintf(`{"input": [{"type": %q, "action": "add", "args": %s}], "output": [{"type": %q}]}`, tt.input, args, tt.output)
 			if err := instance.InitConfigFromBytes([]byte(config)); err != nil {
 				t.Fatalf("InitConfigFromBytes(): %v", err)
 			}

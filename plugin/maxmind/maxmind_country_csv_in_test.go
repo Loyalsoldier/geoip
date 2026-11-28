@@ -385,8 +385,6 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 		"/ipv6.csv":    []byte(countryIPv6CSV),
 	})
 
-	// The countries that have both IPv4 and IPv6 networks.
-	dualStack := map[string]bool{"CN": true, "US": true}
 	china := map[string]bool{"CN": true}
 	chinaLists := map[string][]string{"CN": {"1.0.0.0/22", "2001:250::/35", "2001:da8::/32"}}
 
@@ -432,12 +430,13 @@ func TestGeoLite2CountryCSVIn_Input(t *testing.T) {
 		},
 		{
 			name:  "add ipv4 only",
-			input: newInput(geolite2_country_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, Want: dualStack, OnlyIPType: lib.IPv4}),
-			want:  map[string][]string{"CN": countryListsIPv4["CN"], "US": countryListsIPv4["US"]},
+			input: newInput(geolite2_country_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, OnlyIPType: lib.IPv4}),
+			want:  countryListsIPv4,
 		},
 		{
+			// DE has no IPv6 network, so that there is no list of it.
 			name:  "add ipv6 only",
-			input: newInput(geolite2_country_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, Want: dualStack, OnlyIPType: lib.IPv6}),
+			input: newInput(geolite2_country_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, OnlyIPType: lib.IPv6}),
 			want:  countryListsIPv6,
 		},
 		{

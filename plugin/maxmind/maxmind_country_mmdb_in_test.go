@@ -125,8 +125,6 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 		"/invalid.mmdb": []byte("not an mmdb database"),
 	})
 
-	// The countries that have both IPv4 and IPv6 networks.
-	dualStack := map[string]bool{"CN": true, "US": true}
 	china := map[string]bool{"CN": true}
 	chinaLists := map[string][]string{"CN": {"1.0.0.0/22", "2001:250::/35", "2001:da8::/32"}}
 
@@ -172,12 +170,13 @@ func TestGeoLite2CountryMMDBIn_Input(t *testing.T) {
 		},
 		{
 			name:  "add ipv4 only",
-			input: &geolite2_country_mmdb_in{Type: geoLite2, Action: lib.ActionAdd, URI: countryFile, Want: dualStack, OnlyIPType: lib.IPv4},
-			want:  map[string][]string{"CN": countryListsIPv4["CN"], "US": countryListsIPv4["US"]},
+			input: &geolite2_country_mmdb_in{Type: geoLite2, Action: lib.ActionAdd, URI: countryFile, OnlyIPType: lib.IPv4},
+			want:  countryListsIPv4,
 		},
 		{
+			// DE has no IPv6 network, so that there is no list of it.
 			name:  "add ipv6 only",
-			input: &geolite2_country_mmdb_in{Type: ipinfo, Action: lib.ActionAdd, URI: ipinfoFile, Want: dualStack, OnlyIPType: lib.IPv6},
+			input: &geolite2_country_mmdb_in{Type: ipinfo, Action: lib.ActionAdd, URI: ipinfoFile, OnlyIPType: lib.IPv6},
 			want:  countryListsIPv6,
 		},
 		{

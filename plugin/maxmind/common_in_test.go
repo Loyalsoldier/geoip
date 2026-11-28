@@ -205,7 +205,8 @@ func TestNewGeoLite2CountryMMDBInFromBytes(t *testing.T) {
 }
 
 // TestInputOptions verifies that each option is applied to the formats it is
-// valid for and is ignored by the other formats of this package.
+// valid for, and that the options shared by several formats are ignored by
+// the remaining formats of this package.
 func TestInputOptions(t *testing.T) {
 	wantedList := WithInputWantedList([]string{" cn ", "", "US", "cn"})
 	want := map[string]bool{"CN": true, "US": true}

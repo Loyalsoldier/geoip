@@ -495,8 +495,6 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 		"/ipv6.csv": []byte(asnIPv6CSV),
 	})
 
-	// The ASes that have both IPv4 and IPv6 networks.
-	dualStack := map[string][]string{"13335": {"AS13335"}, "15169": {"AS15169"}}
 	cloudflare := map[string][]string{"13335": {"CLOUDFLARE"}}
 	cloudflareLists := map[string][]string{"CLOUDFLARE": {"1.0.0.0/23", "1.1.1.0/24", "2400:cb00::/32", "2606:4700::/32"}}
 
@@ -543,13 +541,26 @@ func TestGeoLite2ASNCSVIn_Input(t *testing.T) {
 		},
 		{
 			name:  "add ipv4 only",
-			input: newInput(geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, Want: dualStack, OnlyIPType: lib.IPv4}),
-			want:  map[string][]string{"AS13335": {"1.0.0.0/24", "1.1.1.0/24"}, "AS15169": {"8.8.8.0/24"}},
+			input: newInput(geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, OnlyIPType: lib.IPv4}),
+			want: map[string][]string{
+				"AS13335": {"1.0.0.0/24", "1.1.1.0/24"},
+				"AS15169": {"8.8.8.0/24"},
+				"AS38803": {"1.0.4.0/22"},
+			},
 		},
 		{
+			// AS38803 has no IPv6 network, so that there is no list of it.
 			name:  "add ipv6 only",
-			input: newInput(geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, Want: dualStack, OnlyIPType: lib.IPv6}),
+			input: newInput(geolite2_asn_csv_in{Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, OnlyIPType: lib.IPv6}),
 			want:  map[string][]string{"AS13335": {"2606:4700::/32"}, "AS15169": {"2001:4860::/32"}},
+		},
+		{
+			name: "add ipv6 only of wanted lists",
+			input: newInput(geolite2_asn_csv_in{
+				Action: lib.ActionAdd, IPv4File: ipv4File, IPv6File: ipv6File, OnlyIPType: lib.IPv6,
+				Want: map[string][]string{"13335": {"CLOUDFLARE"}, "38803": {"GTELECOM"}},
+			}),
+			want: map[string][]string{"CLOUDFLARE": {"2606:4700::/32"}},
 		},
 		{
 			name:      "add to existing entries",

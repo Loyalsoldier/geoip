@@ -443,18 +443,20 @@ func TestGeoLite2CountryMMDBOut_writeFile(t *testing.T) {
 // TestGeoLite2CountryMMDBOut_Output tells about, in the format shared by
 // GeoLite2 and DB-IP country databases.
 type sourcePlaces struct {
-	asia, europe        mmdbtype.Map
-	china, germany, usa mmdbtype.Map
+	asia, europe, northAmerica mmdbtype.Map
+	china, germany, japan, usa mmdbtype.Map
 }
 
 // newSourcePlaces returns places whose localized names are given by names.
 func newSourcePlaces(names func(place string) mmdbtype.Map) sourcePlaces {
 	return sourcePlaces{
-		asia:    continentData("AS", 6255147, names("Asia")),
-		europe:  continentData("EU", 6255148, names("Europe")),
-		china:   countryData("CN", 1814991, false, names("China")),
-		germany: countryData("DE", 2921044, true, names("Germany")),
-		usa:     countryData("US", 6252001, false, names("United States")),
+		asia:         continentData("AS", 6255147, names("Asia")),
+		europe:       continentData("EU", 6255148, names("Europe")),
+		northAmerica: continentData("NA", 6255149, names("North America")),
+		china:        countryData("CN", 1814991, false, names("China")),
+		germany:      countryData("DE", 2921044, true, names("Germany")),
+		japan:        countryData("JP", 1861060, false, names("Japan")),
+		usa:          countryData("US", 6252001, false, names("United States")),
 	}
 }
 
@@ -464,10 +466,12 @@ func (p sourcePlaces) source() []mmdbRecord {
 		{"1.0.1.0/24", mmdbtype.Map{"continent": p.asia, "country": p.china, "registered_country": p.usa}},
 		// Only the first network of a country provides extra info.
 		{"1.0.2.0/23", mmdbtype.Map{"continent": p.europe, "country": countryData("CN", 1, true, nil)}},
+		// A country may come without continent.
+		{"1.0.16.0/20", mmdbtype.Map{"country": p.japan}},
 		// The registered country is used in the absence of a country.
-		{"5.1.0.0/16", mmdbtype.Map{"continent": p.europe, "registered_country": p.germany, "represented_country": representedCountryData(p.usa)}},
+		{"3.0.0.0/8", mmdbtype.Map{"continent": p.northAmerica, "registered_country": p.usa, "represented_country": representedCountryData(p.germany)}},
 		// The represented country is the last resort.
-		{"6.0.0.0/8", mmdbtype.Map{"represented_country": representedCountryData(p.usa)}},
+		{"5.1.0.0/16", mmdbtype.Map{"continent": p.europe, "represented_country": representedCountryData(p.germany)}},
 		// A network without any country provides no extra info.
 		{"7.0.0.0/8", mmdbtype.Map{"continent": p.europe}},
 	}
@@ -477,6 +481,7 @@ func (p sourcePlaces) source() []mmdbRecord {
 var enrichedLists = map[string][]string{
 	"CN":      {"1.0.1.0/24", "2001:250::/35"},
 	"DE":      {"5.1.0.0/16"},
+	"JP":      {"1.0.16.0/20"},
 	"US":      {"8.8.8.0/24"},
 	"PRIVATE": {"10.0.0.0/8"},
 }
@@ -486,9 +491,9 @@ var enrichedLists = map[string][]string{
 func (p sourcePlaces) enriched() []mmdbRecord {
 	return []mmdbRecord{
 		{"1.0.1.0/24", mmdbtype.Map{"continent": p.asia, "country": p.china}},
+		{"1.0.16.0/20", mmdbtype.Map{"country": p.japan}},
 		{"5.1.0.0/16", mmdbtype.Map{"continent": p.europe, "country": p.germany}},
-		// The network of the represented country tells no continent.
-		{"8.8.8.0/24", mmdbtype.Map{"country": p.usa}},
+		{"8.8.8.0/24", mmdbtype.Map{"continent": p.northAmerica, "country": p.usa}},
 		// The source tells nothing about this list.
 		{"10.0.0.0/8", isoCodeRecord("PRIVATE")},
 		{"2001:250::/35", mmdbtype.Map{"continent": p.asia, "country": p.china}},
@@ -556,9 +561,13 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		{"5.1.0.0/16", ipinfoData(ipinfoGermany, "AS3320")},
 		// Country codes are trimmed and upper-cased.
 		{"6.0.0.0/8", ipinfoData(ipinfoPlace("NA", "North America", " us ", "United States"), "AS668")},
+		// A network without country code provides no extra info.
+		{"7.0.0.0/8", ipinfoData(ipinfoPlace("EU", "Europe", "", "Unknown"), "AS64512")},
 	}
 	ipinfoEnriched := []mmdbRecord{
 		{"1.0.1.0/24", ipinfoListRecord(ipinfoChina)},
+		// The source tells nothing about this list.
+		{"1.0.16.0/20", countryCodeRecord("JP")},
 		{"5.1.0.0/16", ipinfoListRecord(ipinfoGermany)},
 		{"8.8.8.0/24", ipinfoListRecord(ipinfoPlace("NA", "North America", "US", "United States"))},
 		// The source tells nothing about this list.
