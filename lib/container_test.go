@@ -117,6 +117,46 @@ func TestContainerAdd(t *testing.T) {
 	}
 }
 
+// An entry that only has IP addresses of the ignored type must not end up in
+// the container as an entry without any IP address.
+func TestContainerAddIgnoredEntry(t *testing.T) {
+	tests := []struct {
+		name   string
+		adding []string
+		opts   []IgnoreIPOption
+		want   []string // nil means the entry is not added
+	}{
+		{"ipv4 only entry ignore ipv4", []string{"1.1.1.1"}, []IgnoreIPOption{IgnoreIPv4}, nil},
+		{"ipv6 only entry ignore ipv6", []string{"2001:db8::1"}, []IgnoreIPOption{IgnoreIPv6}, nil},
+		{"empty entry ignore ipv4", []string{}, []IgnoreIPOption{IgnoreIPv4}, nil},
+		{"empty entry ignore ipv6", []string{}, []IgnoreIPOption{IgnoreIPv6}, nil},
+		{"ipv4 only entry ignore ipv6", []string{"1.1.1.1"}, []IgnoreIPOption{IgnoreIPv6}, []string{"1.1.1.1/32"}},
+		{"ipv6 only entry ignore ipv4", []string{"2001:db8::1"}, []IgnoreIPOption{IgnoreIPv4}, []string{"2001:db8::1/128"}},
+		{"empty entry without option", []string{}, nil, []string{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewContainer()
+			if err := c.Add(newEntryWith(t, "other", "8.8.8.8")); err != nil {
+				t.Fatal(err)
+			}
+			if err := c.Add(newEntryWith(t, "test", tt.adding...), tt.opts...); err != nil {
+				t.Fatal(err)
+			}
+			if tt.want == nil {
+				if _, found := c.GetEntry("test"); found || c.Len() != 1 {
+					t.Fatalf("entry is added: found = %v, Len() = %d, want 1", found, c.Len())
+				}
+				return
+			}
+			if c.Len() != 2 {
+				t.Fatalf("Len() = %d, want 2", c.Len())
+			}
+			assertStrings(t, entryText(t, c, "test"), tt.want)
+		})
+	}
+}
+
 func TestContainerAddBrokenBuilder(t *testing.T) {
 	tests := []struct {
 		name  string

@@ -120,11 +120,19 @@ func (c *container) Add(entry *Entry, opts ...IgnoreIPOption) error {
 		}
 
 	case false:
+		// An entry that has nothing but IP addresses of the ignored type is not
+		// added, as an entry without IP address can not be output.
 		switch ignoreIPType {
 		case IPv4:
+			if !entry.hasIPv6Builder() {
+				return nil
+			}
 			entry.ipv4Builder = nil
 			entry.ipv4Set = nil
 		case IPv6:
+			if !entry.hasIPv4Builder() {
+				return nil
+			}
 			entry.ipv6Builder = nil
 			entry.ipv6Set = nil
 		}
