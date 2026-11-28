@@ -432,6 +432,8 @@ func TestGeoLite2CountryMMDBOut_writeFile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			// Databases are written reproducibly, so that the file is to hold
+			// exactly what the writer writes again, without anything stale.
 			if want := writeMMDB(t, writer); !bytes.Equal(got, want) {
 				t.Fatalf("the file holds %d bytes that differ from the %d bytes of the database", len(got), len(want))
 			}
@@ -636,25 +638,25 @@ func TestGeoLite2CountryMMDBOut_Output(t *testing.T) {
 		},
 
 		{
-			name:  "lists are written in alphabetical order",
+			name:  "overlapping networks go to the last list in alphabetical order",
 			out:   geolite2_country_mmdb_out{Type: geoLite2},
 			lists: overlappingLists,
 			want:  chinaOverCloudflare,
 		},
 		{
-			name:  "overwrite lists are written last",
+			name:  "overlapping networks go to the overwrite list",
 			out:   geolite2_country_mmdb_out{Type: geoLite2, Overwrite: []string{"cloudflare"}},
 			lists: overlappingLists,
 			want:  cloudflareOverChina,
 		},
 		{
-			name:  "wanted lists are written in their order",
-			out:   geolite2_country_mmdb_out{Type: geoLite2, Want: []string{"cn", "cloudflare"}, Overwrite: []string{"cn"}},
+			name:  "overlapping networks go to the last wanted list",
+			out:   geolite2_country_mmdb_out{Type: geoLite2, Want: []string{"cn", "cloudflare"}},
 			lists: overlappingLists,
 			want:  cloudflareOverChina,
 		},
 		{
-			name:  "wanted lists are written in their reverse order",
+			name:  "wanted lists take precedence over overwrite lists",
 			out:   geolite2_country_mmdb_out{Type: geoLite2, Want: []string{"cloudflare", "cn"}, Overwrite: []string{"cloudflare"}},
 			lists: overlappingLists,
 			want:  chinaOverCloudflare,
